@@ -1,131 +1,488 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quick Sign-In Experience</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
-        body { font-family: 'Inter', sans-serif; }
-        .glass-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        .fade-in { animation: fadeIn 0.5s ease-out forwards; }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-    </style>
-</head>
-<body class="bg-slate-50 min-h-screen flex items-center justify-center p-4">
+import React, { useState, useEffect } from 'react';
+import { 
+  LayoutDashboard, 
+  ClipboardCheck, 
+  CalendarPlus, 
+  LogOut, 
+  User, 
+  ShieldCheck, 
+  CheckCircle2, 
+  XCircle, 
+  AlertCircle,
+  BarChart3,
+  Calendar as CalendarIcon,
+  Menu,
+  X
+} from 'lucide-react';
 
-    <!-- Kontainer Login -->
-    <div id="login-container" class="glass-card w-full max-w-md p-8 rounded-3xl shadow-2xl transition-all duration-500">
-        <div class="text-center mb-8">
-            <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-600 text-white rounded-2xl mb-4 shadow-lg shadow-blue-200">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewbox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                </svg>
-            </div>
-            <h1 class="text-2xl font-bold text-gray-800">Selamat Datang</h1>
-            <p class="text-gray-500 mt-2">Cukup klik tombol di bawah untuk masuk secara instan.</p>
+// --- Mock Data ---
+const INITIAL_AUDITS = [
+  { id: 1, date: '2023-10-25', area: 'Produksi A', auditor: 'Budi', status: 'OK' },
+  { id: 2, date: '2023-10-25', area: 'Gudang', auditor: 'Siti', status: 'NG' },
+  { id: 3, date: '2023-10-24', area: 'Maintenance', auditor: 'Andi', status: 'OK' },
+];
+
+const INITIAL_SCHEDULES = [
+  { id: 1, date: '2023-10-26', area: 'Produksi A', auditor: 'Budi' },
+  { id: 2, date: '2023-10-26', area: 'Gudang', auditor: 'Siti' },
+];
+
+export default function App() {
+  const [page, setPage] = useState('login');
+  const [currentUser, setCurrentUser] = useState(null);
+  const [audits, setAudits] = useState(INITIAL_AUDITS);
+  const [schedules, setSchedules] = useState(INITIAL_SCHEDULES);
+  
+  // Sidebar state (terutama untuk mobile)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
+  // Login State
+  const [loginRole, setLoginRole] = useState('user');
+  const [password, setPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
+
+  // Form States
+  const [auditForm, setAuditForm] = useState({ area: '', status: 'OK', notes: '' });
+  const [scheduleForm, setScheduleForm] = useState({ date: '', area: '', auditor: '' });
+
+  // Tutup menu mobile saat pindah halaman
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [page]);
+
+  // --- Logic Functions ---
+  const handleLogin = (e) => {
+    e.preventDefault();
+    if (loginRole === 'admin') {
+      if (password === 'admin123') {
+        setCurrentUser({ role: 'admin', name: 'Administrator' });
+        setPage('dashboard');
+        setLoginError('');
+      } else {
+        setLoginError('Password Admin salah!');
+      }
+    } else {
+      setCurrentUser({ role: 'user', name: 'Operator User' });
+      setPage('dashboard');
+      setLoginError('');
+    }
+  };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    setPage('login');
+    setPassword('');
+  };
+
+  const submitAudit = (e) => {
+    e.preventDefault();
+    const newAudit = {
+      id: Date.now(),
+      date: new Date().toISOString().split('T')[0],
+      area: auditForm.area,
+      auditor: currentUser.name,
+      status: auditForm.status
+    };
+    setAudits([newAudit, ...audits]);
+    setAuditForm({ area: '', status: 'OK', notes: '' });
+    setPage('dashboard');
+  };
+
+  const submitSchedule = (e) => {
+    e.preventDefault();
+    const newSchedule = {
+      id: Date.now(),
+      ...scheduleForm
+    };
+    setSchedules([...schedules, newSchedule]);
+    setScheduleForm({ date: '', area: '', auditor: '' });
+  };
+
+  // --- Components ---
+
+  const SidebarContent = () => (
+    <div className="flex flex-col h-full py-6">
+      <div className="flex items-center px-6 mb-10 gap-3">
+        <div className="bg-blue-600 p-2 rounded-xl text-white">
+          <ClipboardCheck size={24} />
         </div>
+        <h1 className="font-bold text-xl tracking-tight">Kamishibai</h1>
+      </div>
 
-        <button id="btn-signin" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 rounded-xl shadow-lg shadow-blue-100 transition-all active:scale-95 flex items-center justify-center gap-3 group">
-            <span>Masuk Sekarang</span>
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 group-hover:translate-x-1 transition-transform" fill="none" viewbox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-            </svg>
+      <nav className="flex-1 px-4 space-y-2">
+        <NavItem 
+          active={page === 'dashboard'} 
+          onClick={() => setPage('dashboard')}
+          icon={<LayoutDashboard size={20} />}
+          label="Dashboard"
+        />
+        <NavItem 
+          active={page === 'input-audit'} 
+          onClick={() => setPage('input-audit')}
+          icon={<ClipboardCheck size={20} />}
+          label="Input Audit"
+        />
+        {currentUser?.role === 'admin' && (
+          <NavItem 
+            active={page === 'input-jadwal'} 
+            onClick={() => setPage('input-jadwal')}
+            icon={<CalendarPlus size={20} />}
+            label="Atur Jadwal"
+          />
+        )}
+      </nav>
+
+      <div className="px-4 mt-auto">
+        <div className="bg-slate-800 p-4 rounded-2xl mb-4 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-blue-400">
+            {currentUser?.role === 'admin' ? <ShieldCheck size={20} /> : <User size={20} />}
+          </div>
+          <div className="overflow-hidden">
+            <p className="text-sm font-bold truncate">{currentUser?.name}</p>
+            <p className="text-[10px] text-slate-400 uppercase tracking-wider">{currentUser?.role}</p>
+          </div>
+        </div>
+        <button 
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 transition-colors font-medium text-sm"
+        >
+          <LogOut size={20} /> Keluar
         </button>
-
-        <p class="text-center text-xs text-gray-400 mt-6 uppercase tracking-widest font-medium">Akses Cepat & Lokal</p>
+      </div>
     </div>
+  );
 
-    <!-- Kontainer Dashboard (Tersembunyi secara default) -->
-    <div id="dashboard-container" class="hidden glass-card w-full max-w-2xl p-8 rounded-3xl shadow-2xl transition-all duration-500">
-        <div class="flex items-center justify-between mb-8 pb-6 border-b border-gray-100">
+  const NavItem = ({ active, onClick, icon, label }) => (
+    <button 
+      onClick={onClick}
+      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 font-medium text-sm ${
+        active 
+        ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' 
+        : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+      }`}
+    >
+      {icon} {label}
+    </button>
+  );
+
+  if (page === 'login') {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+        <div className="bg-white p-8 rounded-[2rem] shadow-xl w-full max-w-md border border-slate-100">
+          <div className="flex flex-col items-center mb-8">
+            <div className="bg-blue-600 p-4 rounded-2xl text-white mb-4 shadow-xl shadow-blue-100">
+              <ClipboardCheck size={32} />
+            </div>
+            <h2 className="text-2xl font-bold text-slate-800">Audit Kamishibai</h2>
+            <p className="text-slate-400 text-sm mt-1 text-center">Selamat datang di sistem manajemen audit</p>
+          </div>
+
+          <form onSubmit={handleLogin} className="space-y-5">
             <div>
-                <h2 class="text-2xl font-bold text-gray-800">Dashboard Anda</h2>
-                <p class="text-sm text-green-600 font-medium">Sesi Aktif</p>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Role Akses</label>
+              <select 
+                className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition-all appearance-none"
+                value={loginRole}
+                onChange={(e) => setLoginRole(e.target.value)}
+              >
+                <option value="user">Operator (User)</option>
+                <option value="admin">Administrator (Admin)</option>
+              </select>
             </div>
-            <button id="btn-signout" class="text-sm text-red-500 font-semibold hover:bg-red-50 px-4 py-2 rounded-lg transition-colors">Keluar</button>
-        </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="p-6 bg-blue-50 rounded-2xl">
-                <h3 class="font-bold text-blue-800 mb-2">ID Sesi</h3>
-                <p id="display-session" class="text-xs font-mono text-blue-600 break-all bg-white p-2 rounded border border-blue-100"></p>
-            </div>
-            <div class="p-6 bg-green-50 rounded-2xl">
-                <h3 class="font-bold text-green-800 mb-2">Metode Akses</h3>
-                <p class="text-sm text-green-600">Instan (Tanpa Ketik)</p>
-            </div>
-        </div>
+            {loginRole === 'admin' && (
+              <div className="animate-in fade-in slide-in-from-top-2">
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Password</label>
+                <input 
+                  type="password" 
+                  className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  placeholder="Password admin..."
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+            )}
 
-        <div class="mt-8 p-4 bg-gray-50 rounded-xl text-center">
-            <p class="text-gray-600 italic">"Anda telah masuk ke sistem tanpa perlu mengetik satu karakter pun."</p>
+            {loginError && (
+              <div className="p-3 bg-red-50 text-red-600 text-xs rounded-xl flex items-center gap-2 border border-red-100">
+                <AlertCircle size={14} /> {loginError}
+              </div>
+            )}
+
+            <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-2xl shadow-xl shadow-blue-200 transition-all active:scale-[0.98]">
+              Masuk Sistem
+            </button>
+          </form>
         </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex min-h-screen bg-slate-50 font-sans text-slate-900">
+      {/* Sidebar Desktop (Fixed) */}
+      <aside className="hidden lg:block w-72 bg-slate-900 text-white flex-shrink-0 sticky top-0 h-screen">
+        <SidebarContent />
+      </aside>
+
+      {/* Sidebar Mobile (Drawer) */}
+      <div className={`fixed inset-0 z-50 lg:hidden transition-opacity duration-300 ${isMobileMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+        <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)} />
+        <aside className={`absolute inset-y-0 left-0 w-72 bg-slate-900 text-white transform transition-transform duration-300 ease-out ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+          <SidebarContent />
+          <button 
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="absolute top-6 right-[-50px] bg-slate-900 p-2 rounded-full text-white"
+          >
+            <X size={24} />
+          </button>
+        </aside>
+      </div>
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0">
+        <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200 px-6 flex items-center justify-between sticky top-0 z-40">
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="lg:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
+            >
+              <Menu size={24} />
+            </button>
+            <h2 className="font-bold text-lg text-slate-800">Manajemen Audit</h2>
+          </div>
+          
+          <div className="flex items-center gap-3">
+             <div className="hidden sm:block text-right mr-2">
+                <p className="text-sm font-bold text-slate-800 leading-none">{currentUser.name}</p>
+                <p className="text-[10px] text-slate-500 font-bold uppercase mt-1 tracking-wider">{currentUser.role}</p>
+             </div>
+             <div className="w-10 h-10 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 border border-blue-100">
+                <User size={20} />
+             </div>
+          </div>
+        </header>
+
+        <main className="p-6 lg:p-10 max-w-7xl mx-auto w-full">
+          {page === 'dashboard' && (
+            <div className="space-y-8 animate-in fade-in duration-500">
+              <header>
+                <h1 className="text-3xl font-extrabold text-slate-900">Dashboard</h1>
+                <p className="text-slate-500">Pantau aktivitas audit Kamishibai secara real-time</p>
+              </header>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <StatCard title="Total Audit" value={audits.length} icon={<BarChart3 />} color="text-blue-600" bg="bg-blue-50" />
+                <StatCard title="Status OK" value={audits.filter(a => a.status === 'OK').length} icon={<CheckCircle2 />} color="text-green-600" bg="bg-green-50" />
+                <StatCard title="Status NG" value={audits.filter(a => a.status === 'NG').length} icon={<XCircle />} color="text-red-600" bg="bg-red-50" />
+              </div>
+
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                <section className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
+                  <h3 className="font-bold text-slate-800 mb-6 flex items-center gap-2">
+                    <ClipboardCheck size={20} className="text-blue-600" /> Riwayat Audit
+                  </h3>
+                  <div className="space-y-4">
+                    {audits.map(audit => (
+                      <div key={audit.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-transparent hover:border-slate-200 transition-all">
+                        <div className="flex gap-4 items-center">
+                          <div className={`w-2 h-10 rounded-full ${audit.status === 'OK' ? 'bg-green-400' : 'bg-red-400'}`} />
+                          <div>
+                            <p className="font-bold text-slate-800 text-sm">{audit.area}</p>
+                            <p className="text-xs text-slate-400">{audit.date} • {audit.auditor}</p>
+                          </div>
+                        </div>
+                        <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${audit.status === 'OK' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                          {audit.status}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+
+                <section className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
+                  <h3 className="font-bold text-slate-800 mb-6 flex items-center gap-2">
+                    <CalendarIcon size={20} className="text-orange-500" /> Jadwal Mendatang
+                  </h3>
+                  <div className="space-y-4">
+                    {schedules.map(s => (
+                      <div key={s.id} className="flex items-center gap-5 p-4 bg-slate-50 rounded-2xl border-l-4 border-blue-600 hover:bg-slate-100 transition-all">
+                        <div className="bg-white px-3 py-2 rounded-xl text-center min-w-[60px] shadow-sm border border-slate-100">
+                          <p className="text-[10px] uppercase font-black text-blue-600 leading-tight">{new Date(s.date).toLocaleString('id-ID', { month: 'short' })}</p>
+                          <p className="text-xl font-black text-slate-800 leading-tight">{new Date(s.date).getDate()}</p>
+                        </div>
+                        <div>
+                          <p className="font-bold text-slate-800 text-sm">{s.area}</p>
+                          <p className="text-xs text-slate-500">Auditor: <span className="text-slate-700 font-medium">{s.auditor}</span></p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              </div>
+            </div>
+          )}
+
+          {page === 'input-audit' && (
+             <div className="max-w-xl mx-auto animate-in slide-in-from-bottom-8 duration-500">
+                <div className="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-slate-100">
+                  <h2 className="text-3xl font-black text-slate-900 mb-2">Form Audit</h2>
+                  <p className="text-slate-400 mb-8">Lengkapi hasil temuan audit di lapangan</p>
+                  
+                  <form onSubmit={submitAudit} className="space-y-8">
+                    <div className="space-y-3">
+                      <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Lokasi Area</label>
+                      <select 
+                        className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-600 appearance-none"
+                        value={auditForm.area}
+                        onChange={e => setAuditForm({...auditForm, area: e.target.value})}
+                        required
+                      >
+                        <option value="">Pilih Area...</option>
+                        <option value="Produksi A">Produksi A</option>
+                        <option value="Produksi B">Produksi B</option>
+                        <option value="Gudang">Gudang</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-3">
+                       <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Hasil Pengecekan</label>
+                       <div className="flex gap-4">
+                          <button 
+                            type="button" 
+                            onClick={() => setAuditForm({...auditForm, status: 'OK'})}
+                            className={`flex-1 p-5 rounded-2xl border-2 flex flex-col items-center gap-2 transition-all ${auditForm.status === 'OK' ? 'border-green-600 bg-green-50 text-green-700 shadow-lg shadow-green-100' : 'border-slate-100 text-slate-400 grayscale'}`}
+                          >
+                            <CheckCircle2 size={32} /> 
+                            <span className="font-bold">KONDISI OK</span>
+                          </button>
+                          <button 
+                            type="button" 
+                            onClick={() => setAuditForm({...auditForm, status: 'NG'})}
+                            className={`flex-1 p-5 rounded-2xl border-2 flex flex-col items-center gap-2 transition-all ${auditForm.status === 'NG' ? 'border-red-600 bg-red-50 text-red-700 shadow-lg shadow-red-100' : 'border-slate-100 text-slate-400 grayscale'}`}
+                          >
+                            <XCircle size={32} /> 
+                            <span className="font-bold">KONDISI NG</span>
+                          </button>
+                       </div>
+                    </div>
+
+                    <div className="space-y-3">
+                       <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Keterangan (Opsional)</label>
+                       <textarea 
+                         className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-600 h-28 resize-none"
+                         placeholder="Tuliskan temuan mendalam..."
+                         value={auditForm.notes}
+                         onChange={e => setAuditForm({...auditForm, notes: e.target.value})}
+                       />
+                    </div>
+
+                    <button type="submit" className="w-full bg-slate-900 text-white font-bold py-5 rounded-2xl shadow-xl hover:bg-black transition-all active:scale-[0.98]">
+                       Kirim Data Audit
+                    </button>
+                  </form>
+                </div>
+             </div>
+          )}
+
+          {page === 'input-jadwal' && currentUser?.role === 'admin' && (
+             <div className="space-y-8 animate-in slide-in-from-bottom-8 duration-500">
+                <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <h1 className="text-3xl font-extrabold text-slate-900">Manajemen Jadwal</h1>
+                    <p className="text-slate-500">Penjadwalan auditor Kamishibai tahunan</p>
+                  </div>
+                  <div className="bg-white p-2 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-2">
+                     <div className="bg-orange-500/10 text-orange-600 p-2 rounded-xl"><AlertCircle size={20} /></div>
+                     <p className="text-xs font-bold text-slate-600 pr-4">Admin Only Area</p>
+                  </div>
+                </header>
+
+                <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
+                   <h2 className="font-bold text-slate-800 mb-6 flex items-center gap-2">Tambah Jadwal Baru</h2>
+                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                      <div className="md:col-span-1">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Tanggal</label>
+                        <input 
+                          type="date" 
+                          className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-blue-600" 
+                          value={scheduleForm.date}
+                          onChange={e => setScheduleForm({...scheduleForm, date: e.target.value})}
+                        />
+                      </div>
+                      <div className="md:col-span-1">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Area Kerja</label>
+                        <input 
+                          type="text" 
+                          placeholder="Misal: Gudang B" 
+                          className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-blue-600" 
+                          value={scheduleForm.area}
+                          onChange={e => setScheduleForm({...scheduleForm, area: e.target.value})}
+                        />
+                      </div>
+                      <div className="md:col-span-1">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Auditor</label>
+                        <input 
+                          type="text" 
+                          placeholder="Nama PIC..." 
+                          className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-blue-600" 
+                          value={scheduleForm.auditor}
+                          onChange={e => setScheduleForm({...scheduleForm, auditor: e.target.value})}
+                        />
+                      </div>
+                      <button onClick={submitSchedule} className="bg-blue-600 text-white font-bold h-[56px] rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-100">
+                        Tambah
+                      </button>
+                   </div>
+                </div>
+
+                <div className="bg-white rounded-[2rem] border border-slate-100 overflow-hidden shadow-sm">
+                   <div className="overflow-x-auto">
+                     <table className="w-full text-left">
+                        <thead className="bg-slate-50 text-slate-400 text-[10px] font-black uppercase tracking-[0.2em]">
+                           <tr>
+                              <th className="px-8 py-5">Status</th>
+                              <th className="px-8 py-5">Tanggal</th>
+                              <th className="px-8 py-5">Area</th>
+                              <th className="px-8 py-5">Auditor</th>
+                           </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                           {schedules.map(s => (
+                             <tr key={s.id} className="hover:bg-slate-50 transition-colors group">
+                                <td className="px-8 py-5">
+                                   <div className="w-3 h-3 rounded-full bg-slate-200 group-hover:bg-blue-400 transition-colors" />
+                                </td>
+                                <td className="px-8 py-5 text-sm font-medium text-slate-500">{s.date}</td>
+                                <td className="px-8 py-5 text-sm font-bold text-slate-800">{s.area}</td>
+                                <td className="px-8 py-5 text-sm text-slate-600">{s.auditor}</td>
+                             </tr>
+                           ))}
+                        </tbody>
+                     </table>
+                   </div>
+                </div>
+             </div>
+          )}
+        </main>
+      </div>
     </div>
+  );
+}
 
-    <!-- Overlay Loading -->
-    <div id="loader" class="fixed inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-50 hidden">
-        <div class="flex flex-col items-center">
-            <div class="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-            <p class="mt-4 text-blue-600 font-medium">Menyiapkan dashboard...</p>
-        </div>
+// --- Helper Components ---
+
+function StatCard({ title, value, icon, color, bg }) {
+  return (
+    <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 flex items-center justify-between hover:shadow-md transition-shadow">
+      <div>
+        <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">{title}</p>
+        <h3 className="text-4xl font-black text-slate-900 mt-2 tracking-tight">{value}</h3>
+      </div>
+      <div className={`${bg} ${color} p-5 rounded-2xl`}>
+        {React.cloneElement(icon, { size: 28 })}
+      </div>
     </div>
-
-    <script>
-        const loginContainer = document.getElementById('login-container');
-        const dashboardContainer = document.getElementById('dashboard-container');
-        const loader = document.getElementById('loader');
-        const btnSignIn = document.getElementById('btn-signin');
-        const btnSignOut = document.getElementById('btn-signout');
-        const displaySession = document.getElementById('display-session');
-
-        // Fungsi untuk mengelola tampilan berdasarkan status login
-        function updateUI() {
-            const isLoggedIn = sessionStorage.getItem('isLoggedIn') === 'true';
-            
-            if (isLoggedIn) {
-                loginContainer.classList.add('hidden');
-                dashboardContainer.classList.remove('hidden');
-                dashboardContainer.classList.add('fade-in');
-                displaySession.textContent = sessionStorage.getItem('sessionId');
-            } else {
-                dashboardContainer.classList.add('hidden');
-                loginContainer.classList.remove('hidden');
-                loginContainer.classList.add('fade-in');
-            }
-        }
-
-        // Event listener untuk tombol Masuk
-        btnSignIn.addEventListener('click', () => {
-            loader.classList.remove('hidden');
-            
-            // Simulasi proses delay loading 800ms
-            setTimeout(() => {
-                const randomId = 'USER-' + Math.random().toString(36).substr(2, 9).toUpperCase();
-                sessionStorage.setItem('isLoggedIn', 'true');
-                sessionStorage.setItem('sessionId', randomId);
-                
-                loader.classList.add('hidden');
-                updateUI();
-            }, 800);
-        });
-
-        // Event listener untuk tombol Keluar
-        btnSignOut.addEventListener('click', () => {
-            sessionStorage.removeItem('isLoggedIn');
-            sessionStorage.removeItem('sessionId');
-            updateUI();
-        });
-
-        // Cek status saat halaman dimuat
-        window.onload = updateUI;
-    </script>
-</body>
-</html>
+  );
+}
