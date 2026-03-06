@@ -99,7 +99,7 @@
                             <div><label class="text-[10px] font-black text-slate-400 mb-1 block">TANGGAL</label><input type="date" id="sch-date" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" required></div>
                             <div><label class="text-[10px] font-black text-slate-400 mb-1 block">AREA</label><input type="text" id="sch-area" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" placeholder="Contoh: Line 1" required></div>
                             <div><label class="text-[10px] font-black text-slate-400 mb-1 block">AUDITOR</label><input type="text" id="sch-auditor" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" placeholder="Nama PIC" required></div>
-                            <button type="submit" class="bg-blue-600 text-white font-bold h-[56px] rounded-2xl hover:bg-blue-700">Simpan Jadwal</button>
+                            <button type="submit" id="btn-submit-sch" class="bg-blue-600 text-white font-bold h-[56px] rounded-2xl hover:bg-blue-700 disabled:opacity-50 transition-opacity">Simpan Jadwal</button>
                         </form>
                     </div>
 
@@ -147,7 +147,7 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = "kamishibaimsm"; // Menggunakan ID project Anda
+        const appId = "kamishibaimsm"; 
 
         let schedules = [];
         let user = null;
@@ -155,9 +155,13 @@
         // 1. Auth Setup
         async function startApp() {
             try {
-                await signInAnonymously(auth);
+                // Pastikan menunggu sign in selesai
+                const userCredential = await signInAnonymously(auth);
+                user = userCredential.user;
+                console.log("Logged in as:", user.uid);
             } catch (err) {
                 console.error("Auth failed", err);
+                updateSyncIndicator('Auth Error', 'bg-red-500');
             }
         }
 
@@ -166,20 +170,25 @@
             if (user) {
                 updateSyncIndicator('Online', 'bg-green-500');
                 listenToSchedules();
+            } else {
+                updateSyncIndicator('Disconnected', 'bg-slate-300');
             }
         });
 
-        // 2. Firestore Listeners (Rule 1: /artifacts/{appId}/public/data/{col})
+        // 2. Firestore Listeners
         function listenToSchedules() {
+            if (!user) return;
             const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'schedules');
+            
+            // Tambahkan error callback pada onSnapshot
             onSnapshot(colRef, (snapshot) => {
                 schedules = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
                 renderTable();
                 updateDashboard();
             }, (err) => {
-                console.error("Firestore Error:", err);
+                console.error("Firestore Listen Error:", err);
                 if(err.code === 'permission-denied') {
-                    alert("Akses Ditolak! Pastikan 'Firestore Rules' Anda di Firebase Console sudah di-set ke test mode (allow read, write: if true;)");
+                    updateSyncIndicator('Permission Denied', 'bg-red-500');
                 }
             });
         }
@@ -187,10 +196,21 @@
         // 3. Save Function
         async function handleSaveSchedule(e) {
             e.preventDefault();
+            
             if (!user) {
-                alert("Menunggu koneksi ke server...");
-                return;
+                // Mencoba login ulang jika user hilang
+                updateSyncIndicator('Reconnecting...', 'bg-orange-400');
+                try {
+                    await signInAnonymously(auth);
+                } catch(err) {
+                    alert("Koneksi gagal. Periksa koneksi internet Anda.");
+                    return;
+                }
             }
+
+            const btn = document.getElementById('btn-submit-sch');
+            btn.disabled = true;
+            btn.innerText = "Menyimpan...";
 
             const date = document.getElementById('sch-date').value;
             const area = document.getElementById('sch-area').value;
@@ -207,7 +227,10 @@
                 e.target.reset();
             } catch (err) {
                 console.error("Save Error:", err);
-                alert("Gagal menyimpan ke Firebase: " + err.message);
+                alert("Gagal menyimpan ke Firebase. Pastikan Rules Firestore sudah disetel ke Public.");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Simpan Jadwal";
             }
         }
 
@@ -217,7 +240,7 @@
             try {
                 await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'schedules', id));
             } catch (err) {
-                alert("Gagal menghapus");
+                alert("Gagal menghapus: " + err.message);
             }
         };
 
@@ -231,9 +254,9 @@
             body.innerHTML = schedules.map((s, i) => `
                 <tr class="hover:bg-slate-50">
                     <td class="px-8 py-5 text-sm text-slate-400">${i+1}</td>
-                    <td class="px-8 py-5 text-sm font-medium text-slate-600">${s.date}</td>
-                    <td class="px-8 py-5 text-sm font-bold text-slate-800">${s.area}</td>
-                    <td class="px-8 py-5 text-sm text-slate-600">${s.auditor}</td>
+                    <td class="px-8 py-5 text-sm font-medium text-slate-600">${s.date || '-'}</td>
+                    <td class="px-8 py-5 text-sm font-bold text-slate-800">${s.area || '-'}</td>
+                    <td class="px-8 py-5 text-sm text-slate-600">${s.auditor || '-'}</td>
                     <td class="px-8 py-5">
                         <button onclick="deleteSchedule('${s.id}')" class="text-red-400 hover:text-red-600 transition-colors">
                             <i data-lucide="trash-2" class="w-4 h-4"></i>
@@ -250,9 +273,8 @@
         }
 
         function updateSyncIndicator(text, colorClass) {
-            const dot = document.querySelector('#sync-indicator div');
             const span = document.querySelector('#sync-indicator');
-            dot.className = `w-2 h-2 rounded-full ${colorClass}`;
+            if (!span) return;
             span.innerHTML = `<div class="w-2 h-2 rounded-full ${colorClass}"></div> ${text}`;
         }
 
@@ -291,6 +313,7 @@
             document.getElementById('password-container').classList.toggle('hidden', e.target.value !== 'admin');
         };
 
+        // Jalankan inisialisasi
         startApp();
         lucide.createIcons();
     </script>
