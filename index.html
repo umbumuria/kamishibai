@@ -9,8 +9,6 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
-        #sidebar { transition: transform 0.3s ease-in-out; }
-        .sidebar-open { transform: translateX(0) !important; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900">
@@ -44,20 +42,14 @@
 
     <!-- MAIN APP -->
     <div id="main-app" class="hidden flex min-h-screen relative overflow-x-hidden">
-        <!-- SIDEBAR -->
-        <aside id="sidebar" class="fixed inset-y-0 left-0 w-72 bg-slate-900 text-white flex flex-col z-50 -translate-x-full lg:translate-x-0 lg:static lg:h-screen flex-shrink-0">
-            <div class="p-8 flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <div class="bg-blue-600 p-2 rounded-xl text-white"><i data-lucide="clipboard-check" class="w-6 h-6"></i></div>
-                    <h1 class="font-bold text-xl tracking-tight">Kamishibai</h1>
-                </div>
+        <aside class="fixed inset-y-0 left-0 w-72 bg-slate-900 text-white flex flex-col z-50 -translate-x-full lg:translate-x-0 lg:static lg:h-screen flex-shrink-0">
+            <div class="p-8 flex items-center gap-3">
+                <div class="bg-blue-600 p-2 rounded-xl text-white"><i data-lucide="clipboard-check" class="w-6 h-6"></i></div>
+                <h1 class="font-bold text-xl tracking-tight">Kamishibai</h1>
             </div>
             <nav class="flex-1 px-4 space-y-2">
-                <button onclick="navigate('dashboard')" id="nav-dashboard" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-sm bg-blue-600 text-white shadow-lg">
+                <button onclick="navigate('dashboard')" id="nav-dashboard" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-sm text-slate-400 hover:bg-slate-800 hover:text-white">
                     <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard
-                </button>
-                <button onclick="navigate('input-audit')" id="nav-input-audit" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-sm text-slate-400 hover:bg-slate-800 hover:text-white">
-                    <i data-lucide="clipboard-check" class="w-5 h-5"></i> Input Audit
                 </button>
                 <button onclick="navigate('input-jadwal')" id="nav-input-jadwal" class="nav-item admin-only w-full hidden flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-sm text-slate-400 hover:bg-slate-800 hover:text-white">
                     <i data-lucide="calendar-plus" class="w-5 h-5"></i> Atur Jadwal
@@ -70,59 +62,46 @@
             </div>
         </aside>
 
-        <!-- CONTENT -->
         <div class="flex-1 flex flex-col min-w-0">
             <header class="h-20 bg-white border-b border-slate-200 px-6 flex items-center justify-between sticky top-0 z-40">
-                <h2 id="page-title" class="font-bold text-lg text-slate-800">Dashboard</h2>
+                <h2 id="page-title" class="font-bold text-lg text-slate-800 uppercase">DASHBOARD</h2>
                 <div id="sync-indicator" class="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100">
                     <div class="w-2 h-2 rounded-full bg-slate-300 animate-pulse"></div>
-                    Connecting...
+                    Menghubungkan...
                 </div>
             </header>
 
             <main class="p-6 lg:p-10 max-w-7xl mx-auto w-full">
-                <!-- Page Dashboard -->
                 <div id="page-dashboard" class="page-view space-y-8">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="stats-container">
-                        <div class="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm flex items-center justify-between">
-                            <div><p class="text-slate-400 text-[10px] font-black uppercase tracking-widest">Total Jadwal</p><h3 id="stat-total-sch" class="text-4xl font-black text-slate-900 mt-2">0</h3></div>
-                            <div class="bg-blue-50 text-blue-600 p-5 rounded-2xl"><i data-lucide="calendar" class="w-7 h-7"></i></div>
-                        </div>
+                    <div class="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm inline-block min-w-[250px]">
+                        <p class="text-slate-400 text-[10px] font-black uppercase tracking-widest">Total Jadwal</p>
+                        <h3 id="stat-total-sch" class="text-4xl font-black text-slate-900 mt-2">0</h3>
                     </div>
                 </div>
 
-                <!-- Page Input Jadwal -->
                 <div id="page-input-jadwal" class="page-view hidden space-y-8">
                     <div class="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
-                        <h3 class="font-bold text-slate-800 mb-6">Tambah Jadwal Baru</h3>
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="font-bold text-slate-800">Tambah Jadwal Baru</h3>
+                            <span id="draft-status" class="text-[10px] text-slate-400 font-bold uppercase tracking-widest hidden italic">Draft Tersimpan Otomatis</span>
+                        </div>
                         <form id="schedule-form" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-                            <div><label class="text-[10px] font-black text-slate-400 mb-1 block">TANGGAL</label><input type="date" id="sch-date" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" required></div>
-                            <div><label class="text-[10px] font-black text-slate-400 mb-1 block">AREA</label><input type="text" id="sch-area" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" placeholder="Contoh: Line 1" required></div>
-                            <div><label class="text-[10px] font-black text-slate-400 mb-1 block">AUDITOR</label><input type="text" id="sch-auditor" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" placeholder="Nama PIC" required></div>
-                            <button type="submit" id="btn-submit-sch" class="bg-blue-600 text-white font-bold h-[56px] rounded-2xl hover:bg-blue-700 disabled:opacity-50 transition-opacity">Simpan Jadwal</button>
+                            <div><label class="text-[10px] font-black text-slate-400 mb-1 block">TANGGAL</label><input type="date" id="sch-date" class="draft-input w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" required></div>
+                            <div><label class="text-[10px] font-black text-slate-400 mb-1 block">AREA</label><input type="text" id="sch-area" class="draft-input w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" placeholder="Area Audit" required></div>
+                            <div><label class="text-[10px] font-black text-slate-400 mb-1 block">AUDITOR</label><input type="text" id="sch-auditor" class="draft-input w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" placeholder="Nama Auditor" required></div>
+                            <button type="submit" id="btn-submit" class="bg-blue-600 text-white font-bold h-[56px] rounded-2xl hover:bg-blue-700 disabled:opacity-50">Simpan Jadwal</button>
                         </form>
                     </div>
 
-                    <div class="bg-white rounded-[2rem] border border-slate-100 overflow-hidden shadow-sm overflow-x-auto">
+                    <div class="bg-white rounded-[2rem] border border-slate-100 overflow-hidden shadow-sm">
                         <table class="w-full text-left">
                             <thead class="bg-slate-50 text-slate-400 text-[10px] font-black uppercase tracking-widest">
                                 <tr><th class="px-8 py-5">No</th><th class="px-8 py-5">Tanggal</th><th class="px-8 py-5">Area</th><th class="px-8 py-5">Auditor</th><th class="px-8 py-5">Aksi</th></tr>
                             </thead>
                             <tbody id="table-body" class="divide-y divide-slate-100">
-                                <tr><td colspan="5" class="px-8 py-10 text-center text-slate-400 italic">Memuat data...</td></tr>
+                                <tr><td colspan="5" class="px-8 py-10 text-center text-slate-400 italic">Memuat database...</td></tr>
                             </tbody>
                         </table>
-                    </div>
-                </div>
-
-                <!-- Page Input Audit -->
-                <div id="page-input-audit" class="page-view hidden">
-                    <div class="bg-white p-10 rounded-[2.5rem] border border-slate-100 max-w-xl mx-auto shadow-sm text-center">
-                        <div class="bg-orange-50 text-orange-500 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                            <i data-lucide="construction" class="w-8 h-8"></i>
-                        </div>
-                        <h2 class="text-xl font-bold text-slate-800">Halaman Audit</h2>
-                        <p class="text-slate-500 mt-2">Halaman ini sedang dalam pengembangan.</p>
                     </div>
                 </div>
             </main>
@@ -132,9 +111,8 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, serverTimestamp, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyCiW38hQ5ZfYnp3sa95OQw6IjxnfnM5dl4",
             authDomain: "kamishibaimsm.firebaseapp.com",
@@ -149,116 +127,166 @@
         const db = getFirestore(app);
         const appId = "kamishibaimsm"; 
 
-        let schedules = [];
         let user = null;
+        let schedules = [];
 
-        // 1. Auth Setup
-        async function startApp() {
+        // --- CORE LOGIC ---
+
+        async function initFirebase() {
             try {
-                // Pastikan menunggu sign in selesai
-                const userCredential = await signInAnonymously(auth);
-                user = userCredential.user;
-                console.log("Logged in as:", user.uid);
-            } catch (err) {
-                console.error("Auth failed", err);
-                updateSyncIndicator('Auth Error', 'bg-red-500');
+                await signInAnonymously(auth);
+            } catch (error) {
+                console.error("Firebase Auth Error:", error.code);
+                updateSyncStatus('Auth Failed', 'bg-red-500');
             }
         }
 
         onAuthStateChanged(auth, (u) => {
             user = u;
             if (user) {
-                updateSyncIndicator('Online', 'bg-green-500');
-                listenToSchedules();
+                updateSyncStatus('Terhubung', 'bg-green-500');
+                startListening();
+                restoreSession(); // Cek sesi saat login berhasil
             } else {
-                updateSyncIndicator('Disconnected', 'bg-slate-300');
+                updateSyncStatus('Menghubungkan...', 'bg-slate-300 animate-pulse');
             }
         });
 
-        // 2. Firestore Listeners
-        function listenToSchedules() {
-            if (!user) return;
+        function startListening() {
             const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'schedules');
-            
-            // Tambahkan error callback pada onSnapshot
             onSnapshot(colRef, (snapshot) => {
                 schedules = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
                 renderTable();
                 updateDashboard();
             }, (err) => {
-                console.error("Firestore Listen Error:", err);
-                if(err.code === 'permission-denied') {
-                    updateSyncIndicator('Permission Denied', 'bg-red-500');
-                }
+                console.error("Firestore Error:", err);
             });
         }
 
-        // 3. Save Function
-        async function handleSaveSchedule(e) {
+        async function saveSchedule(e) {
             e.preventDefault();
-            
-            if (!user) {
-                // Mencoba login ulang jika user hilang
-                updateSyncIndicator('Reconnecting...', 'bg-orange-400');
-                try {
-                    await signInAnonymously(auth);
-                } catch(err) {
-                    alert("Koneksi gagal. Periksa koneksi internet Anda.");
-                    return;
-                }
-            }
+            if (!user) return alert("Belum terhubung ke server.");
 
-            const btn = document.getElementById('btn-submit-sch');
+            const btn = document.getElementById('btn-submit');
             btn.disabled = true;
-            btn.innerText = "Menyimpan...";
+            btn.innerText = "Proses...";
 
-            const date = document.getElementById('sch-date').value;
-            const area = document.getElementById('sch-area').value;
-            const auditor = document.getElementById('sch-auditor').value;
+            const data = {
+                date: document.getElementById('sch-date').value,
+                area: document.getElementById('sch-area').value,
+                auditor: document.getElementById('sch-auditor').value,
+                createdAt: serverTimestamp()
+            };
 
             try {
                 const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'schedules');
-                await addDoc(colRef, {
-                    date,
-                    area,
-                    auditor,
-                    timestamp: serverTimestamp()
-                });
+                await addDoc(colRef, data);
+                
+                // Bersihkan draf setelah berhasil simpan
+                localStorage.removeItem('kamishibai_draft');
+                document.getElementById('draft-status').classList.add('hidden');
                 e.target.reset();
             } catch (err) {
-                console.error("Save Error:", err);
-                alert("Gagal menyimpan ke Firebase. Pastikan Rules Firestore sudah disetel ke Public.");
+                alert("Gagal simpan: " + err.message);
             } finally {
                 btn.disabled = false;
                 btn.innerText = "Simpan Jadwal";
             }
         }
 
-        // 4. Delete Function
-        window.deleteSchedule = async (id) => {
-            if(!confirm("Hapus data ini?")) return;
-            try {
-                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'schedules', id));
-            } catch (err) {
-                alert("Gagal menghapus: " + err.message);
+        // --- AUTO SAVE & SESSION LOGIC ---
+
+        // Simpan posisi halaman & draf saat input berubah
+        function saveSessionState() {
+            const draft = {
+                date: document.getElementById('sch-date').value,
+                area: document.getElementById('sch-area').value,
+                auditor: document.getElementById('sch-auditor').value
+            };
+            localStorage.setItem('kamishibai_draft', JSON.stringify(draft));
+            
+            // Tampilkan indikator draft jika ada isi
+            const hasContent = Object.values(draft).some(val => val !== "");
+            document.getElementById('draft-status').classList.toggle('hidden', !hasContent);
+        }
+
+        function restoreSession() {
+            // 1. Kembalikan Posisi Halaman
+            const lastPage = localStorage.getItem('kamishibai_last_page');
+            const isLoggedIn = localStorage.getItem('kamishibai_logged_in');
+            const userRole = localStorage.getItem('kamishibai_role');
+
+            if (isLoggedIn === 'true') {
+                document.getElementById('login-page').classList.add('hidden');
+                document.getElementById('main-app').classList.remove('hidden');
+                
+                if (userRole === 'admin') {
+                    document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
+                }
+
+                if (lastPage) navigate(lastPage, false);
             }
+
+            // 2. Kembalikan Draf Form
+            const savedDraft = localStorage.getItem('kamishibai_draft');
+            if (savedDraft) {
+                const draft = JSON.parse(savedDraft);
+                document.getElementById('sch-date').value = draft.date || "";
+                document.getElementById('sch-area').value = draft.area || "";
+                document.getElementById('sch-auditor').value = draft.auditor || "";
+                
+                const hasContent = Object.values(draft).some(val => val !== "");
+                document.getElementById('draft-status').classList.toggle('hidden', !hasContent);
+            }
+        }
+
+        // --- UI HELPERS ---
+
+        window.navigate = (page, saveToStorage = true) => {
+            document.querySelectorAll('.page-view').forEach(p => p.classList.add('hidden'));
+            document.getElementById(`page-${page}`).classList.remove('hidden');
+            document.getElementById('page-title').innerText = page.toUpperCase().replace('-', ' ');
+            
+            // Update Nav Style
+            document.querySelectorAll('.nav-item').forEach(btn => {
+                btn.classList.remove('bg-blue-600', 'text-white');
+                btn.classList.add('text-slate-400');
+            });
+            const activeNav = document.getElementById(`nav-${page}`);
+            if (activeNav) {
+                activeNav.classList.add('bg-blue-600', 'text-white');
+                activeNav.classList.remove('text-slate-400');
+            }
+
+            if (saveToStorage) localStorage.setItem('kamishibai_last_page', page);
         };
 
-        // UI Helpers
+        window.logout = () => {
+            localStorage.clear();
+            location.reload();
+        };
+
+        window.deleteSchedule = async (id) => {
+            if(!confirm("Hapus jadwal ini?")) return;
+            try {
+                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'schedules', id));
+            } catch (err) { alert("Gagal hapus data."); }
+        };
+
         function renderTable() {
             const body = document.getElementById('table-body');
             if (schedules.length === 0) {
-                body.innerHTML = `<tr><td colspan="5" class="px-8 py-10 text-center text-slate-400 italic">Belum ada data di database</td></tr>`;
+                body.innerHTML = `<tr><td colspan="5" class="px-8 py-10 text-center text-slate-400 italic">Database Kosong</td></tr>`;
                 return;
             }
             body.innerHTML = schedules.map((s, i) => `
                 <tr class="hover:bg-slate-50">
                     <td class="px-8 py-5 text-sm text-slate-400">${i+1}</td>
-                    <td class="px-8 py-5 text-sm font-medium text-slate-600">${s.date || '-'}</td>
-                    <td class="px-8 py-5 text-sm font-bold text-slate-800">${s.area || '-'}</td>
-                    <td class="px-8 py-5 text-sm text-slate-600">${s.auditor || '-'}</td>
+                    <td class="px-8 py-5 text-sm font-medium text-slate-600">${s.date}</td>
+                    <td class="px-8 py-5 text-sm font-bold text-slate-800">${s.area}</td>
+                    <td class="px-8 py-5 text-sm text-slate-600">${s.auditor}</td>
                     <td class="px-8 py-5">
-                        <button onclick="deleteSchedule('${s.id}')" class="text-red-400 hover:text-red-600 transition-colors">
+                        <button onclick="deleteSchedule('${s.id}')" class="text-red-400 hover:text-red-600">
                             <i data-lucide="trash-2" class="w-4 h-4"></i>
                         </button>
                     </td>
@@ -268,40 +296,23 @@
         }
 
         function updateDashboard() {
-            const el = document.getElementById('stat-total-sch');
-            if (el) el.innerText = schedules.length;
+            document.getElementById('stat-total-sch').innerText = schedules.length;
         }
 
-        function updateSyncIndicator(text, colorClass) {
-            const span = document.querySelector('#sync-indicator');
-            if (!span) return;
-            span.innerHTML = `<div class="w-2 h-2 rounded-full ${colorClass}"></div> ${text}`;
+        function updateSyncStatus(msg, color) {
+            const indicator = document.getElementById('sync-indicator');
+            indicator.innerHTML = `<div class="w-2 h-2 rounded-full ${color}"></div> ${msg}`;
         }
 
-        // Navigation
-        window.navigate = (pageId) => {
-            document.querySelectorAll('.page-view').forEach(p => p.classList.add('hidden'));
-            document.getElementById(`page-${pageId}`).classList.remove('hidden');
-            
-            document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('bg-blue-600', 'text-white'));
-            const activeNav = document.getElementById(`nav-${pageId}`);
-            if(activeNav) activeNav.classList.add('bg-blue-600', 'text-white');
-            
-            document.getElementById('page-title').innerText = pageId.replace('-', ' ').toUpperCase();
-        };
+        // --- EVENT LISTENERS ---
 
-        window.logout = () => {
-            location.reload();
-        };
-
-        // Form Event
-        document.getElementById('schedule-form').addEventListener('submit', handleSaveSchedule);
-        
-        // Simple Login
         document.getElementById('login-form').onsubmit = (e) => {
             e.preventDefault();
             const role = document.getElementById('login-role').value;
-            if (role === 'admin') {
+            localStorage.setItem('kamishibai_logged_in', 'true');
+            localStorage.setItem('kamishibai_role', role);
+            
+            if(role === 'admin') {
                 document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
             }
             document.getElementById('login-page').classList.add('hidden');
@@ -313,8 +324,14 @@
             document.getElementById('password-container').classList.toggle('hidden', e.target.value !== 'admin');
         };
 
-        // Jalankan inisialisasi
-        startApp();
+        // Pasang event auto-save pada form input
+        document.querySelectorAll('.draft-input').forEach(input => {
+            input.addEventListener('input', saveSessionState);
+        });
+
+        document.getElementById('schedule-form').onsubmit = saveSchedule;
+
+        initFirebase();
         lucide.createIcons();
     </script>
 </body>
