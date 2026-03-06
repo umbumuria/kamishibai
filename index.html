@@ -8,16 +8,17 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; overflow: hidden; }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .page-view { height: calc(100vh - 5rem); overflow-y: auto; padding-bottom: 5rem; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900">
 
     <!-- LOGIN PAGE -->
-    <div id="login-page" class="min-h-screen flex items-center justify-center p-4">
+    <div id="login-page" class="min-h-screen flex items-center justify-center p-4 bg-slate-100">
         <div class="bg-white p-8 rounded-[2.5rem] shadow-xl w-full max-w-md border border-slate-100">
             <div class="flex flex-col items-center mb-8">
                 <div class="bg-blue-600 p-4 rounded-2xl text-white mb-4 shadow-xl shadow-blue-100">
@@ -29,14 +30,14 @@
             <form id="login-form" class="space-y-5">
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Role Akses</label>
-                    <select id="login-role" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition-all appearance-none">
-                        <option value="user">Operator (User)</option>
+                    <select id="login-role" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition-all appearance-none cursor-pointer">
+                        <option value="user">Auditor</option>
                         <option value="admin">Administrator (Admin)</option>
                     </select>
                 </div>
                 <div id="password-container" class="hidden">
-                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Password</label>
-                    <input type="password" id="login-password" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition-all" placeholder="Password admin...">
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Password Admin</label>
+                    <input type="password" id="login-password" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition-all" placeholder="Masukkan password...">
                 </div>
                 <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-2xl shadow-xl shadow-blue-200 transition-all active:scale-[0.98]">Masuk Sistem</button>
             </form>
@@ -44,13 +45,14 @@
     </div>
 
     <!-- MAIN APP -->
-    <div id="main-app" class="hidden flex min-h-screen relative overflow-x-hidden">
-        <aside class="fixed inset-y-0 left-0 w-72 bg-slate-900 text-white flex flex-col z-50 -translate-x-full lg:translate-x-0 lg:static lg:h-screen flex-shrink-0">
+    <div id="main-app" class="hidden flex h-screen w-full overflow-hidden">
+        <!-- Sidebar -->
+        <aside class="w-72 bg-slate-900 text-white flex flex-col flex-shrink-0 z-50">
             <div class="p-8 flex items-center gap-3">
                 <div class="bg-blue-600 p-2 rounded-xl text-white"><i data-lucide="clipboard-check" class="w-6 h-6"></i></div>
-                <h1 class="font-bold text-xl tracking-tight">Kamishibai</h1>
+                <h1 class="font-bold text-xl tracking-tight uppercase">Kamishibai</h1>
             </div>
-            <nav class="flex-1 px-4 space-y-2">
+            <nav class="flex-1 px-4 space-y-2 overflow-y-auto custom-scrollbar">
                 <button onclick="navigate('dashboard')" id="nav-dashboard" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-sm text-slate-400 hover:bg-slate-800 hover:text-white">
                     <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard
                 </button>
@@ -61,29 +63,28 @@
                     <i data-lucide="calendar-plus" class="w-5 h-5"></i> Atur Jadwal
                 </button>
             </nav>
-            <div class="p-6 mt-auto">
+            <div class="p-6 border-t border-slate-800">
                 <button onclick="logout()" class="w-full flex items-center gap-3 px-4 py-2 rounded-xl text-red-400 hover:bg-red-500/10 transition-colors font-medium text-sm">
                     <i data-lucide="log-out" class="w-5 h-5"></i> Keluar
                 </button>
             </div>
         </aside>
 
-        <div class="flex-1 flex flex-col min-w-0">
-            <header class="h-20 bg-white border-b border-slate-200 px-6 flex items-center justify-between sticky top-0 z-40">
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col min-w-0 bg-slate-50">
+            <header class="h-20 bg-white border-b border-slate-200 px-8 flex items-center justify-between sticky top-0 z-40 flex-shrink-0">
                 <div class="flex items-center gap-4">
-                    <button class="lg:hidden p-2 text-slate-600"><i data-lucide="menu"></i></button>
-                    <h2 id="page-title" class="font-bold text-lg text-slate-800 uppercase">DASHBOARD</h2>
+                    <h2 id="page-title" class="font-black text-lg text-slate-800 uppercase tracking-tighter">DASHBOARD</h2>
                 </div>
-                <div id="sync-indicator" class="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100">
-                    <div class="w-2 h-2 rounded-full bg-slate-300 animate-pulse"></div>
-                    Menghubungkan...
+                <div id="sync-indicator" class="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 bg-slate-50 px-4 py-2 rounded-full border border-slate-100">
+                    <div id="sync-dot" class="w-2 h-2 rounded-full bg-slate-300 animate-pulse"></div>
+                    <span id="sync-text">Menghubungkan...</span>
                 </div>
             </header>
 
-            <main class="p-6 lg:p-10 max-w-7xl mx-auto w-full custom-scrollbar overflow-y-auto">
-                
+            <main class="flex-1 overflow-hidden relative">
                 <!-- PAGE: DASHBOARD -->
-                <div id="page-dashboard" class="page-view space-y-8">
+                <div id="page-dashboard" class="page-view p-8 space-y-8">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div class="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
                             <p class="text-slate-400 text-[10px] font-black uppercase tracking-widest">Total Jadwal</p>
@@ -97,18 +98,19 @@
                 </div>
 
                 <!-- PAGE: INPUT HASIL AUDIT -->
-                <div id="page-input-hasil" class="page-view hidden space-y-8">
-                    <div class="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
+                <div id="page-input-hasil" class="page-view hidden p-8 space-y-8 custom-scrollbar">
+                    <div class="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm max-w-5xl mx-auto">
                         <div class="mb-8 border-b border-slate-50 pb-6">
                             <h3 class="text-xl font-bold text-slate-800">Formulir Hasil Audit</h3>
-                            <p class="text-sm text-slate-400 mt-1">Lengkapi data temuan audit di bawah ini</p>
+                            <p class="text-sm text-slate-400 mt-1">Lengkapi data temuan audit sesuai instruksi kerja</p>
                         </div>
                         
                         <form id="audit-result-form" class="space-y-8">
+                            <!-- Basic Info -->
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <label class="text-[10px] font-black text-slate-400 mb-2 block uppercase tracking-widest">Group</label>
-                                    <select id="res-group" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-blue-500" required>
+                                    <select id="res-group" onchange="filterAuditDropdowns()" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-blue-500" required>
                                         <option value="">Pilih Group</option>
                                         <option value="SUGAR FACTORY">SUGAR FACTORY</option>
                                         <option value="PLANTATION">PLANTATION</option>
@@ -121,21 +123,23 @@
                                 </div>
                             </div>
 
+                            <!-- Filtered Dropdowns -->
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
-                                    <label class="text-[10px] font-black text-slate-400 mb-2 block uppercase tracking-widest">Dept. Auditee (Filter by Group)</label>
+                                    <label class="text-[10px] font-black text-slate-400 mb-2 block uppercase tracking-widest">Dept. Auditee</label>
                                     <select id="res-dept-auditee" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50" required disabled>
                                         <option value="">Pilih Group Terlebih Dahulu...</option>
                                     </select>
                                 </div>
                                 <div>
-                                    <label class="text-[10px] font-black text-slate-400 mb-2 block uppercase tracking-widest">Nama Auditor (Filter by Group)</label>
+                                    <label class="text-[10px] font-black text-slate-400 mb-2 block uppercase tracking-widest">Nama Auditor</label>
                                     <select id="res-auditor" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50" required disabled>
                                         <option value="">Pilih Group Terlebih Dahulu...</option>
                                     </select>
                                 </div>
                             </div>
 
+                            <!-- People & IK -->
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <label class="text-[10px] font-black text-slate-400 mb-2 block uppercase tracking-widest">Nama Auditee</label>
@@ -147,14 +151,38 @@
                                 </div>
                             </div>
 
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                <div>
-                                    <label class="text-[10px] font-black text-slate-400 mb-2 block uppercase tracking-widest">Nilai Temuan</label>
-                                    <input type="number" id="res-nilai" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" placeholder="0" required>
+                            <!-- Scoring & Status -->
+                            <div class="bg-blue-50/50 p-6 rounded-[2rem] border border-blue-100/50 space-y-6">
+                                <h4 class="text-blue-600 font-bold text-xs uppercase tracking-widest flex items-center gap-2">
+                                    <i data-lucide="calculator" class="w-4 h-4"></i> Perhitungan Nilai Temuan
+                                </h4>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <div>
+                                        <label class="text-[10px] font-black text-slate-400 mb-2 block uppercase tracking-widest">Jml Item Diperiksa</label>
+                                        <input type="number" id="res-total-item" oninput="calculateScore()" class="w-full p-4 bg-white border border-slate-200 rounded-2xl text-sm" placeholder="0" min="1" required>
+                                    </div>
+                                    <div>
+                                        <label class="text-[10px] font-black text-slate-400 mb-2 block uppercase tracking-widest">Jml Temuan</label>
+                                        <input type="number" id="res-total-temuan" oninput="calculateScore()" class="w-full p-4 bg-white border border-slate-200 rounded-2xl text-sm" placeholder="0" min="0" required>
+                                    </div>
+                                    <div>
+                                        <label class="text-[10px] font-black text-slate-400 mb-2 block uppercase tracking-widest">Nilai Akhir</label>
+                                        <div class="flex items-center gap-2">
+                                            <input type="text" id="res-nilai" class="w-full p-4 bg-slate-100 border border-slate-200 rounded-2xl text-sm font-bold text-blue-600" value="0" readonly>
+                                        </div>
+                                    </div>
                                 </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <label class="text-[10px] font-black text-slate-400 mb-2 block uppercase tracking-widest">Status Temuan</label>
-                                    <input type="text" id="res-status-temuan" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" placeholder="Contoh: Mayor/Minor" required>
+                                    <select id="res-status-temuan" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" required>
+                                        <option value="Sesuai">Sesuai (Tidak ada temuan)</option>
+                                        <option value="Minor">Minor</option>
+                                        <option value="Mayor">Mayor</option>
+                                        <option value="Observasi">Observasi</option>
+                                    </select>
                                 </div>
                                 <div>
                                     <label class="text-[10px] font-black text-slate-400 mb-2 block uppercase tracking-widest">Status Verifikasi</label>
@@ -166,37 +194,25 @@
                                 </div>
                             </div>
 
+                            <!-- Descriptions -->
                             <div class="space-y-6">
                                 <div>
                                     <label class="text-[10px] font-black text-slate-400 mb-2 block uppercase tracking-widest">Uraian Ketidaksesuaian</label>
-                                    <textarea id="res-uraian" rows="3" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" placeholder="Deskripsikan temuan..."></textarea>
+                                    <textarea id="res-uraian" rows="3" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" placeholder="Apa yang tidak sesuai dengan IK?"></textarea>
                                 </div>
                                 <div>
                                     <label class="text-[10px] font-black text-slate-400 mb-2 block uppercase tracking-widest">Penyebab Ketidaksesuaian</label>
-                                    <textarea id="res-penyebab" rows="3" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" placeholder="Analisa penyebab..."></textarea>
+                                    <textarea id="res-penyebab" rows="3" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" placeholder="Analisa mengapa hal ini bisa terjadi?"></textarea>
                                 </div>
                                 <div>
                                     <label class="text-[10px] font-black text-slate-400 mb-2 block uppercase tracking-widest">Tindakan Perbaikan</label>
-                                    <textarea id="res-perbaikan" rows="3" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" placeholder="Langkah perbaikan..."></textarea>
-                                </div>
-                                <div>
-                                    <label class="text-[10px] font-black text-slate-400 mb-2 block uppercase tracking-widest">Update</label>
-                                    <input type="text" id="res-update" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" placeholder="Keterangan update tambahan">
+                                    <textarea id="res-perbaikan" rows="3" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" placeholder="Langkah perbaikan yang akan diambil..."></textarea>
                                 </div>
                             </div>
 
-                            <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
-                                ${[1,2,3,4,5].map(i => `
-                                    <div class="space-y-2">
-                                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-tighter">Foto Temuan ${i}</label>
-                                        <div class="relative group h-32 bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-slate-100 transition-all overflow-hidden">
-                                            <input type="file" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer res-foto" data-index="${i}">
-                                            <i data-lucide="camera" class="w-6 h-6 text-slate-300 group-hover:scale-110 transition-transform"></i>
-                                            <span class="text-[8px] text-slate-400 mt-2 font-bold">Pilih Foto</span>
-                                            <img id="preview-foto-${i}" class="absolute inset-0 w-full h-full object-cover hidden">
-                                        </div>
-                                    </div>
-                                `).join('')}
+                            <!-- Photos -->
+                            <div class="grid grid-cols-2 md:grid-cols-5 gap-4" id="photo-grid">
+                                <!-- Generated by JS -->
                             </div>
 
                             <button type="submit" id="btn-save-result" class="w-full bg-blue-600 text-white font-bold py-5 rounded-[2rem] hover:bg-blue-700 shadow-xl shadow-blue-100 transition-all active:scale-[0.98]">
@@ -207,7 +223,7 @@
                 </div>
 
                 <!-- PAGE: ATUR JADWAL -->
-                <div id="page-input-jadwal" class="page-view hidden space-y-8">
+                <div id="page-input-jadwal" class="page-view hidden p-8 space-y-8 custom-scrollbar">
                     <div class="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
                         <div class="flex items-center justify-between mb-6">
                             <h3 id="sch-form-title" class="font-bold text-slate-800">Tambah Jadwal Baru</h3>
@@ -223,29 +239,40 @@
                                     <option value="SUPPORTING">SUPPORTING</option>
                                 </select>
                             </div>
-                            <div><label class="text-[10px] font-black text-slate-400 mb-1 block uppercase">Tanggal</label><input type="date" id="sch-date" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" required></div>
-                            <div><label class="text-[10px] font-black text-slate-400 mb-1 block uppercase">Dept. Auditee</label><input type="text" id="sch-area" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" placeholder="Boiler / HR" required></div>
-                            <div><label class="text-[10px] font-black text-slate-400 mb-1 block uppercase">Auditor</label><input type="text" id="sch-auditor" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" placeholder="Nama Auditor" required></div>
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 mb-1 block uppercase">Tanggal</label>
+                                <input type="date" id="sch-date" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" required>
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 mb-1 block uppercase">Dept. Auditee</label>
+                                <input type="text" id="sch-area" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" placeholder="Contoh: Boiler" required>
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 mb-1 block uppercase">Auditor</label>
+                                <input type="text" id="sch-auditor" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" placeholder="Nama Auditor" required>
+                            </div>
                             <button type="submit" id="btn-submit" class="bg-blue-600 text-white font-bold h-[56px] rounded-2xl hover:bg-blue-700 disabled:opacity-50 transition-all">Simpan Jadwal</button>
                         </form>
                     </div>
 
                     <div class="bg-white rounded-[2rem] border border-slate-100 overflow-hidden shadow-sm">
-                        <table class="w-full text-left">
-                            <thead class="bg-slate-50 text-slate-400 text-[10px] font-black uppercase tracking-widest">
-                                <tr>
-                                    <th class="px-8 py-5">No</th>
-                                    <th class="px-8 py-5">Group</th>
-                                    <th class="px-8 py-5">Tanggal</th>
-                                    <th class="px-8 py-5">Dept. Auditee</th>
-                                    <th class="px-8 py-5">Auditor</th>
-                                    <th class="px-8 py-5">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody id="table-body" class="divide-y divide-slate-100">
-                                <tr><td colspan="6" class="px-8 py-10 text-center text-slate-400 italic">Memuat database...</td></tr>
-                            </tbody>
-                        </table>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left min-w-[800px]">
+                                <thead class="bg-slate-50 text-slate-400 text-[10px] font-black uppercase tracking-widest">
+                                    <tr>
+                                        <th class="px-8 py-5">No</th>
+                                        <th class="px-8 py-5">Group</th>
+                                        <th class="px-8 py-5">Tanggal</th>
+                                        <th class="px-8 py-5">Dept. Auditee</th>
+                                        <th class="px-8 py-5">Auditor</th>
+                                        <th class="px-8 py-5">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-body" class="divide-y divide-slate-100">
+                                    <tr><td colspan="6" class="px-8 py-10 text-center text-slate-400 italic">Memuat database...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </main>
@@ -277,13 +304,11 @@
         let uploadedPhotos = ["", "", "", "", "", ""];
         let editingScheduleId = null;
 
-        // --- FIREBASE CORE ---
-
-        async function initFirebase() {
+        async function initAuth() {
             try {
                 await signInAnonymously(auth);
-            } catch (error) {
-                console.error("Auth Error:", error);
+            } catch (err) {
+                console.error(err);
                 updateSyncStatus('Koneksi Gagal', 'bg-red-500');
             }
         }
@@ -292,33 +317,64 @@
             user = u;
             if (user) {
                 updateSyncStatus('Terhubung', 'bg-green-500');
-                startListeningSchedules();
-                startListeningResults();
+                startListening();
                 restoreSession();
             }
         });
 
-        function startListeningSchedules() {
-            const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'schedules');
-            onSnapshot(colRef, (snapshot) => {
-                schedules = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        // Logika Tampilan Role & Password
+        document.getElementById('login-role').addEventListener('change', (e) => {
+            const container = document.getElementById('password-container');
+            if (e.target.value === 'admin') {
+                container.classList.remove('hidden');
+            } else {
+                container.classList.add('hidden');
+            }
+        });
+
+        function updateSyncStatus(text, colorClass) {
+            const dot = document.getElementById('sync-dot');
+            const label = document.getElementById('sync-text');
+            dot.className = `w-2 h-2 rounded-full ${colorClass}`;
+            label.innerText = text;
+        }
+
+        function startListening() {
+            const schRef = collection(db, 'artifacts', appId, 'public', 'data', 'schedules');
+            onSnapshot(schRef, (snap) => {
+                schedules = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                 renderTable();
                 updateDashboard();
                 filterAuditDropdowns();
             });
-        }
 
-        function startListeningResults() {
-            const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'audit_results');
-            onSnapshot(colRef, (snapshot) => {
-                auditResults = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+            const resRef = collection(db, 'artifacts', appId, 'public', 'data', 'audit_results');
+            onSnapshot(resRef, (snap) => {
+                auditResults = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                 updateDashboard();
             });
         }
 
-        // --- FILTER LOGIC ---
+        window.calculateScore = () => {
+            const totalItem = parseFloat(document.getElementById('res-total-item').value) || 0;
+            const totalTemuan = parseFloat(document.getElementById('res-total-temuan').value) || 0;
+            const scoreDisplay = document.getElementById('res-nilai');
 
-        function filterAuditDropdowns() {
+            if (totalItem > 0) {
+                const result = 1 - (totalTemuan / totalItem);
+                const finalScore = (result * 100).toFixed(2);
+                scoreDisplay.value = finalScore + "%";
+                
+                const statusSelect = document.getElementById('res-status-temuan');
+                if (totalTemuan === 0) statusSelect.value = "Sesuai";
+                else if (result < 0.8) statusSelect.value = "Mayor";
+                else statusSelect.value = "Minor";
+            } else {
+                scoreDisplay.value = "0";
+            }
+        };
+
+        window.filterAuditDropdowns = () => {
             const selectedGroup = document.getElementById('res-group').value;
             const deptSelect = document.getElementById('res-dept-auditee');
             const auditorSelect = document.getElementById('res-auditor');
@@ -331,69 +387,61 @@
                 return;
             }
 
-            const filteredSchedules = schedules.filter(s => s.group === selectedGroup);
-            const uniqueDepts = [...new Set(filteredSchedules.map(s => s.area))].sort();
-            const uniqueAuditors = [...new Set(filteredSchedules.map(s => s.auditor))].sort();
+            const filtered = schedules.filter(s => s.group === selectedGroup);
+            const depts = [...new Set(filtered.map(s => s.area))].sort();
+            const auditors = [...new Set(filtered.map(s => s.auditor))].sort();
 
             deptSelect.disabled = false;
             auditorSelect.disabled = false;
 
-            if (uniqueDepts.length > 0) {
-                deptSelect.innerHTML = '<option value="">Pilih Dept Auditee...</option>' + 
-                    uniqueDepts.map(d => `<option value="${d}">${d}</option>`).join('');
-            } else {
-                deptSelect.innerHTML = '<option value="">Tidak ada jadwal di group ini</option>';
-            }
+            deptSelect.innerHTML = depts.length ? 
+                '<option value="">Pilih Dept Auditee...</option>' + depts.map(d => `<option value="${d}">${d}</option>`).join('') :
+                '<option value="">Tidak ada data di group ini</option>';
 
-            if (uniqueAuditors.length > 0) {
-                auditorSelect.innerHTML = '<option value="">Pilih Auditor...</option>' + 
-                    uniqueAuditors.map(a => `<option value="${a}">${a}</option>`).join('');
-            } else {
-                auditorSelect.innerHTML = '<option value="">Tidak ada auditor di group ini</option>';
-            }
-        }
+            auditorSelect.innerHTML = auditors.length ? 
+                '<option value="">Pilih Auditor...</option>' + auditors.map(a => `<option value="${a}">${a}</option>`).join('') :
+                '<option value="">Tidak ada data di group ini</option>';
+        };
 
-        // --- FORM HANDLERS ---
-
-        async function saveAuditResult(e) {
+        document.getElementById('audit-result-form').onsubmit = async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btn-save-result');
             btn.disabled = true;
             btn.innerText = "Menyimpan...";
 
-            const resultData = {
+            const data = {
                 group: document.getElementById('res-group').value,
                 date: document.getElementById('res-date').value,
                 deptAuditee: document.getElementById('res-dept-auditee').value,
                 auditor: document.getElementById('res-auditor').value,
                 namaAuditee: document.getElementById('res-nama-auditee').value,
                 judulIK: document.getElementById('res-judul-ik').value,
+                totalItem: document.getElementById('res-total-item').value,
+                totalTemuan: document.getElementById('res-total-temuan').value,
                 nilai: document.getElementById('res-nilai').value,
                 statusTemuan: document.getElementById('res-status-temuan').value,
+                verifikasi: document.getElementById('res-verifikasi').value,
                 uraian: document.getElementById('res-uraian').value,
                 penyebab: document.getElementById('res-penyebab').value,
                 perbaikan: document.getElementById('res-perbaikan').value,
-                verifikasi: document.getElementById('res-verifikasi').value,
-                update: document.getElementById('res-update').value,
-                photos: uploadedPhotos.slice(1),
+                photos: uploadedPhotos.filter(p => p !== ""),
                 createdAt: serverTimestamp()
             };
 
             try {
-                const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'audit_results');
-                await addDoc(colRef, resultData);
-                alert("Berhasil disimpan!");
+                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'audit_results'), data);
+                alert("Audit Berhasil Disimpan!");
                 e.target.reset();
                 resetPhotoPreviews();
                 navigate('dashboard');
-            } catch (err) { alert(err.message); }
+            } catch (err) { alert("Error: " + err.message); }
             finally {
                 btn.disabled = false;
                 btn.innerText = "Simpan Hasil Audit";
             }
-        }
+        };
 
-        async function saveSchedule(e) {
+        document.getElementById('schedule-form').onsubmit = async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btn-submit');
             btn.disabled = true;
@@ -408,80 +456,18 @@
 
             try {
                 if (editingScheduleId) {
-                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'schedules', editingScheduleId);
-                    await updateDoc(docRef, data);
+                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'schedules', editingScheduleId), data);
                     resetScheduleForm();
                 } else {
                     data.createdAt = serverTimestamp();
-                    const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'schedules');
-                    await addDoc(colRef, data);
+                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'schedules'), data);
                     e.target.reset();
                 }
             } catch (err) { alert(err.message); }
             finally { btn.disabled = false; }
-        }
-
-        // --- EDIT & DELETE JADWAL ---
-
-        window.editSchedule = (id) => {
-            const item = schedules.find(s => s.id === id);
-            if (!item) return;
-
-            editingScheduleId = id;
-            document.getElementById('sch-group').value = item.group;
-            document.getElementById('sch-date').value = item.date;
-            document.getElementById('sch-area').value = item.area;
-            document.getElementById('sch-auditor').value = item.auditor;
-
-            document.getElementById('sch-form-title').innerText = "Edit Jadwal";
-            document.getElementById('btn-submit').innerText = "Update Jadwal";
-            document.getElementById('btn-submit').classList.replace('bg-blue-600', 'bg-orange-500');
-            document.getElementById('btn-cancel-edit').classList.remove('hidden');
-            
-            // Scroll ke form
-            document.getElementById('page-input-jadwal').scrollTop = 0;
         };
 
-        window.resetScheduleForm = () => {
-            editingScheduleId = null;
-            document.getElementById('schedule-form').reset();
-            document.getElementById('sch-form-title').innerText = "Tambah Jadwal Baru";
-            document.getElementById('btn-submit').innerText = "Simpan Jadwal";
-            document.getElementById('btn-submit').classList.replace('bg-orange-500', 'bg-blue-600');
-            document.getElementById('btn-cancel-edit').classList.add('hidden');
-        };
-
-        window.deleteSchedule = async (id) => {
-            if(!confirm("Hapus jadwal ini?")) return;
-            await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'schedules', id));
-        };
-
-        // --- UI HELPERS ---
-
-        function handlePhotoUpload(e) {
-            const file = e.target.files[0];
-            const index = e.target.getAttribute('data-index');
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    uploadedPhotos[index] = event.target.result;
-                    const preview = document.getElementById(`preview-foto-${index}`);
-                    preview.src = event.target.result;
-                    preview.classList.remove('hidden');
-                };
-                reader.readAsDataURL(file);
-            }
-        }
-
-        function resetPhotoPreviews() {
-            uploadedPhotos = ["", "", "", "", "", ""];
-            [1,2,3,4,5].forEach(i => {
-                const preview = document.getElementById(`preview-foto-${i}`);
-                if (preview) preview.classList.add('hidden');
-            });
-        }
-
-        window.navigate = (page, saveToStorage = true) => {
+        window.navigate = (page, save = true) => {
             document.querySelectorAll('.page-view').forEach(p => p.classList.add('hidden'));
             document.getElementById(`page-${page}`).classList.remove('hidden');
             document.getElementById('page-title').innerText = page.toUpperCase().replace(/-/g, ' ');
@@ -490,50 +476,37 @@
                 btn.classList.remove('bg-blue-600', 'text-white');
                 btn.classList.add('text-slate-400');
             });
-            const activeNav = document.getElementById(`nav-${page}`);
-            if (activeNav) {
-                activeNav.classList.add('bg-blue-600', 'text-white');
-                activeNav.classList.remove('text-slate-400');
+            const active = document.getElementById(`nav-${page}`);
+            if (active) {
+                active.classList.add('bg-blue-600', 'text-white');
+                active.classList.remove('text-slate-400');
             }
-            if (saveToStorage) localStorage.setItem('kamishibai_last_page', page);
+            if (save) localStorage.setItem('kamishibai_last_page', page);
+            lucide.createIcons();
         };
 
-        function restoreSession() {
-            const lastPage = localStorage.getItem('kamishibai_last_page');
-            const isLoggedIn = localStorage.getItem('kamishibai_logged_in');
-            const userRole = localStorage.getItem('kamishibai_role');
-
-            if (isLoggedIn === 'true') {
-                document.getElementById('login-page').classList.add('hidden');
-                document.getElementById('main-app').classList.remove('hidden');
-                if (userRole === 'admin') document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
-                if (lastPage) navigate(lastPage, false);
-            }
+        function updateDashboard() {
+            document.getElementById('stat-total-sch').innerText = schedules.length;
+            document.getElementById('stat-total-results').innerText = auditResults.length;
         }
-
-        window.logout = () => { localStorage.clear(); location.reload(); };
 
         function renderTable() {
             const body = document.getElementById('table-body');
-            if (schedules.length === 0) {
+            if (!schedules.length) {
                 body.innerHTML = `<tr><td colspan="6" class="px-8 py-10 text-center text-slate-400 italic">Database Kosong</td></tr>`;
                 return;
             }
             body.innerHTML = schedules.map((s, i) => `
                 <tr class="hover:bg-slate-50 transition-colors">
-                    <td class="px-8 py-5 text-sm text-slate-400">${i+1}</td>
-                    <td class="px-8 py-5"><span class="px-2 py-1 bg-slate-100 text-[10px] font-bold rounded-lg text-slate-600">${s.group}</span></td>
-                    <td class="px-8 py-5 text-sm text-slate-600">${s.date}</td>
-                    <td class="px-8 py-5 text-sm font-bold text-slate-800">${s.area}</td>
-                    <td class="px-8 py-5 text-sm text-slate-600">${s.auditor}</td>
+                    <td class="px-8 py-5 text-sm font-bold text-slate-400">${i+1}</td>
+                    <td class="px-8 py-5 text-sm font-bold">${s.group}</td>
+                    <td class="px-8 py-5 text-sm font-medium text-slate-600">${s.date}</td>
+                    <td class="px-8 py-5 text-sm font-medium text-slate-600">${s.area}</td>
+                    <td class="px-8 py-5 text-sm font-medium text-slate-600">${s.auditor}</td>
                     <td class="px-8 py-5">
-                        <div class="flex items-center gap-3">
-                            <button onclick="editSchedule('${s.id}')" class="text-orange-400 hover:text-orange-600 transition-colors">
-                                <i data-lucide="edit-3" class="w-4 h-4"></i>
-                            </button>
-                            <button onclick="deleteSchedule('${s.id}')" class="text-red-400 hover:text-red-600 transition-colors">
-                                <i data-lucide="trash-2" class="w-4 h-4"></i>
-                            </button>
+                        <div class="flex gap-2">
+                            <button onclick="editSchedule('${s.id}')" class="p-2 text-blue-500 hover:bg-blue-50 rounded-lg"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                            <button onclick="deleteSchedule('${s.id}')" class="p-2 text-red-500 hover:bg-red-50 rounded-lg"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                         </div>
                     </td>
                 </tr>
@@ -541,40 +514,109 @@
             lucide.createIcons();
         }
 
-        function updateDashboard() {
-            document.getElementById('stat-total-sch').innerText = schedules.length;
-            document.getElementById('stat-total-results').innerText = auditResults.length;
+        window.editSchedule = (id) => {
+            const item = schedules.find(s => s.id === id);
+            if (!item) return;
+            editingScheduleId = id;
+            document.getElementById('sch-group').value = item.group;
+            document.getElementById('sch-date').value = item.date;
+            document.getElementById('sch-area').value = item.area;
+            document.getElementById('sch-auditor').value = item.auditor;
+            document.getElementById('sch-form-title').innerText = "Edit Jadwal";
+            document.getElementById('btn-submit').innerText = "Update";
+            document.getElementById('btn-cancel-edit').classList.remove('hidden');
+        };
+
+        window.resetScheduleForm = () => {
+            editingScheduleId = null;
+            document.getElementById('schedule-form').reset();
+            document.getElementById('sch-form-title').innerText = "Tambah Jadwal Baru";
+            document.getElementById('btn-submit').innerText = "Simpan Jadwal";
+            document.getElementById('btn-cancel-edit').classList.add('hidden');
+        };
+
+        window.deleteSchedule = async (id) => {
+            if (confirm("Hapus jadwal ini?")) await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'schedules', id));
+        };
+
+        function initPhotoGrid() {
+            const grid = document.getElementById('photo-grid');
+            grid.innerHTML = [1,2,3,4,5].map(i => `
+                <div class="space-y-2">
+                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-tighter">Foto ${i}</label>
+                    <div class="relative group h-28 bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-slate-100 transition-all overflow-hidden">
+                        <input type="file" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer" onchange="handlePhotoUpload(event, ${i})">
+                        <i data-lucide="camera" class="w-5 h-5 text-slate-300 group-hover:scale-110 transition-transform"></i>
+                        <img id="preview-foto-${i}" class="absolute inset-0 w-full h-full object-cover hidden">
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
         }
 
-        function updateSyncStatus(msg, color) {
-            const indicator = document.getElementById('sync-indicator');
-            indicator.innerHTML = `<div class="w-2 h-2 rounded-full ${color}"></div> ${msg}`;
-        }
+        window.handlePhotoUpload = (e, index) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    uploadedPhotos[index] = ev.target.result;
+                    const preview = document.getElementById(`preview-foto-${index}`);
+                    preview.src = ev.target.result;
+                    preview.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        };
 
-        // --- LISTENERS ---
+        function resetPhotoPreviews() {
+            uploadedPhotos = ["", "", "", "", "", ""];
+            [1,2,3,4,5].forEach(i => {
+                const p = document.getElementById(`preview-foto-${i}`);
+                if (p) p.classList.add('hidden');
+            });
+        }
 
         document.getElementById('login-form').onsubmit = (e) => {
             e.preventDefault();
             const role = document.getElementById('login-role').value;
+            const pass = document.getElementById('login-password').value;
+            
+            // Validasi sederhana: Admin butuh password (apa saja), Auditor bebas.
+            if (role === 'admin' && pass.trim() === "") {
+                alert("Admin wajib memasukkan password.");
+                return;
+            }
+
             localStorage.setItem('kamishibai_logged_in', 'true');
             localStorage.setItem('kamishibai_role', role);
             location.reload();
         };
 
-        document.getElementById('login-role').onchange = (e) => {
-            document.getElementById('password-container').classList.toggle('hidden', e.target.value !== 'admin');
+        function restoreSession() {
+            const authState = localStorage.getItem('kamishibai_logged_in');
+            const role = localStorage.getItem('kamishibai_role');
+            if (authState === 'true') {
+                document.getElementById('login-page').classList.add('hidden');
+                document.getElementById('main-app').classList.remove('hidden');
+                
+                // Reset visibilitas admin-only
+                document.querySelectorAll('.admin-only').forEach(e => e.classList.add('hidden'));
+                if (role === 'admin') {
+                    document.querySelectorAll('.admin-only').forEach(e => e.classList.remove('hidden'));
+                }
+                
+                const last = localStorage.getItem('kamishibai_last_page') || 'dashboard';
+                navigate(last, false);
+            }
+        }
+
+        window.logout = () => { localStorage.clear(); location.reload(); };
+
+        window.onload = () => {
+            initAuth();
+            initPhotoGrid();
+            lucide.createIcons();
         };
-
-        document.getElementById('res-group').onchange = filterAuditDropdowns;
-        document.getElementById('schedule-form').onsubmit = saveSchedule;
-        document.getElementById('audit-result-form').onsubmit = saveAuditResult;
-
-        document.querySelectorAll('.res-foto').forEach(input => {
-            input.addEventListener('change', handlePhotoUpload);
-        });
-
-        initFirebase();
-        lucide.createIcons();
     </script>
 </body>
 </html>
