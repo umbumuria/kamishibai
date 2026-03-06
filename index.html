@@ -105,7 +105,6 @@
                         </div>
                         
                         <form id="audit-result-form" class="space-y-8">
-                            <!-- Group & Basic Info -->
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <label class="text-[10px] font-black text-slate-400 mb-2 block uppercase tracking-widest">Group</label>
@@ -122,23 +121,21 @@
                                 </div>
                             </div>
 
-                            <!-- Dropdown dari Jadwal -->
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
-                                    <label class="text-[10px] font-black text-slate-400 mb-2 block uppercase tracking-widest">Dept. Auditee (Berdasarkan Jadwal)</label>
-                                    <select id="res-dept-auditee" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-blue-500" required>
-                                        <option value="">Pilih Dept...</option>
+                                    <label class="text-[10px] font-black text-slate-400 mb-2 block uppercase tracking-widest">Dept. Auditee (Filter by Group)</label>
+                                    <select id="res-dept-auditee" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50" required disabled>
+                                        <option value="">Pilih Group Terlebih Dahulu...</option>
                                     </select>
                                 </div>
                                 <div>
-                                    <label class="text-[10px] font-black text-slate-400 mb-2 block uppercase tracking-widest">Nama Auditor (Berdasarkan Jadwal)</label>
-                                    <select id="res-auditor" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-blue-500" required>
-                                        <option value="">Pilih Auditor...</option>
+                                    <label class="text-[10px] font-black text-slate-400 mb-2 block uppercase tracking-widest">Nama Auditor (Filter by Group)</label>
+                                    <select id="res-auditor" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50" required disabled>
+                                        <option value="">Pilih Group Terlebih Dahulu...</option>
                                     </select>
                                 </div>
                             </div>
 
-                            <!-- Input Manual -->
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <label class="text-[10px] font-black text-slate-400 mb-2 block uppercase tracking-widest">Nama Auditee</label>
@@ -150,7 +147,6 @@
                                 </div>
                             </div>
 
-                            <!-- Nilai & Status -->
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <div>
                                     <label class="text-[10px] font-black text-slate-400 mb-2 block uppercase tracking-widest">Nilai Temuan</label>
@@ -170,7 +166,6 @@
                                 </div>
                             </div>
 
-                            <!-- Deskripsi & Perbaikan -->
                             <div class="space-y-6">
                                 <div>
                                     <label class="text-[10px] font-black text-slate-400 mb-2 block uppercase tracking-widest">Uraian Ketidaksesuaian</label>
@@ -190,7 +185,6 @@
                                 </div>
                             </div>
 
-                            <!-- Upload Foto (5 slot) -->
                             <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
                                 ${[1,2,3,4,5].map(i => `
                                     <div class="space-y-2">
@@ -216,13 +210,22 @@
                 <div id="page-input-jadwal" class="page-view hidden space-y-8">
                     <div class="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
                         <div class="flex items-center justify-between mb-6">
-                            <h3 class="font-bold text-slate-800">Tambah Jadwal Baru</h3>
-                            <span id="draft-status" class="text-[10px] text-slate-400 font-bold uppercase tracking-widest hidden italic">Draft Tersimpan Otomatis</span>
+                            <h3 id="sch-form-title" class="font-bold text-slate-800">Tambah Jadwal Baru</h3>
+                            <button id="btn-cancel-edit" onclick="resetScheduleForm()" class="hidden text-xs text-red-500 font-bold hover:underline">Batal Edit</button>
                         </div>
-                        <form id="schedule-form" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-                            <div><label class="text-[10px] font-black text-slate-400 mb-1 block uppercase">Tanggal</label><input type="date" id="sch-date" class="draft-input w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" required></div>
-                            <div><label class="text-[10px] font-black text-slate-400 mb-1 block uppercase">Dept. Auditee</label><input type="text" id="sch-area" class="draft-input w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" placeholder="Contoh: Boiler / HR" required></div>
-                            <div><label class="text-[10px] font-black text-slate-400 mb-1 block uppercase">Auditor</label><input type="text" id="sch-auditor" class="draft-input w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" placeholder="Nama Auditor" required></div>
+                        <form id="schedule-form" class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 mb-1 block uppercase">Group</label>
+                                <select id="sch-group" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" required>
+                                    <option value="">Pilih Group</option>
+                                    <option value="SUGAR FACTORY">SUGAR FACTORY</option>
+                                    <option value="PLANTATION">PLANTATION</option>
+                                    <option value="SUPPORTING">SUPPORTING</option>
+                                </select>
+                            </div>
+                            <div><label class="text-[10px] font-black text-slate-400 mb-1 block uppercase">Tanggal</label><input type="date" id="sch-date" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" required></div>
+                            <div><label class="text-[10px] font-black text-slate-400 mb-1 block uppercase">Dept. Auditee</label><input type="text" id="sch-area" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" placeholder="Boiler / HR" required></div>
+                            <div><label class="text-[10px] font-black text-slate-400 mb-1 block uppercase">Auditor</label><input type="text" id="sch-auditor" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" placeholder="Nama Auditor" required></div>
                             <button type="submit" id="btn-submit" class="bg-blue-600 text-white font-bold h-[56px] rounded-2xl hover:bg-blue-700 disabled:opacity-50 transition-all">Simpan Jadwal</button>
                         </form>
                     </div>
@@ -230,10 +233,17 @@
                     <div class="bg-white rounded-[2rem] border border-slate-100 overflow-hidden shadow-sm">
                         <table class="w-full text-left">
                             <thead class="bg-slate-50 text-slate-400 text-[10px] font-black uppercase tracking-widest">
-                                <tr><th class="px-8 py-5">No</th><th class="px-8 py-5">Tanggal</th><th class="px-8 py-5">Dept. Auditee</th><th class="px-8 py-5">Auditor</th><th class="px-8 py-5">Aksi</th></tr>
+                                <tr>
+                                    <th class="px-8 py-5">No</th>
+                                    <th class="px-8 py-5">Group</th>
+                                    <th class="px-8 py-5">Tanggal</th>
+                                    <th class="px-8 py-5">Dept. Auditee</th>
+                                    <th class="px-8 py-5">Auditor</th>
+                                    <th class="px-8 py-5">Aksi</th>
+                                </tr>
                             </thead>
                             <tbody id="table-body" class="divide-y divide-slate-100">
-                                <tr><td colspan="5" class="px-8 py-10 text-center text-slate-400 italic">Memuat database...</td></tr>
+                                <tr><td colspan="6" class="px-8 py-10 text-center text-slate-400 italic">Memuat database...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -245,7 +255,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, updateDoc, onSnapshot, doc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCiW38hQ5ZfYnp3sa95OQw6IjxnfnM5dl4",
@@ -264,7 +274,8 @@
         let user = null;
         let schedules = [];
         let auditResults = [];
-        let uploadedPhotos = ["", "", "", "", "", ""]; // index 1-5
+        let uploadedPhotos = ["", "", "", "", "", ""];
+        let editingScheduleId = null;
 
         // --- FIREBASE CORE ---
 
@@ -284,8 +295,6 @@
                 startListeningSchedules();
                 startListeningResults();
                 restoreSession();
-            } else {
-                updateSyncStatus('Menghubungkan...', 'bg-slate-300 animate-pulse');
             }
         });
 
@@ -295,7 +304,7 @@
                 schedules = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
                 renderTable();
                 updateDashboard();
-                populateAuditDropdowns();
+                filterAuditDropdowns();
             });
         }
 
@@ -307,31 +316,47 @@
             });
         }
 
-        // --- AUDIT RESULT LOGIC ---
+        // --- FILTER LOGIC ---
 
-        function populateAuditDropdowns() {
+        function filterAuditDropdowns() {
+            const selectedGroup = document.getElementById('res-group').value;
             const deptSelect = document.getElementById('res-dept-auditee');
             const auditorSelect = document.getElementById('res-auditor');
-            
-            // Simpan pilihan saat ini agar tidak tereset jika sedang mengetik
-            const currentDept = deptSelect.value;
-            const currentAuditor = auditorSelect.value;
 
-            // Ambil unique values dari schedules
-            const uniqueDepts = [...new Set(schedules.map(s => s.area))].sort();
-            const uniqueAuditors = [...new Set(schedules.map(s => s.auditor))].sort();
+            if (!selectedGroup) {
+                deptSelect.disabled = true;
+                auditorSelect.disabled = true;
+                deptSelect.innerHTML = '<option value="">Pilih Group Terlebih Dahulu...</option>';
+                auditorSelect.innerHTML = '<option value="">Pilih Group Terlebih Dahulu...</option>';
+                return;
+            }
 
-            deptSelect.innerHTML = '<option value="">Pilih Dept...</option>' + 
-                uniqueDepts.map(d => `<option value="${d}" ${d === currentDept ? 'selected' : ''}>${d}</option>`).join('');
-            
-            auditorSelect.innerHTML = '<option value="">Pilih Auditor...</option>' + 
-                uniqueAuditors.map(a => `<option value="${a}" ${a === currentAuditor ? 'selected' : ''}>${a}</option>`).join('');
+            const filteredSchedules = schedules.filter(s => s.group === selectedGroup);
+            const uniqueDepts = [...new Set(filteredSchedules.map(s => s.area))].sort();
+            const uniqueAuditors = [...new Set(filteredSchedules.map(s => s.auditor))].sort();
+
+            deptSelect.disabled = false;
+            auditorSelect.disabled = false;
+
+            if (uniqueDepts.length > 0) {
+                deptSelect.innerHTML = '<option value="">Pilih Dept Auditee...</option>' + 
+                    uniqueDepts.map(d => `<option value="${d}">${d}</option>`).join('');
+            } else {
+                deptSelect.innerHTML = '<option value="">Tidak ada jadwal di group ini</option>';
+            }
+
+            if (uniqueAuditors.length > 0) {
+                auditorSelect.innerHTML = '<option value="">Pilih Auditor...</option>' + 
+                    uniqueAuditors.map(a => `<option value="${a}">${a}</option>`).join('');
+            } else {
+                auditorSelect.innerHTML = '<option value="">Tidak ada auditor di group ini</option>';
+            }
         }
+
+        // --- FORM HANDLERS ---
 
         async function saveAuditResult(e) {
             e.preventDefault();
-            if (!user) return alert("Sesi tidak aktif.");
-
             const btn = document.getElementById('btn-save-result');
             btn.disabled = true;
             btn.innerText = "Menyimpan...";
@@ -350,24 +375,88 @@
                 perbaikan: document.getElementById('res-perbaikan').value,
                 verifikasi: document.getElementById('res-verifikasi').value,
                 update: document.getElementById('res-update').value,
-                photos: uploadedPhotos.slice(1), // ambil index 1-5
+                photos: uploadedPhotos.slice(1),
                 createdAt: serverTimestamp()
             };
 
             try {
                 const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'audit_results');
                 await addDoc(colRef, resultData);
-                alert("Hasil audit berhasil disimpan!");
+                alert("Berhasil disimpan!");
                 e.target.reset();
                 resetPhotoPreviews();
                 navigate('dashboard');
-            } catch (err) {
-                alert("Gagal menyimpan hasil audit: " + err.message);
-            } finally {
+            } catch (err) { alert(err.message); }
+            finally {
                 btn.disabled = false;
                 btn.innerText = "Simpan Hasil Audit";
             }
         }
+
+        async function saveSchedule(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-submit');
+            btn.disabled = true;
+
+            const data = {
+                group: document.getElementById('sch-group').value,
+                date: document.getElementById('sch-date').value,
+                area: document.getElementById('sch-area').value,
+                auditor: document.getElementById('sch-auditor').value,
+                updatedAt: serverTimestamp()
+            };
+
+            try {
+                if (editingScheduleId) {
+                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'schedules', editingScheduleId);
+                    await updateDoc(docRef, data);
+                    resetScheduleForm();
+                } else {
+                    data.createdAt = serverTimestamp();
+                    const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'schedules');
+                    await addDoc(colRef, data);
+                    e.target.reset();
+                }
+            } catch (err) { alert(err.message); }
+            finally { btn.disabled = false; }
+        }
+
+        // --- EDIT & DELETE JADWAL ---
+
+        window.editSchedule = (id) => {
+            const item = schedules.find(s => s.id === id);
+            if (!item) return;
+
+            editingScheduleId = id;
+            document.getElementById('sch-group').value = item.group;
+            document.getElementById('sch-date').value = item.date;
+            document.getElementById('sch-area').value = item.area;
+            document.getElementById('sch-auditor').value = item.auditor;
+
+            document.getElementById('sch-form-title').innerText = "Edit Jadwal";
+            document.getElementById('btn-submit').innerText = "Update Jadwal";
+            document.getElementById('btn-submit').classList.replace('bg-blue-600', 'bg-orange-500');
+            document.getElementById('btn-cancel-edit').classList.remove('hidden');
+            
+            // Scroll ke form
+            document.getElementById('page-input-jadwal').scrollTop = 0;
+        };
+
+        window.resetScheduleForm = () => {
+            editingScheduleId = null;
+            document.getElementById('schedule-form').reset();
+            document.getElementById('sch-form-title').innerText = "Tambah Jadwal Baru";
+            document.getElementById('btn-submit').innerText = "Simpan Jadwal";
+            document.getElementById('btn-submit').classList.replace('bg-orange-500', 'bg-blue-600');
+            document.getElementById('btn-cancel-edit').classList.add('hidden');
+        };
+
+        window.deleteSchedule = async (id) => {
+            if(!confirm("Hapus jadwal ini?")) return;
+            await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'schedules', id));
+        };
+
+        // --- UI HELPERS ---
 
         function handlePhotoUpload(e) {
             const file = e.target.files[0];
@@ -375,10 +464,9 @@
             if (file) {
                 const reader = new FileReader();
                 reader.onload = (event) => {
-                    const base64 = event.target.result;
-                    uploadedPhotos[index] = base64;
+                    uploadedPhotos[index] = event.target.result;
                     const preview = document.getElementById(`preview-foto-${index}`);
-                    preview.src = base64;
+                    preview.src = event.target.result;
                     preview.classList.remove('hidden');
                 };
                 reader.readAsDataURL(file);
@@ -391,64 +479,6 @@
                 const preview = document.getElementById(`preview-foto-${i}`);
                 if (preview) preview.classList.add('hidden');
             });
-        }
-
-        // --- SCHEDULE LOGIC ---
-
-        async function saveSchedule(e) {
-            e.preventDefault();
-            const btn = document.getElementById('btn-submit');
-            btn.disabled = true;
-
-            const data = {
-                date: document.getElementById('sch-date').value,
-                area: document.getElementById('sch-area').value,
-                auditor: document.getElementById('sch-auditor').value,
-                createdAt: serverTimestamp()
-            };
-
-            try {
-                const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'schedules');
-                await addDoc(colRef, data);
-                localStorage.removeItem('kamishibai_draft');
-                document.getElementById('draft-status').classList.add('hidden');
-                e.target.reset();
-            } catch (err) { alert(err.message); }
-            finally { btn.disabled = false; }
-        }
-
-        // --- SESSION & UI ---
-
-        function saveSessionState() {
-            const draft = {
-                date: document.getElementById('sch-date').value,
-                area: document.getElementById('sch-area').value,
-                auditor: document.getElementById('sch-auditor').value
-            };
-            localStorage.setItem('kamishibai_draft', JSON.stringify(draft));
-            const hasContent = Object.values(draft).some(val => val !== "");
-            document.getElementById('draft-status').classList.toggle('hidden', !hasContent);
-        }
-
-        function restoreSession() {
-            const lastPage = localStorage.getItem('kamishibai_last_page');
-            const isLoggedIn = localStorage.getItem('kamishibai_logged_in');
-            const userRole = localStorage.getItem('kamishibai_role');
-
-            if (isLoggedIn === 'true') {
-                document.getElementById('login-page').classList.add('hidden');
-                document.getElementById('main-app').classList.remove('hidden');
-                if (userRole === 'admin') document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
-                if (lastPage) navigate(lastPage, false);
-            }
-
-            const savedDraft = localStorage.getItem('kamishibai_draft');
-            if (savedDraft) {
-                const draft = JSON.parse(savedDraft);
-                document.getElementById('sch-date').value = draft.date || "";
-                document.getElementById('sch-area').value = draft.area || "";
-                document.getElementById('sch-auditor').value = draft.auditor || "";
-            }
         }
 
         window.navigate = (page, saveToStorage = true) => {
@@ -468,29 +498,43 @@
             if (saveToStorage) localStorage.setItem('kamishibai_last_page', page);
         };
 
-        window.logout = () => { localStorage.clear(); location.reload(); };
+        function restoreSession() {
+            const lastPage = localStorage.getItem('kamishibai_last_page');
+            const isLoggedIn = localStorage.getItem('kamishibai_logged_in');
+            const userRole = localStorage.getItem('kamishibai_role');
 
-        window.deleteSchedule = async (id) => {
-            if(!confirm("Hapus jadwal ini?")) return;
-            await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'schedules', id));
-        };
+            if (isLoggedIn === 'true') {
+                document.getElementById('login-page').classList.add('hidden');
+                document.getElementById('main-app').classList.remove('hidden');
+                if (userRole === 'admin') document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
+                if (lastPage) navigate(lastPage, false);
+            }
+        }
+
+        window.logout = () => { localStorage.clear(); location.reload(); };
 
         function renderTable() {
             const body = document.getElementById('table-body');
             if (schedules.length === 0) {
-                body.innerHTML = `<tr><td colspan="5" class="px-8 py-10 text-center text-slate-400 italic">Database Kosong</td></tr>`;
+                body.innerHTML = `<tr><td colspan="6" class="px-8 py-10 text-center text-slate-400 italic">Database Kosong</td></tr>`;
                 return;
             }
             body.innerHTML = schedules.map((s, i) => `
                 <tr class="hover:bg-slate-50 transition-colors">
                     <td class="px-8 py-5 text-sm text-slate-400">${i+1}</td>
-                    <td class="px-8 py-5 text-sm font-medium text-slate-600">${s.date}</td>
+                    <td class="px-8 py-5"><span class="px-2 py-1 bg-slate-100 text-[10px] font-bold rounded-lg text-slate-600">${s.group}</span></td>
+                    <td class="px-8 py-5 text-sm text-slate-600">${s.date}</td>
                     <td class="px-8 py-5 text-sm font-bold text-slate-800">${s.area}</td>
                     <td class="px-8 py-5 text-sm text-slate-600">${s.auditor}</td>
                     <td class="px-8 py-5">
-                        <button onclick="deleteSchedule('${s.id}')" class="text-red-400 hover:text-red-600 transition-colors">
-                            <i data-lucide="trash-2" class="w-4 h-4"></i>
-                        </button>
+                        <div class="flex items-center gap-3">
+                            <button onclick="editSchedule('${s.id}')" class="text-orange-400 hover:text-orange-600 transition-colors">
+                                <i data-lucide="edit-3" class="w-4 h-4"></i>
+                            </button>
+                            <button onclick="deleteSchedule('${s.id}')" class="text-red-400 hover:text-red-600 transition-colors">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </div>
                     </td>
                 </tr>
             `).join('');
@@ -521,11 +565,10 @@
             document.getElementById('password-container').classList.toggle('hidden', e.target.value !== 'admin');
         };
 
-        document.querySelectorAll('.draft-input').forEach(input => input.addEventListener('input', saveSessionState));
+        document.getElementById('res-group').onchange = filterAuditDropdowns;
         document.getElementById('schedule-form').onsubmit = saveSchedule;
         document.getElementById('audit-result-form').onsubmit = saveAuditResult;
 
-        // Listener untuk upload foto
         document.querySelectorAll('.res-foto').forEach(input => {
             input.addEventListener('change', handlePhotoUpload);
         });
