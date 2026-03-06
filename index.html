@@ -9,6 +9,9 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900">
@@ -51,6 +54,9 @@
                 <button onclick="navigate('dashboard')" id="nav-dashboard" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-sm text-slate-400 hover:bg-slate-800 hover:text-white">
                     <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard
                 </button>
+                <button onclick="navigate('input-hasil')" id="nav-input-hasil" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-sm text-slate-400 hover:bg-slate-800 hover:text-white">
+                    <i data-lucide="file-edit" class="w-5 h-5"></i> Input Hasil Audit
+                </button>
                 <button onclick="navigate('input-jadwal')" id="nav-input-jadwal" class="nav-item admin-only w-full hidden flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-sm text-slate-400 hover:bg-slate-800 hover:text-white">
                     <i data-lucide="calendar-plus" class="w-5 h-5"></i> Atur Jadwal
                 </button>
@@ -64,21 +70,149 @@
 
         <div class="flex-1 flex flex-col min-w-0">
             <header class="h-20 bg-white border-b border-slate-200 px-6 flex items-center justify-between sticky top-0 z-40">
-                <h2 id="page-title" class="font-bold text-lg text-slate-800 uppercase">DASHBOARD</h2>
+                <div class="flex items-center gap-4">
+                    <button class="lg:hidden p-2 text-slate-600"><i data-lucide="menu"></i></button>
+                    <h2 id="page-title" class="font-bold text-lg text-slate-800 uppercase">DASHBOARD</h2>
+                </div>
                 <div id="sync-indicator" class="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100">
                     <div class="w-2 h-2 rounded-full bg-slate-300 animate-pulse"></div>
                     Menghubungkan...
                 </div>
             </header>
 
-            <main class="p-6 lg:p-10 max-w-7xl mx-auto w-full">
+            <main class="p-6 lg:p-10 max-w-7xl mx-auto w-full custom-scrollbar overflow-y-auto">
+                
+                <!-- PAGE: DASHBOARD -->
                 <div id="page-dashboard" class="page-view space-y-8">
-                    <div class="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm inline-block min-w-[250px]">
-                        <p class="text-slate-400 text-[10px] font-black uppercase tracking-widest">Total Jadwal</p>
-                        <h3 id="stat-total-sch" class="text-4xl font-black text-slate-900 mt-2">0</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
+                            <p class="text-slate-400 text-[10px] font-black uppercase tracking-widest">Total Jadwal</p>
+                            <h3 id="stat-total-sch" class="text-4xl font-black text-slate-900 mt-2">0</h3>
+                        </div>
+                        <div class="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
+                            <p class="text-slate-400 text-[10px] font-black uppercase tracking-widest">Audit Selesai</p>
+                            <h3 id="stat-total-results" class="text-4xl font-black text-blue-600 mt-2">0</h3>
+                        </div>
                     </div>
                 </div>
 
+                <!-- PAGE: INPUT HASIL AUDIT -->
+                <div id="page-input-hasil" class="page-view hidden space-y-8">
+                    <div class="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
+                        <div class="mb-8 border-b border-slate-50 pb-6">
+                            <h3 class="text-xl font-bold text-slate-800">Formulir Hasil Audit</h3>
+                            <p class="text-sm text-slate-400 mt-1">Lengkapi data temuan audit di bawah ini</p>
+                        </div>
+                        
+                        <form id="audit-result-form" class="space-y-8">
+                            <!-- Group & Basic Info -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="text-[10px] font-black text-slate-400 mb-2 block uppercase tracking-widest">Group</label>
+                                    <select id="res-group" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-blue-500" required>
+                                        <option value="">Pilih Group</option>
+                                        <option value="SUGAR FACTORY">SUGAR FACTORY</option>
+                                        <option value="PLANTATION">PLANTATION</option>
+                                        <option value="SUPPORTING">SUPPORTING</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-black text-slate-400 mb-2 block uppercase tracking-widest">Tanggal Audit</label>
+                                    <input type="date" id="res-date" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-blue-500" required>
+                                </div>
+                            </div>
+
+                            <!-- Dropdown dari Jadwal -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="text-[10px] font-black text-slate-400 mb-2 block uppercase tracking-widest">Dept. Auditee (Berdasarkan Jadwal)</label>
+                                    <select id="res-dept-auditee" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-blue-500" required>
+                                        <option value="">Pilih Dept...</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-black text-slate-400 mb-2 block uppercase tracking-widest">Nama Auditor (Berdasarkan Jadwal)</label>
+                                    <select id="res-auditor" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-blue-500" required>
+                                        <option value="">Pilih Auditor...</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Input Manual -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="text-[10px] font-black text-slate-400 mb-2 block uppercase tracking-widest">Nama Auditee</label>
+                                    <input type="text" id="res-nama-auditee" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="Input Nama Auditee" required>
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-black text-slate-400 mb-2 block uppercase tracking-widest">Judul IK</label>
+                                    <input type="text" id="res-judul-ik" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="Judul Instruksi Kerja" required>
+                                </div>
+                            </div>
+
+                            <!-- Nilai & Status -->
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div>
+                                    <label class="text-[10px] font-black text-slate-400 mb-2 block uppercase tracking-widest">Nilai Temuan</label>
+                                    <input type="number" id="res-nilai" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" placeholder="0" required>
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-black text-slate-400 mb-2 block uppercase tracking-widest">Status Temuan</label>
+                                    <input type="text" id="res-status-temuan" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" placeholder="Contoh: Mayor/Minor" required>
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-black text-slate-400 mb-2 block uppercase tracking-widest">Status Verifikasi</label>
+                                    <select id="res-verifikasi" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" required>
+                                        <option value="OPEN">OPEN</option>
+                                        <option value="CLOSED">CLOSED</option>
+                                        <option value="OBSERVASI">OBSERVASI</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Deskripsi & Perbaikan -->
+                            <div class="space-y-6">
+                                <div>
+                                    <label class="text-[10px] font-black text-slate-400 mb-2 block uppercase tracking-widest">Uraian Ketidaksesuaian</label>
+                                    <textarea id="res-uraian" rows="3" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" placeholder="Deskripsikan temuan..."></textarea>
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-black text-slate-400 mb-2 block uppercase tracking-widest">Penyebab Ketidaksesuaian</label>
+                                    <textarea id="res-penyebab" rows="3" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" placeholder="Analisa penyebab..."></textarea>
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-black text-slate-400 mb-2 block uppercase tracking-widest">Tindakan Perbaikan</label>
+                                    <textarea id="res-perbaikan" rows="3" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" placeholder="Langkah perbaikan..."></textarea>
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-black text-slate-400 mb-2 block uppercase tracking-widest">Update</label>
+                                    <input type="text" id="res-update" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" placeholder="Keterangan update tambahan">
+                                </div>
+                            </div>
+
+                            <!-- Upload Foto (5 slot) -->
+                            <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                                ${[1,2,3,4,5].map(i => `
+                                    <div class="space-y-2">
+                                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-tighter">Foto Temuan ${i}</label>
+                                        <div class="relative group h-32 bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-slate-100 transition-all overflow-hidden">
+                                            <input type="file" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer res-foto" data-index="${i}">
+                                            <i data-lucide="camera" class="w-6 h-6 text-slate-300 group-hover:scale-110 transition-transform"></i>
+                                            <span class="text-[8px] text-slate-400 mt-2 font-bold">Pilih Foto</span>
+                                            <img id="preview-foto-${i}" class="absolute inset-0 w-full h-full object-cover hidden">
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+
+                            <button type="submit" id="btn-save-result" class="w-full bg-blue-600 text-white font-bold py-5 rounded-[2rem] hover:bg-blue-700 shadow-xl shadow-blue-100 transition-all active:scale-[0.98]">
+                                Simpan Hasil Audit
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- PAGE: ATUR JADWAL -->
                 <div id="page-input-jadwal" class="page-view hidden space-y-8">
                     <div class="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
                         <div class="flex items-center justify-between mb-6">
@@ -86,17 +220,17 @@
                             <span id="draft-status" class="text-[10px] text-slate-400 font-bold uppercase tracking-widest hidden italic">Draft Tersimpan Otomatis</span>
                         </div>
                         <form id="schedule-form" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-                            <div><label class="text-[10px] font-black text-slate-400 mb-1 block">TANGGAL</label><input type="date" id="sch-date" class="draft-input w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" required></div>
-                            <div><label class="text-[10px] font-black text-slate-400 mb-1 block">AREA</label><input type="text" id="sch-area" class="draft-input w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" placeholder="Area Audit" required></div>
-                            <div><label class="text-[10px] font-black text-slate-400 mb-1 block">AUDITOR</label><input type="text" id="sch-auditor" class="draft-input w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" placeholder="Nama Auditor" required></div>
-                            <button type="submit" id="btn-submit" class="bg-blue-600 text-white font-bold h-[56px] rounded-2xl hover:bg-blue-700 disabled:opacity-50">Simpan Jadwal</button>
+                            <div><label class="text-[10px] font-black text-slate-400 mb-1 block uppercase">Tanggal</label><input type="date" id="sch-date" class="draft-input w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" required></div>
+                            <div><label class="text-[10px] font-black text-slate-400 mb-1 block uppercase">Dept. Auditee</label><input type="text" id="sch-area" class="draft-input w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" placeholder="Contoh: Boiler / HR" required></div>
+                            <div><label class="text-[10px] font-black text-slate-400 mb-1 block uppercase">Auditor</label><input type="text" id="sch-auditor" class="draft-input w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" placeholder="Nama Auditor" required></div>
+                            <button type="submit" id="btn-submit" class="bg-blue-600 text-white font-bold h-[56px] rounded-2xl hover:bg-blue-700 disabled:opacity-50 transition-all">Simpan Jadwal</button>
                         </form>
                     </div>
 
                     <div class="bg-white rounded-[2rem] border border-slate-100 overflow-hidden shadow-sm">
                         <table class="w-full text-left">
                             <thead class="bg-slate-50 text-slate-400 text-[10px] font-black uppercase tracking-widest">
-                                <tr><th class="px-8 py-5">No</th><th class="px-8 py-5">Tanggal</th><th class="px-8 py-5">Area</th><th class="px-8 py-5">Auditor</th><th class="px-8 py-5">Aksi</th></tr>
+                                <tr><th class="px-8 py-5">No</th><th class="px-8 py-5">Tanggal</th><th class="px-8 py-5">Dept. Auditee</th><th class="px-8 py-5">Auditor</th><th class="px-8 py-5">Aksi</th></tr>
                             </thead>
                             <tbody id="table-body" class="divide-y divide-slate-100">
                                 <tr><td colspan="5" class="px-8 py-10 text-center text-slate-400 italic">Memuat database...</td></tr>
@@ -129,15 +263,17 @@
 
         let user = null;
         let schedules = [];
+        let auditResults = [];
+        let uploadedPhotos = ["", "", "", "", "", ""]; // index 1-5
 
-        // --- CORE LOGIC ---
+        // --- FIREBASE CORE ---
 
         async function initFirebase() {
             try {
                 await signInAnonymously(auth);
             } catch (error) {
-                console.error("Firebase Auth Error:", error.code);
-                updateSyncStatus('Auth Failed', 'bg-red-500');
+                console.error("Auth Error:", error);
+                updateSyncStatus('Koneksi Gagal', 'bg-red-500');
             }
         }
 
@@ -145,31 +281,124 @@
             user = u;
             if (user) {
                 updateSyncStatus('Terhubung', 'bg-green-500');
-                startListening();
-                restoreSession(); // Cek sesi saat login berhasil
+                startListeningSchedules();
+                startListeningResults();
+                restoreSession();
             } else {
                 updateSyncStatus('Menghubungkan...', 'bg-slate-300 animate-pulse');
             }
         });
 
-        function startListening() {
+        function startListeningSchedules() {
             const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'schedules');
             onSnapshot(colRef, (snapshot) => {
                 schedules = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
                 renderTable();
                 updateDashboard();
-            }, (err) => {
-                console.error("Firestore Error:", err);
+                populateAuditDropdowns();
             });
         }
 
+        function startListeningResults() {
+            const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'audit_results');
+            onSnapshot(colRef, (snapshot) => {
+                auditResults = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                updateDashboard();
+            });
+        }
+
+        // --- AUDIT RESULT LOGIC ---
+
+        function populateAuditDropdowns() {
+            const deptSelect = document.getElementById('res-dept-auditee');
+            const auditorSelect = document.getElementById('res-auditor');
+            
+            // Simpan pilihan saat ini agar tidak tereset jika sedang mengetik
+            const currentDept = deptSelect.value;
+            const currentAuditor = auditorSelect.value;
+
+            // Ambil unique values dari schedules
+            const uniqueDepts = [...new Set(schedules.map(s => s.area))].sort();
+            const uniqueAuditors = [...new Set(schedules.map(s => s.auditor))].sort();
+
+            deptSelect.innerHTML = '<option value="">Pilih Dept...</option>' + 
+                uniqueDepts.map(d => `<option value="${d}" ${d === currentDept ? 'selected' : ''}>${d}</option>`).join('');
+            
+            auditorSelect.innerHTML = '<option value="">Pilih Auditor...</option>' + 
+                uniqueAuditors.map(a => `<option value="${a}" ${a === currentAuditor ? 'selected' : ''}>${a}</option>`).join('');
+        }
+
+        async function saveAuditResult(e) {
+            e.preventDefault();
+            if (!user) return alert("Sesi tidak aktif.");
+
+            const btn = document.getElementById('btn-save-result');
+            btn.disabled = true;
+            btn.innerText = "Menyimpan...";
+
+            const resultData = {
+                group: document.getElementById('res-group').value,
+                date: document.getElementById('res-date').value,
+                deptAuditee: document.getElementById('res-dept-auditee').value,
+                auditor: document.getElementById('res-auditor').value,
+                namaAuditee: document.getElementById('res-nama-auditee').value,
+                judulIK: document.getElementById('res-judul-ik').value,
+                nilai: document.getElementById('res-nilai').value,
+                statusTemuan: document.getElementById('res-status-temuan').value,
+                uraian: document.getElementById('res-uraian').value,
+                penyebab: document.getElementById('res-penyebab').value,
+                perbaikan: document.getElementById('res-perbaikan').value,
+                verifikasi: document.getElementById('res-verifikasi').value,
+                update: document.getElementById('res-update').value,
+                photos: uploadedPhotos.slice(1), // ambil index 1-5
+                createdAt: serverTimestamp()
+            };
+
+            try {
+                const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'audit_results');
+                await addDoc(colRef, resultData);
+                alert("Hasil audit berhasil disimpan!");
+                e.target.reset();
+                resetPhotoPreviews();
+                navigate('dashboard');
+            } catch (err) {
+                alert("Gagal menyimpan hasil audit: " + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Simpan Hasil Audit";
+            }
+        }
+
+        function handlePhotoUpload(e) {
+            const file = e.target.files[0];
+            const index = e.target.getAttribute('data-index');
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const base64 = event.target.result;
+                    uploadedPhotos[index] = base64;
+                    const preview = document.getElementById(`preview-foto-${index}`);
+                    preview.src = base64;
+                    preview.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function resetPhotoPreviews() {
+            uploadedPhotos = ["", "", "", "", "", ""];
+            [1,2,3,4,5].forEach(i => {
+                const preview = document.getElementById(`preview-foto-${i}`);
+                if (preview) preview.classList.add('hidden');
+            });
+        }
+
+        // --- SCHEDULE LOGIC ---
+
         async function saveSchedule(e) {
             e.preventDefault();
-            if (!user) return alert("Belum terhubung ke server.");
-
             const btn = document.getElementById('btn-submit');
             btn.disabled = true;
-            btn.innerText = "Proses...";
 
             const data = {
                 date: document.getElementById('sch-date').value,
@@ -181,22 +410,15 @@
             try {
                 const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'schedules');
                 await addDoc(colRef, data);
-                
-                // Bersihkan draf setelah berhasil simpan
                 localStorage.removeItem('kamishibai_draft');
                 document.getElementById('draft-status').classList.add('hidden');
                 e.target.reset();
-            } catch (err) {
-                alert("Gagal simpan: " + err.message);
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "Simpan Jadwal";
-            }
+            } catch (err) { alert(err.message); }
+            finally { btn.disabled = false; }
         }
 
-        // --- AUTO SAVE & SESSION LOGIC ---
+        // --- SESSION & UI ---
 
-        // Simpan posisi halaman & draf saat input berubah
         function saveSessionState() {
             const draft = {
                 date: document.getElementById('sch-date').value,
@@ -204,14 +426,11 @@
                 auditor: document.getElementById('sch-auditor').value
             };
             localStorage.setItem('kamishibai_draft', JSON.stringify(draft));
-            
-            // Tampilkan indikator draft jika ada isi
             const hasContent = Object.values(draft).some(val => val !== "");
             document.getElementById('draft-status').classList.toggle('hidden', !hasContent);
         }
 
         function restoreSession() {
-            // 1. Kembalikan Posisi Halaman
             const lastPage = localStorage.getItem('kamishibai_last_page');
             const isLoggedIn = localStorage.getItem('kamishibai_logged_in');
             const userRole = localStorage.getItem('kamishibai_role');
@@ -219,35 +438,24 @@
             if (isLoggedIn === 'true') {
                 document.getElementById('login-page').classList.add('hidden');
                 document.getElementById('main-app').classList.remove('hidden');
-                
-                if (userRole === 'admin') {
-                    document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
-                }
-
+                if (userRole === 'admin') document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
                 if (lastPage) navigate(lastPage, false);
             }
 
-            // 2. Kembalikan Draf Form
             const savedDraft = localStorage.getItem('kamishibai_draft');
             if (savedDraft) {
                 const draft = JSON.parse(savedDraft);
                 document.getElementById('sch-date').value = draft.date || "";
                 document.getElementById('sch-area').value = draft.area || "";
                 document.getElementById('sch-auditor').value = draft.auditor || "";
-                
-                const hasContent = Object.values(draft).some(val => val !== "");
-                document.getElementById('draft-status').classList.toggle('hidden', !hasContent);
             }
         }
-
-        // --- UI HELPERS ---
 
         window.navigate = (page, saveToStorage = true) => {
             document.querySelectorAll('.page-view').forEach(p => p.classList.add('hidden'));
             document.getElementById(`page-${page}`).classList.remove('hidden');
-            document.getElementById('page-title').innerText = page.toUpperCase().replace('-', ' ');
+            document.getElementById('page-title').innerText = page.toUpperCase().replace(/-/g, ' ');
             
-            // Update Nav Style
             document.querySelectorAll('.nav-item').forEach(btn => {
                 btn.classList.remove('bg-blue-600', 'text-white');
                 btn.classList.add('text-slate-400');
@@ -257,20 +465,14 @@
                 activeNav.classList.add('bg-blue-600', 'text-white');
                 activeNav.classList.remove('text-slate-400');
             }
-
             if (saveToStorage) localStorage.setItem('kamishibai_last_page', page);
         };
 
-        window.logout = () => {
-            localStorage.clear();
-            location.reload();
-        };
+        window.logout = () => { localStorage.clear(); location.reload(); };
 
         window.deleteSchedule = async (id) => {
             if(!confirm("Hapus jadwal ini?")) return;
-            try {
-                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'schedules', id));
-            } catch (err) { alert("Gagal hapus data."); }
+            await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'schedules', id));
         };
 
         function renderTable() {
@@ -280,13 +482,13 @@
                 return;
             }
             body.innerHTML = schedules.map((s, i) => `
-                <tr class="hover:bg-slate-50">
+                <tr class="hover:bg-slate-50 transition-colors">
                     <td class="px-8 py-5 text-sm text-slate-400">${i+1}</td>
                     <td class="px-8 py-5 text-sm font-medium text-slate-600">${s.date}</td>
                     <td class="px-8 py-5 text-sm font-bold text-slate-800">${s.area}</td>
                     <td class="px-8 py-5 text-sm text-slate-600">${s.auditor}</td>
                     <td class="px-8 py-5">
-                        <button onclick="deleteSchedule('${s.id}')" class="text-red-400 hover:text-red-600">
+                        <button onclick="deleteSchedule('${s.id}')" class="text-red-400 hover:text-red-600 transition-colors">
                             <i data-lucide="trash-2" class="w-4 h-4"></i>
                         </button>
                     </td>
@@ -297,6 +499,7 @@
 
         function updateDashboard() {
             document.getElementById('stat-total-sch').innerText = schedules.length;
+            document.getElementById('stat-total-results').innerText = auditResults.length;
         }
 
         function updateSyncStatus(msg, color) {
@@ -304,32 +507,28 @@
             indicator.innerHTML = `<div class="w-2 h-2 rounded-full ${color}"></div> ${msg}`;
         }
 
-        // --- EVENT LISTENERS ---
+        // --- LISTENERS ---
 
         document.getElementById('login-form').onsubmit = (e) => {
             e.preventDefault();
             const role = document.getElementById('login-role').value;
             localStorage.setItem('kamishibai_logged_in', 'true');
             localStorage.setItem('kamishibai_role', role);
-            
-            if(role === 'admin') {
-                document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
-            }
-            document.getElementById('login-page').classList.add('hidden');
-            document.getElementById('main-app').classList.remove('hidden');
-            lucide.createIcons();
+            location.reload();
         };
 
         document.getElementById('login-role').onchange = (e) => {
             document.getElementById('password-container').classList.toggle('hidden', e.target.value !== 'admin');
         };
 
-        // Pasang event auto-save pada form input
-        document.querySelectorAll('.draft-input').forEach(input => {
-            input.addEventListener('input', saveSessionState);
-        });
-
+        document.querySelectorAll('.draft-input').forEach(input => input.addEventListener('input', saveSessionState));
         document.getElementById('schedule-form').onsubmit = saveSchedule;
+        document.getElementById('audit-result-form').onsubmit = saveAuditResult;
+
+        // Listener untuk upload foto
+        document.querySelectorAll('.res-foto').forEach(input => {
+            input.addEventListener('change', handlePhotoUpload);
+        });
 
         initFirebase();
         lucide.createIcons();
