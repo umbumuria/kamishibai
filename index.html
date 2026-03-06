@@ -8,31 +8,9 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-        
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-        }
-
-        /* Sidebar transition for mobile */
-        #sidebar {
-            transition: transform 0.3s ease-in-out;
-        }
-
-        .sidebar-open {
-            transform: translateX(0) !important;
-        }
-
-        /* Custom scrollbar */
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 10px;
-        }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        #sidebar { transition: transform 0.3s ease-in-out; }
+        .sidebar-open { transform: translateX(0) !important; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900">
@@ -47,7 +25,6 @@
                 <h2 class="text-2xl font-bold text-slate-800">Audit Kamishibai</h2>
                 <p class="text-slate-400 text-sm mt-1">Masuk ke sistem manajemen audit</p>
             </div>
-
             <form id="login-form" class="space-y-5">
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Role Akses</label>
@@ -56,45 +33,27 @@
                         <option value="admin">Administrator (Admin)</option>
                     </select>
                 </div>
-
                 <div id="password-container" class="hidden">
                     <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Password</label>
                     <input type="password" id="login-password" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition-all" placeholder="Password admin...">
                 </div>
-
-                <div id="login-error" class="hidden p-3 bg-red-50 text-red-600 text-xs rounded-xl flex items-center gap-2 border border-red-100">
-                    <i data-lucide="alert-circle" class="w-4 h-4"></i> <span id="error-message"></span>
-                </div>
-
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-2xl shadow-xl shadow-blue-200 transition-all active:scale-[0.98]">
-                    Masuk Sistem
-                </button>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-2xl shadow-xl shadow-blue-200 transition-all active:scale-[0.98]">Masuk Sistem</button>
             </form>
         </div>
     </div>
 
-    <!-- MAIN APP STRUCTURE -->
+    <!-- MAIN APP -->
     <div id="main-app" class="hidden flex min-h-screen relative overflow-x-hidden">
-        
-        <!-- SIDEBAR OVERLAY (Mobile) -->
-        <div id="sidebar-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 hidden lg:hidden"></div>
-
         <!-- SIDEBAR -->
         <aside id="sidebar" class="fixed inset-y-0 left-0 w-72 bg-slate-900 text-white flex flex-col z-50 -translate-x-full lg:translate-x-0 lg:static lg:h-screen flex-shrink-0">
             <div class="p-8 flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <div class="bg-blue-600 p-2 rounded-xl text-white">
-                        <i data-lucide="clipboard-check" class="w-6 h-6"></i>
-                    </div>
+                    <div class="bg-blue-600 p-2 rounded-xl text-white"><i data-lucide="clipboard-check" class="w-6 h-6"></i></div>
                     <h1 class="font-bold text-xl tracking-tight">Kamishibai</h1>
                 </div>
-                <button onclick="toggleSidebar()" class="lg:hidden p-2 text-slate-400 hover:text-white">
-                    <i data-lucide="x" class="w-6 h-6"></i>
-                </button>
             </div>
-
             <nav class="flex-1 px-4 space-y-2">
-                <button onclick="navigate('dashboard')" id="nav-dashboard" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-sm bg-blue-600 text-white shadow-lg shadow-blue-900/20">
+                <button onclick="navigate('dashboard')" id="nav-dashboard" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-sm bg-blue-600 text-white shadow-lg">
                     <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard
                 </button>
                 <button onclick="navigate('input-audit')" id="nav-input-audit" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-sm text-slate-400 hover:bg-slate-800 hover:text-white">
@@ -104,140 +63,78 @@
                     <i data-lucide="calendar-plus" class="w-5 h-5"></i> Atur Jadwal
                 </button>
             </nav>
-
             <div class="p-6 mt-auto">
-                <div class="bg-slate-800 p-4 rounded-2xl mb-4 flex items-center gap-3 overflow-hidden">
-                    <div class="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-blue-400 flex-shrink-0">
-                        <i id="user-icon" data-lucide="user" class="w-5 h-5"></i>
-                    </div>
-                    <div class="truncate">
-                        <p id="user-display-name" class="text-sm font-bold truncate">User</p>
-                        <p id="user-display-role" class="text-[10px] text-slate-400 uppercase tracking-wider leading-tight">Role</p>
-                    </div>
-                </div>
                 <button onclick="logout()" class="w-full flex items-center gap-3 px-4 py-2 rounded-xl text-red-400 hover:bg-red-500/10 transition-colors font-medium text-sm">
                     <i data-lucide="log-out" class="w-5 h-5"></i> Keluar
                 </button>
             </div>
         </aside>
 
-        <!-- CONTENT AREA -->
+        <!-- CONTENT -->
         <div class="flex-1 flex flex-col min-w-0">
-            <header class="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200 px-6 flex items-center justify-between sticky top-0 z-40">
-                <div class="flex items-center gap-4">
-                    <button onclick="toggleSidebar()" class="lg:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-xl transition-colors">
-                        <i data-lucide="menu" class="w-6 h-6"></i>
-                    </button>
-                    <h2 id="page-title" class="font-bold text-lg text-slate-800">Dashboard</h2>
-                </div>
-                <div class="flex items-center gap-3">
-                    <div class="hidden sm:block text-right">
-                        <p id="header-name" class="text-sm font-bold text-slate-800 leading-none">User</p>
-                        <p id="header-role" class="text-[10px] text-slate-500 font-bold uppercase mt-1 tracking-wider leading-none">Role</p>
-                    </div>
-                    <div class="w-10 h-10 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 border border-blue-100">
-                        <i data-lucide="user" class="w-5 h-5"></i>
-                    </div>
+            <header class="h-20 bg-white border-b border-slate-200 px-6 flex items-center justify-between sticky top-0 z-40">
+                <h2 id="page-title" class="font-bold text-lg text-slate-800">Dashboard</h2>
+                <div id="sync-indicator" class="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100">
+                    <div class="w-2 h-2 rounded-full bg-slate-300 animate-pulse"></div>
+                    Connecting...
                 </div>
             </header>
 
-            <main id="content-container" class="p-6 lg:p-10 max-w-7xl mx-auto w-full">
-                <!-- DASHBOARD PAGE CONTENT -->
+            <main class="p-6 lg:p-10 max-w-7xl mx-auto w-full">
+                <!-- Page Dashboard -->
                 <div id="page-dashboard" class="page-view space-y-8">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 flex items-center justify-between">
-                            <div><p class="text-slate-400 text-[10px] font-black uppercase tracking-widest leading-none">Total Audit</p><h3 id="stat-total" class="text-4xl font-black text-slate-900 mt-2 tracking-tight">0</h3></div>
-                            <div class="bg-blue-50 text-blue-600 p-5 rounded-2xl"><i data-lucide="bar-chart-3" class="w-7 h-7"></i></div>
-                        </div>
-                        <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 flex items-center justify-between">
-                            <div><p class="text-slate-400 text-[10px] font-black uppercase tracking-widest leading-none">Status OK</p><h3 id="stat-ok" class="text-4xl font-black text-slate-900 mt-2 tracking-tight">0</h3></div>
-                            <div class="bg-green-50 text-green-600 p-5 rounded-2xl"><i data-lucide="check-circle-2" class="w-7 h-7"></i></div>
-                        </div>
-                        <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 flex items-center justify-between">
-                            <div><p class="text-slate-400 text-[10px] font-black uppercase tracking-widest leading-none">Status NG</p><h3 id="stat-ng" class="text-4xl font-black text-slate-900 mt-2 tracking-tight">0</h3></div>
-                            <div class="bg-red-50 text-red-600 p-5 rounded-2xl"><i data-lucide="x-circle" class="w-7 h-7"></i></div>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
-                        <div class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
-                            <h3 class="font-bold text-slate-800 mb-6 flex items-center gap-2"><i data-lucide="clipboard-check" class="text-blue-600 w-5 h-5"></i> Riwayat Audit</h3>
-                            <div id="audit-list" class="space-y-4"></div>
-                        </div>
-                        <div class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
-                            <h3 class="font-bold text-slate-800 mb-6 flex items-center gap-2"><i data-lucide="calendar" class="text-orange-500 w-5 h-5"></i> Jadwal Mendatang</h3>
-                            <div id="schedule-list" class="space-y-4"></div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="stats-container">
+                        <div class="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm flex items-center justify-between">
+                            <div><p class="text-slate-400 text-[10px] font-black uppercase tracking-widest">Total Jadwal</p><h3 id="stat-total-sch" class="text-4xl font-black text-slate-900 mt-2">0</h3></div>
+                            <div class="bg-blue-50 text-blue-600 p-5 rounded-2xl"><i data-lucide="calendar" class="w-7 h-7"></i></div>
                         </div>
                     </div>
                 </div>
 
-                <!-- INPUT AUDIT PAGE CONTENT -->
-                <div id="page-input-audit" class="page-view hidden max-w-xl mx-auto">
-                    <div class="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-slate-100">
-                        <h2 class="text-3xl font-black text-slate-900 mb-2">Form Audit</h2>
-                        <p class="text-slate-400 mb-8">Lengkapi hasil temuan audit</p>
-                        <form id="audit-form" class="space-y-8">
-                            <div class="space-y-3">
-                                <label class="text-xs font-black text-slate-400 uppercase tracking-widest">Lokasi Area</label>
-                                <select id="audit-area" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none" required>
-                                    <option value="">Pilih Area...</option>
-                                    <option value="Produksi A">Produksi A</option>
-                                    <option value="Produksi B">Produksi B</option>
-                                    <option value="Gudang">Gudang</option>
-                                </select>
-                            </div>
-                            <div class="space-y-3">
-                                <label class="text-xs font-black text-slate-400 uppercase tracking-widest">Hasil Pengecekan</label>
-                                <div class="flex gap-4">
-                                    <button type="button" onclick="setStatus('OK')" id="btn-status-ok" class="status-btn flex-1 p-5 rounded-2xl border-2 flex flex-col items-center gap-2 border-green-600 bg-green-50 text-green-700">
-                                        <i data-lucide="check-circle-2" class="w-8 h-8"></i> <span class="font-bold">KONDISI OK</span>
-                                    </button>
-                                    <button type="button" onclick="setStatus('NG')" id="btn-status-ng" class="status-btn flex-1 p-5 rounded-2xl border-2 flex flex-col items-center gap-2 border-slate-100 text-slate-400 grayscale">
-                                        <i data-lucide="x-circle" class="w-8 h-8"></i> <span class="font-bold">KONDISI NG</span>
-                                    </button>
-                                </div>
-                            </div>
-                            <button type="submit" class="w-full bg-slate-900 text-white font-bold py-5 rounded-2xl shadow-xl hover:bg-black transition-all">Kirim Data Audit</button>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- ATUR JADWAL PAGE CONTENT -->
+                <!-- Page Input Jadwal -->
                 <div id="page-input-jadwal" class="page-view hidden space-y-8">
                     <div class="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
-                        <div class="flex items-center justify-between mb-6">
-                            <h2 class="font-bold text-slate-800">Tambah Jadwal Baru</h2>
-                            <span id="sync-status" class="text-[10px] bg-slate-100 text-slate-400 px-3 py-1 rounded-full uppercase font-black tracking-widest">Offline</span>
-                        </div>
+                        <h3 class="font-bold text-slate-800 mb-6">Tambah Jadwal Baru</h3>
                         <form id="schedule-form" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-                            <div><label class="text-[10px] font-black text-slate-400 mb-1 block">TANGGAL</label><input type="date" id="sch-date" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-blue-600" required></div>
-                            <div><label class="text-[10px] font-black text-slate-400 mb-1 block">AREA</label><input type="text" id="sch-area" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-blue-600" placeholder="Area..." required></div>
-                            <div><label class="text-[10px] font-black text-slate-400 mb-1 block">AUDITOR</label><input type="text" id="sch-auditor" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-blue-600" placeholder="PIC..." required></div>
-                            <button type="submit" id="btn-save-schedule" class="bg-blue-600 text-white font-bold h-[56px] rounded-2xl hover:bg-blue-700 shadow-lg shadow-blue-100 disabled:opacity-50">Tambah</button>
+                            <div><label class="text-[10px] font-black text-slate-400 mb-1 block">TANGGAL</label><input type="date" id="sch-date" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" required></div>
+                            <div><label class="text-[10px] font-black text-slate-400 mb-1 block">AREA</label><input type="text" id="sch-area" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" placeholder="Contoh: Line 1" required></div>
+                            <div><label class="text-[10px] font-black text-slate-400 mb-1 block">AUDITOR</label><input type="text" id="sch-auditor" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" placeholder="Nama PIC" required></div>
+                            <button type="submit" class="bg-blue-600 text-white font-bold h-[56px] rounded-2xl hover:bg-blue-700">Simpan Jadwal</button>
                         </form>
                     </div>
+
                     <div class="bg-white rounded-[2rem] border border-slate-100 overflow-hidden shadow-sm overflow-x-auto">
-                        <table class="w-full text-left border-collapse">
+                        <table class="w-full text-left">
                             <thead class="bg-slate-50 text-slate-400 text-[10px] font-black uppercase tracking-widest">
                                 <tr><th class="px-8 py-5">No</th><th class="px-8 py-5">Tanggal</th><th class="px-8 py-5">Area</th><th class="px-8 py-5">Auditor</th><th class="px-8 py-5">Aksi</th></tr>
                             </thead>
-                            <tbody id="table-schedule-body" class="divide-y divide-slate-100">
-                                <tr><td colspan="5" class="px-8 py-10 text-center text-slate-400 text-sm italic">Memuat data...</td></tr>
+                            <tbody id="table-body" class="divide-y divide-slate-100">
+                                <tr><td colspan="5" class="px-8 py-10 text-center text-slate-400 italic">Memuat data...</td></tr>
                             </tbody>
                         </table>
+                    </div>
+                </div>
+
+                <!-- Page Input Audit -->
+                <div id="page-input-audit" class="page-view hidden">
+                    <div class="bg-white p-10 rounded-[2.5rem] border border-slate-100 max-w-xl mx-auto shadow-sm text-center">
+                        <div class="bg-orange-50 text-orange-500 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                            <i data-lucide="construction" class="w-8 h-8"></i>
+                        </div>
+                        <h2 class="text-xl font-bold text-slate-800">Halaman Audit</h2>
+                        <p class="text-slate-500 mt-2">Halaman ini sedang dalam pengembangan.</p>
                     </div>
                 </div>
             </main>
         </div>
     </div>
 
-    <!-- FIREBASE SDKS -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, doc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, serverTimestamp, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // --- CONFIGURATION ---
+        // Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyCiW38hQ5ZfYnp3sa95OQw6IjxnfnM5dl4",
             authDomain: "kamishibaimsm.firebaseapp.com",
@@ -250,186 +147,91 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'kamishibaimsm';
+        const appId = "kamishibaimsm"; // Menggunakan ID project Anda
 
-        // --- GLOBAL STATE ---
-        let audits = [];
         let schedules = [];
-        let currentUser = null;
-        let currentAuditStatus = 'OK';
-        let isSidebarOpen = false;
+        let user = null;
 
-        // --- AUTHENTICATION ---
-        async function initAuth() {
+        // 1. Auth Setup
+        async function startApp() {
             try {
-                // Dalam environment ini kita gunakan anonymous sign-in jika token tidak ada
                 await signInAnonymously(auth);
-            } catch (error) {
-                console.error("Auth Error:", error);
+            } catch (err) {
+                console.error("Auth failed", err);
             }
         }
 
-        onAuthStateChanged(auth, (user) => {
+        onAuthStateChanged(auth, (u) => {
+            user = u;
             if (user) {
-                document.getElementById('sync-status').innerText = "Terhubung";
-                document.getElementById('sync-status').classList.replace('text-slate-400', 'text-green-500');
-                document.getElementById('sync-status').classList.replace('bg-slate-100', 'bg-green-50');
-                
-                // Mulai listen data setelah login
-                setupRealtimeListeners();
-            } else {
-                document.getElementById('sync-status').innerText = "Offline";
+                updateSyncIndicator('Online', 'bg-green-500');
+                listenToSchedules();
             }
         });
 
-        // --- FIRESTORE LISTENERS ---
-        function setupRealtimeListeners() {
-            if (!auth.currentUser) return;
-
-            // Path Publik untuk Jadwal (Sesuai Rule 1)
-            const scheduleCol = collection(db, 'artifacts', appId, 'public', 'data', 'schedules');
-            
-            // Realtime Update Jadwal
-            onSnapshot(scheduleCol, (snapshot) => {
-                schedules = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                renderSchedulesTable();
-                if (document.getElementById('page-dashboard').classList.contains('hidden') === false) {
-                    renderDashboard();
+        // 2. Firestore Listeners (Rule 1: /artifacts/{appId}/public/data/{col})
+        function listenToSchedules() {
+            const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'schedules');
+            onSnapshot(colRef, (snapshot) => {
+                schedules = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                renderTable();
+                updateDashboard();
+            }, (err) => {
+                console.error("Firestore Error:", err);
+                if(err.code === 'permission-denied') {
+                    alert("Akses Ditolak! Pastikan 'Firestore Rules' Anda di Firebase Console sudah di-set ke test mode (allow read, write: if true;)");
                 }
-            }, (error) => {
-                console.error("Firestore Listen Error:", error);
             });
         }
 
-        // --- ACTIONS ---
-        window.saveSchedule = async (event) => {
-            event.preventDefault();
-            if (!auth.currentUser) return;
-
-            const btn = document.getElementById('btn-save-schedule');
-            btn.disabled = true;
-            btn.innerText = "Menyimpan...";
+        // 3. Save Function
+        async function handleSaveSchedule(e) {
+            e.preventDefault();
+            if (!user) {
+                alert("Menunggu koneksi ke server...");
+                return;
+            }
 
             const date = document.getElementById('sch-date').value;
             const area = document.getElementById('sch-area').value;
             const auditor = document.getElementById('sch-auditor').value;
 
             try {
-                const scheduleCol = collection(db, 'artifacts', appId, 'public', 'data', 'schedules');
-                await addDoc(scheduleCol, {
+                const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'schedules');
+                await addDoc(colRef, {
                     date,
                     area,
                     auditor,
-                    createdAt: serverTimestamp()
+                    timestamp: serverTimestamp()
                 });
-                
-                document.getElementById('schedule-form').reset();
-            } catch (e) {
-                console.error("Error adding document: ", e);
-                alert("Gagal menyimpan jadwal.");
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "Tambah";
-            }
-        };
-
-        window.deleteSchedule = async (id) => {
-            if (!confirm("Hapus jadwal ini?")) return;
-            try {
-                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'schedules', id);
-                await deleteDoc(docRef);
-            } catch (e) {
-                console.error("Error deleting: ", e);
-            }
-        };
-
-        // --- NAVIGATION & UI (Exposed to Global) ---
-        window.toggleSidebar = () => {
-            isSidebarOpen = !isSidebarOpen;
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('sidebar-overlay');
-            if (isSidebarOpen) {
-                sidebar.classList.add('sidebar-open');
-                overlay.classList.remove('hidden');
-            } else {
-                sidebar.classList.remove('sidebar-open');
-                overlay.classList.add('hidden');
-            }
-        };
-
-        window.navigate = (pageId) => {
-            if (window.innerWidth < 1024) {
-                isSidebarOpen = false;
-                document.getElementById('sidebar').classList.remove('sidebar-open');
-                document.getElementById('sidebar-overlay').classList.add('hidden');
-            }
-
-            document.querySelectorAll('.page-view').forEach(p => p.classList.add('hidden'));
-            document.getElementById(`page-${pageId}`).classList.remove('hidden');
-
-            document.querySelectorAll('.nav-item').forEach(btn => {
-                btn.classList.remove('bg-blue-600', 'text-white', 'shadow-lg', 'shadow-blue-900/20');
-                btn.classList.add('text-slate-400', 'hover:bg-slate-800', 'hover:text-white');
-            });
-            
-            const activeBtn = document.getElementById(`nav-${pageId}`);
-            if (activeBtn) {
-                activeBtn.classList.remove('text-slate-400', 'hover:bg-slate-800', 'hover:text-white');
-                activeBtn.classList.add('bg-blue-600', 'text-white', 'shadow-lg', 'shadow-blue-900/20');
-            }
-
-            document.getElementById('page-title').innerText = { 
-                'dashboard': 'Dashboard', 
-                'input-audit': 'Form Input Audit', 
-                'input-jadwal': 'Manajemen Jadwal' 
-            }[pageId];
-
-            if (pageId === 'dashboard') renderDashboard();
-            if (pageId === 'input-jadwal') renderSchedulesTable();
-        };
-
-        window.logout = () => {
-            auth.signOut();
-            currentUser = null;
-            document.getElementById('main-app').classList.add('hidden');
-            document.getElementById('login-page').classList.remove('hidden');
-        };
-
-        // --- RENDERING ---
-        function renderDashboard() {
-            document.getElementById('stat-total').innerText = audits.length;
-            document.getElementById('stat-ok').innerText = audits.filter(a => a.status === 'OK').length;
-            document.getElementById('stat-ng').innerText = audits.filter(a => a.status === 'NG').length;
-
-            const sList = document.getElementById('schedule-list');
-            if (schedules.length === 0) {
-                sList.innerHTML = `<p class="text-center text-slate-400 text-sm py-10 italic">Belum ada jadwal</p>`;
-            } else {
-                sList.innerHTML = schedules.slice(0, 5).map(s => `
-                    <div class="flex items-center gap-5 p-4 bg-slate-50 rounded-2xl border-l-4 border-blue-600">
-                        <div class="bg-white px-3 py-2 rounded-xl text-center min-w-[60px] shadow-sm border border-slate-100">
-                            <p class="text-[10px] uppercase font-black text-blue-600 leading-tight">${s.date ? s.date.split('-')[1] : '--'}</p>
-                            <p class="text-xl font-black text-slate-800 leading-tight">${s.date ? s.date.split('-')[2] : '--'}</p>
-                        </div>
-                        <div>
-                            <p class="font-bold text-slate-800 text-sm">${s.area}</p>
-                            <p class="text-xs text-slate-500">Auditor: <span class="text-slate-700 font-medium">${s.auditor}</span></p>
-                        </div>
-                    </div>
-                `).join('');
+                e.target.reset();
+            } catch (err) {
+                console.error("Save Error:", err);
+                alert("Gagal menyimpan ke Firebase: " + err.message);
             }
         }
 
-        function renderSchedulesTable() {
-            const body = document.getElementById('table-schedule-body');
+        // 4. Delete Function
+        window.deleteSchedule = async (id) => {
+            if(!confirm("Hapus data ini?")) return;
+            try {
+                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'schedules', id));
+            } catch (err) {
+                alert("Gagal menghapus");
+            }
+        };
+
+        // UI Helpers
+        function renderTable() {
+            const body = document.getElementById('table-body');
             if (schedules.length === 0) {
-                body.innerHTML = `<tr><td colspan="5" class="px-8 py-10 text-center text-slate-400 text-sm italic">Belum ada data jadwal</td></tr>`;
+                body.innerHTML = `<tr><td colspan="5" class="px-8 py-10 text-center text-slate-400 italic">Belum ada data di database</td></tr>`;
                 return;
             }
-            body.innerHTML = schedules.map((s, index) => `
-                <tr class="hover:bg-slate-50 transition-colors group">
-                    <td class="px-8 py-5 text-sm text-slate-400">${index + 1}</td>
-                    <td class="px-8 py-5 text-sm font-medium text-slate-500">${s.date}</td>
+            body.innerHTML = schedules.map((s, i) => `
+                <tr class="hover:bg-slate-50">
+                    <td class="px-8 py-5 text-sm text-slate-400">${i+1}</td>
+                    <td class="px-8 py-5 text-sm font-medium text-slate-600">${s.date}</td>
                     <td class="px-8 py-5 text-sm font-bold text-slate-800">${s.area}</td>
                     <td class="px-8 py-5 text-sm text-slate-600">${s.auditor}</td>
                     <td class="px-8 py-5">
@@ -442,54 +244,55 @@
             lucide.createIcons();
         }
 
-        // --- LOGIN FORM HANDLER ---
-        document.getElementById('login-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const role = document.getElementById('login-role').value;
-            const password = document.getElementById('login-password').value;
-
-            if (role === 'admin') {
-                if (password === 'admin123') {
-                    loginSuccess({ name: 'Administrator', role: 'admin' });
-                } else {
-                    document.getElementById('login-error').classList.remove('hidden');
-                    document.getElementById('error-message').innerText = "Password salah!";
-                }
-            } else {
-                loginSuccess({ name: 'Operator User', role: 'user' });
-            }
-        });
-
-        function loginSuccess(user) {
-            currentUser = user;
-            document.getElementById('login-page').classList.add('hidden');
-            document.getElementById('main-app').classList.remove('hidden');
-            
-            document.getElementById('user-display-name').innerText = user.name;
-            document.getElementById('user-display-role').innerText = user.role;
-            document.getElementById('header-name').innerText = user.name;
-            document.getElementById('header-role').innerText = user.role;
-            
-            if (user.role === 'admin') {
-                document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
-                navigate('dashboard');
-            } else {
-                document.querySelectorAll('.admin-only').forEach(el => el.classList.add('hidden'));
-                navigate('input-audit');
-            }
-            lucide.createIcons();
+        function updateDashboard() {
+            const el = document.getElementById('stat-total-sch');
+            if (el) el.innerText = schedules.length;
         }
 
-        // Attach form submit to window function
-        document.getElementById('schedule-form').onsubmit = window.saveSchedule;
+        function updateSyncIndicator(text, colorClass) {
+            const dot = document.querySelector('#sync-indicator div');
+            const span = document.querySelector('#sync-indicator');
+            dot.className = `w-2 h-2 rounded-full ${colorClass}`;
+            span.innerHTML = `<div class="w-2 h-2 rounded-full ${colorClass}"></div> ${text}`;
+        }
+
+        // Navigation
+        window.navigate = (pageId) => {
+            document.querySelectorAll('.page-view').forEach(p => p.classList.add('hidden'));
+            document.getElementById(`page-${pageId}`).classList.remove('hidden');
+            
+            document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('bg-blue-600', 'text-white'));
+            const activeNav = document.getElementById(`nav-${pageId}`);
+            if(activeNav) activeNav.classList.add('bg-blue-600', 'text-white');
+            
+            document.getElementById('page-title').innerText = pageId.replace('-', ' ').toUpperCase();
+        };
+
+        window.logout = () => {
+            location.reload();
+        };
+
+        // Form Event
+        document.getElementById('schedule-form').addEventListener('submit', handleSaveSchedule);
+        
+        // Simple Login
+        document.getElementById('login-form').onsubmit = (e) => {
+            e.preventDefault();
+            const role = document.getElementById('login-role').value;
+            if (role === 'admin') {
+                document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
+            }
+            document.getElementById('login-page').classList.add('hidden');
+            document.getElementById('main-app').classList.remove('hidden');
+            lucide.createIcons();
+        };
+
         document.getElementById('login-role').onchange = (e) => {
             document.getElementById('password-container').classList.toggle('hidden', e.target.value !== 'admin');
         };
 
-        // Start Auth
-        initAuth();
+        startApp();
         lucide.createIcons();
-
     </script>
 </body>
 </html>
