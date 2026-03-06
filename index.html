@@ -205,20 +205,25 @@
                 <!-- ATUR JADWAL PAGE CONTENT -->
                 <div id="page-input-jadwal" class="page-view hidden space-y-8">
                     <div class="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
-                        <h2 class="font-bold text-slate-800 mb-6">Tambah Jadwal Baru</h2>
+                        <div class="flex items-center justify-between mb-6">
+                            <h2 class="font-bold text-slate-800">Tambah Jadwal Baru</h2>
+                            <span id="sync-status" class="text-[10px] bg-slate-100 text-slate-400 px-3 py-1 rounded-full uppercase font-black tracking-widest">Offline</span>
+                        </div>
                         <form id="schedule-form" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                             <div><label class="text-[10px] font-black text-slate-400 mb-1 block">TANGGAL</label><input type="date" id="sch-date" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-blue-600" required></div>
                             <div><label class="text-[10px] font-black text-slate-400 mb-1 block">AREA</label><input type="text" id="sch-area" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-blue-600" placeholder="Area..." required></div>
                             <div><label class="text-[10px] font-black text-slate-400 mb-1 block">AUDITOR</label><input type="text" id="sch-auditor" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-blue-600" placeholder="PIC..." required></div>
-                            <button type="submit" class="bg-blue-600 text-white font-bold h-[56px] rounded-2xl hover:bg-blue-700 shadow-lg shadow-blue-100">Tambah</button>
+                            <button type="submit" id="btn-save-schedule" class="bg-blue-600 text-white font-bold h-[56px] rounded-2xl hover:bg-blue-700 shadow-lg shadow-blue-100 disabled:opacity-50">Tambah</button>
                         </form>
                     </div>
                     <div class="bg-white rounded-[2rem] border border-slate-100 overflow-hidden shadow-sm overflow-x-auto">
                         <table class="w-full text-left border-collapse">
                             <thead class="bg-slate-50 text-slate-400 text-[10px] font-black uppercase tracking-widest">
-                                <tr><th class="px-8 py-5">Status</th><th class="px-8 py-5">Tanggal</th><th class="px-8 py-5">Area</th><th class="px-8 py-5">Auditor</th></tr>
+                                <tr><th class="px-8 py-5">No</th><th class="px-8 py-5">Tanggal</th><th class="px-8 py-5">Area</th><th class="px-8 py-5">Auditor</th><th class="px-8 py-5">Aksi</th></tr>
                             </thead>
-                            <tbody id="table-schedule-body" class="divide-y divide-slate-100"></tbody>
+                            <tbody id="table-schedule-body" class="divide-y divide-slate-100">
+                                <tr><td colspan="5" class="px-8 py-10 text-center text-slate-400 text-sm italic">Memuat data...</td></tr>
+                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -226,96 +231,229 @@
         </div>
     </div>
 
-    <!-- SCRIPTS -->
-    <script>
-        // --- DATA STATE ---
-        let audits = [
-            { id: 1, date: '2023-10-25', area: 'Produksi A', auditor: 'Budi', status: 'OK' },
-            { id: 2, date: '2023-10-25', area: 'Gudang', auditor: 'Siti', status: 'NG' }
-        ];
+    <!-- FIREBASE SDKS -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, doc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        let schedules = [
-            { id: 1, date: '2023-10-26', area: 'Produksi A', auditor: 'Budi' },
-            { id: 2, date: '2023-10-26', area: 'Gudang', auditor: 'Siti' }
-        ];
+        // --- CONFIGURATION ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyCiW38hQ5ZfYnp3sa95OQw6IjxnfnM5dl4",
+            authDomain: "kamishibaimsm.firebaseapp.com",
+            projectId: "kamishibaimsm",
+            storageBucket: "kamishibaimsm.firebasestorage.app",
+            messagingSenderId: "184420389379",
+            appId: "1:184420389379:web:51bbb78ce5fa8e8d227436"
+        };
 
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'kamishibaimsm';
+
+        // --- GLOBAL STATE ---
+        let audits = [];
+        let schedules = [];
         let currentUser = null;
         let currentAuditStatus = 'OK';
         let isSidebarOpen = false;
 
-        // --- DOM ELEMENTS ---
-        const loginPage = document.getElementById('login-page');
-        const mainApp = document.getElementById('main-app');
-        const loginForm = document.getElementById('login-form');
-        const loginRole = document.getElementById('login-role');
-        const passwordContainer = document.getElementById('password-container');
-        const loginError = document.getElementById('login-error');
-        const errorMessage = document.getElementById('error-message');
-        const sidebar = document.getElementById('sidebar');
-        const sidebarOverlay = document.getElementById('sidebar-overlay');
-
-        // --- NAVIGATION LOGIC ---
-        function toggleSidebar() {
-            isSidebarOpen = !isSidebarOpen;
-            if (isSidebarOpen) {
-                sidebar.classList.add('sidebar-open');
-                sidebarOverlay.classList.remove('hidden');
-            } else {
-                sidebar.classList.remove('sidebar-open');
-                sidebarOverlay.classList.add('hidden');
+        // --- AUTHENTICATION ---
+        async function initAuth() {
+            try {
+                // Dalam environment ini kita gunakan anonymous sign-in jika token tidak ada
+                await signInAnonymously(auth);
+            } catch (error) {
+                console.error("Auth Error:", error);
             }
         }
 
-        function navigate(pageId) {
-            // Close sidebar on mobile after navigation
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                document.getElementById('sync-status').innerText = "Terhubung";
+                document.getElementById('sync-status').classList.replace('text-slate-400', 'text-green-500');
+                document.getElementById('sync-status').classList.replace('bg-slate-100', 'bg-green-50');
+                
+                // Mulai listen data setelah login
+                setupRealtimeListeners();
+            } else {
+                document.getElementById('sync-status').innerText = "Offline";
+            }
+        });
+
+        // --- FIRESTORE LISTENERS ---
+        function setupRealtimeListeners() {
+            if (!auth.currentUser) return;
+
+            // Path Publik untuk Jadwal (Sesuai Rule 1)
+            const scheduleCol = collection(db, 'artifacts', appId, 'public', 'data', 'schedules');
+            
+            // Realtime Update Jadwal
+            onSnapshot(scheduleCol, (snapshot) => {
+                schedules = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderSchedulesTable();
+                if (document.getElementById('page-dashboard').classList.contains('hidden') === false) {
+                    renderDashboard();
+                }
+            }, (error) => {
+                console.error("Firestore Listen Error:", error);
+            });
+        }
+
+        // --- ACTIONS ---
+        window.saveSchedule = async (event) => {
+            event.preventDefault();
+            if (!auth.currentUser) return;
+
+            const btn = document.getElementById('btn-save-schedule');
+            btn.disabled = true;
+            btn.innerText = "Menyimpan...";
+
+            const date = document.getElementById('sch-date').value;
+            const area = document.getElementById('sch-area').value;
+            const auditor = document.getElementById('sch-auditor').value;
+
+            try {
+                const scheduleCol = collection(db, 'artifacts', appId, 'public', 'data', 'schedules');
+                await addDoc(scheduleCol, {
+                    date,
+                    area,
+                    auditor,
+                    createdAt: serverTimestamp()
+                });
+                
+                document.getElementById('schedule-form').reset();
+            } catch (e) {
+                console.error("Error adding document: ", e);
+                alert("Gagal menyimpan jadwal.");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Tambah";
+            }
+        };
+
+        window.deleteSchedule = async (id) => {
+            if (!confirm("Hapus jadwal ini?")) return;
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'schedules', id);
+                await deleteDoc(docRef);
+            } catch (e) {
+                console.error("Error deleting: ", e);
+            }
+        };
+
+        // --- NAVIGATION & UI (Exposed to Global) ---
+        window.toggleSidebar = () => {
+            isSidebarOpen = !isSidebarOpen;
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            if (isSidebarOpen) {
+                sidebar.classList.add('sidebar-open');
+                overlay.classList.remove('hidden');
+            } else {
+                sidebar.classList.remove('sidebar-open');
+                overlay.classList.add('hidden');
+            }
+        };
+
+        window.navigate = (pageId) => {
             if (window.innerWidth < 1024) {
                 isSidebarOpen = false;
-                sidebar.classList.remove('sidebar-open');
-                sidebarOverlay.classList.add('hidden');
+                document.getElementById('sidebar').classList.remove('sidebar-open');
+                document.getElementById('sidebar-overlay').classList.add('hidden');
             }
 
-            // Update UI Page
             document.querySelectorAll('.page-view').forEach(p => p.classList.add('hidden'));
             document.getElementById(`page-${pageId}`).classList.remove('hidden');
 
-            // Update Nav Buttons
             document.querySelectorAll('.nav-item').forEach(btn => {
                 btn.classList.remove('bg-blue-600', 'text-white', 'shadow-lg', 'shadow-blue-900/20');
                 btn.classList.add('text-slate-400', 'hover:bg-slate-800', 'hover:text-white');
             });
+            
             const activeBtn = document.getElementById(`nav-${pageId}`);
             if (activeBtn) {
                 activeBtn.classList.remove('text-slate-400', 'hover:bg-slate-800', 'hover:text-white');
                 activeBtn.classList.add('bg-blue-600', 'text-white', 'shadow-lg', 'shadow-blue-900/20');
             }
 
-            // Update Header Title
-            const titles = { 'dashboard': 'Dashboard', 'input-audit': 'Form Input Audit', 'input-jadwal': 'Manajemen Jadwal' };
-            document.getElementById('page-title').innerText = titles[pageId];
+            document.getElementById('page-title').innerText = { 
+                'dashboard': 'Dashboard', 
+                'input-audit': 'Form Input Audit', 
+                'input-jadwal': 'Manajemen Jadwal' 
+            }[pageId];
 
             if (pageId === 'dashboard') renderDashboard();
             if (pageId === 'input-jadwal') renderSchedulesTable();
+        };
+
+        window.logout = () => {
+            auth.signOut();
+            currentUser = null;
+            document.getElementById('main-app').classList.add('hidden');
+            document.getElementById('login-page').classList.remove('hidden');
+        };
+
+        // --- RENDERING ---
+        function renderDashboard() {
+            document.getElementById('stat-total').innerText = audits.length;
+            document.getElementById('stat-ok').innerText = audits.filter(a => a.status === 'OK').length;
+            document.getElementById('stat-ng').innerText = audits.filter(a => a.status === 'NG').length;
+
+            const sList = document.getElementById('schedule-list');
+            if (schedules.length === 0) {
+                sList.innerHTML = `<p class="text-center text-slate-400 text-sm py-10 italic">Belum ada jadwal</p>`;
+            } else {
+                sList.innerHTML = schedules.slice(0, 5).map(s => `
+                    <div class="flex items-center gap-5 p-4 bg-slate-50 rounded-2xl border-l-4 border-blue-600">
+                        <div class="bg-white px-3 py-2 rounded-xl text-center min-w-[60px] shadow-sm border border-slate-100">
+                            <p class="text-[10px] uppercase font-black text-blue-600 leading-tight">${s.date ? s.date.split('-')[1] : '--'}</p>
+                            <p class="text-xl font-black text-slate-800 leading-tight">${s.date ? s.date.split('-')[2] : '--'}</p>
+                        </div>
+                        <div>
+                            <p class="font-bold text-slate-800 text-sm">${s.area}</p>
+                            <p class="text-xs text-slate-500">Auditor: <span class="text-slate-700 font-medium">${s.auditor}</span></p>
+                        </div>
+                    </div>
+                `).join('');
+            }
         }
 
-        // --- LOGIN LOGIC ---
-        loginRole.addEventListener('change', (e) => {
-            if (e.target.value === 'admin') {
-                passwordContainer.classList.remove('hidden');
-            } else {
-                passwordContainer.classList.add('hidden');
+        function renderSchedulesTable() {
+            const body = document.getElementById('table-schedule-body');
+            if (schedules.length === 0) {
+                body.innerHTML = `<tr><td colspan="5" class="px-8 py-10 text-center text-slate-400 text-sm italic">Belum ada data jadwal</td></tr>`;
+                return;
             }
-        });
+            body.innerHTML = schedules.map((s, index) => `
+                <tr class="hover:bg-slate-50 transition-colors group">
+                    <td class="px-8 py-5 text-sm text-slate-400">${index + 1}</td>
+                    <td class="px-8 py-5 text-sm font-medium text-slate-500">${s.date}</td>
+                    <td class="px-8 py-5 text-sm font-bold text-slate-800">${s.area}</td>
+                    <td class="px-8 py-5 text-sm text-slate-600">${s.auditor}</td>
+                    <td class="px-8 py-5">
+                        <button onclick="deleteSchedule('${s.id}')" class="text-red-400 hover:text-red-600 transition-colors">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+            lucide.createIcons();
+        }
 
-        loginForm.addEventListener('submit', (e) => {
+        // --- LOGIN FORM HANDLER ---
+        document.getElementById('login-form').addEventListener('submit', (e) => {
             e.preventDefault();
-            const role = loginRole.value;
+            const role = document.getElementById('login-role').value;
             const password = document.getElementById('login-password').value;
 
             if (role === 'admin') {
                 if (password === 'admin123') {
                     loginSuccess({ name: 'Administrator', role: 'admin' });
                 } else {
-                    showError('Password Admin salah!');
+                    document.getElementById('login-error').classList.remove('hidden');
+                    document.getElementById('error-message').innerText = "Password salah!";
                 }
             } else {
                 loginSuccess({ name: 'Operator User', role: 'user' });
@@ -324,141 +462,34 @@
 
         function loginSuccess(user) {
             currentUser = user;
-            loginPage.classList.add('hidden');
-            mainApp.classList.remove('hidden');
+            document.getElementById('login-page').classList.add('hidden');
+            document.getElementById('main-app').classList.remove('hidden');
             
-            // Update Sidebar/Header User Info
             document.getElementById('user-display-name').innerText = user.name;
             document.getElementById('user-display-role').innerText = user.role;
             document.getElementById('header-name').innerText = user.name;
             document.getElementById('header-role').innerText = user.role;
             
-            // Admin only features
             if (user.role === 'admin') {
                 document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
-                document.getElementById('user-icon').setAttribute('data-lucide', 'shield-check');
-                lucide.createIcons();
-                navigate('dashboard'); // Admin tetap ke dashboard
+                navigate('dashboard');
             } else {
                 document.querySelectorAll('.admin-only').forEach(el => el.classList.add('hidden'));
-                document.getElementById('user-icon').setAttribute('data-lucide', 'user');
-                lucide.createIcons();
-                navigate('input-audit'); // Operator langsung ke Form Input Audit
+                navigate('input-audit');
             }
+            lucide.createIcons();
         }
 
-        function logout() {
-            currentUser = null;
-            mainApp.classList.add('hidden');
-            loginPage.classList.remove('hidden');
-            document.getElementById('login-password').value = '';
-            loginError.classList.add('hidden');
-        }
+        // Attach form submit to window function
+        document.getElementById('schedule-form').onsubmit = window.saveSchedule;
+        document.getElementById('login-role').onchange = (e) => {
+            document.getElementById('password-container').classList.toggle('hidden', e.target.value !== 'admin');
+        };
 
-        function showError(msg) {
-            errorMessage.innerText = msg;
-            loginError.classList.remove('hidden');
-        }
-
-        // --- DASHBOARD RENDERING ---
-        function renderDashboard() {
-            // Stats
-            document.getElementById('stat-total').innerText = audits.length;
-            document.getElementById('stat-ok').innerText = audits.filter(a => a.status === 'OK').length;
-            document.getElementById('stat-ng').innerText = audits.filter(a => a.status === 'NG').length;
-
-            // Audit List
-            const list = document.getElementById('audit-list');
-            list.innerHTML = audits.map(a => `
-                <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-transparent hover:border-slate-200 transition-all">
-                    <div class="flex gap-4 items-center">
-                        <div class="w-2 h-10 rounded-full ${a.status === 'OK' ? 'bg-green-400' : 'bg-red-400'}"></div>
-                        <div>
-                            <p class="font-bold text-slate-800 text-sm">${a.area}</p>
-                            <p class="text-xs text-slate-400">${a.date} • ${a.auditor}</p>
-                        </div>
-                    </div>
-                    <span class="px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${a.status === 'OK' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">
-                        ${a.status}
-                    </span>
-                </div>
-            `).join('');
-
-            // Schedule List
-            const sList = document.getElementById('schedule-list');
-            sList.innerHTML = schedules.map(s => `
-                <div class="flex items-center gap-5 p-4 bg-slate-50 rounded-2xl border-l-4 border-blue-600 hover:bg-slate-100 transition-all">
-                    <div class="bg-white px-3 py-2 rounded-xl text-center min-w-[60px] shadow-sm border border-slate-100">
-                        <p class="text-[10px] uppercase font-black text-blue-600 leading-tight">OCT</p>
-                        <p class="text-xl font-black text-slate-800 leading-tight">${s.date.split('-')[2]}</p>
-                    </div>
-                    <div>
-                        <p class="font-bold text-slate-800 text-sm">${s.area}</p>
-                        <p class="text-xs text-slate-500">Auditor: <span class="text-slate-700 font-medium">${s.auditor}</span></p>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        // --- AUDIT FORM ---
-        function setStatus(status) {
-            currentAuditStatus = status;
-            const okBtn = document.getElementById('btn-status-ok');
-            const ngBtn = document.getElementById('btn-status-ng');
-
-            if (status === 'OK') {
-                okBtn.className = "status-btn flex-1 p-5 rounded-2xl border-2 flex flex-col items-center gap-2 border-green-600 bg-green-50 text-green-700 shadow-lg shadow-green-100";
-                ngBtn.className = "status-btn flex-1 p-5 rounded-2xl border-2 flex flex-col items-center gap-2 border-slate-100 text-slate-400 grayscale";
-            } else {
-                ngBtn.className = "status-btn flex-1 p-5 rounded-2xl border-2 flex flex-col items-center gap-2 border-red-600 bg-red-50 text-red-700 shadow-lg shadow-red-100";
-                okBtn.className = "status-btn flex-1 p-5 rounded-2xl border-2 flex flex-col items-center gap-2 border-slate-100 text-slate-400 grayscale";
-            }
-        }
-
-        document.getElementById('audit-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const area = document.getElementById('audit-area').value;
-            const newAudit = {
-                id: Date.now(),
-                date: new Date().toISOString().split('T')[0],
-                area: area,
-                auditor: currentUser.name,
-                status: currentAuditStatus
-            };
-            audits.unshift(newAudit);
-            alert('Audit berhasil dikirim!');
-            navigate('dashboard');
-            e.target.reset();
-        });
-
-        // --- SCHEDULE TABLE ---
-        function renderSchedulesTable() {
-            const body = document.getElementById('table-schedule-body');
-            body.innerHTML = schedules.map(s => `
-                <tr class="hover:bg-slate-50 transition-colors group">
-                    <td class="px-8 py-5"><div class="w-3 h-3 rounded-full bg-slate-200 group-hover:bg-blue-400"></div></td>
-                    <td class="px-8 py-5 text-sm font-medium text-slate-500">${s.date}</td>
-                    <td class="px-8 py-5 text-sm font-bold text-slate-800">${s.area}</td>
-                    <td class="px-8 py-5 text-sm text-slate-600">${s.auditor}</td>
-                </tr>
-            `).join('');
-        }
-
-        document.getElementById('schedule-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const newSch = {
-                id: Date.now(),
-                date: document.getElementById('sch-date').value,
-                area: document.getElementById('sch-area').value,
-                auditor: document.getElementById('sch-auditor').value
-            };
-            schedules.push(newSch);
-            renderSchedulesTable();
-            e.target.reset();
-        });
-
-        // Initialize Icons
+        // Start Auth
+        initAuth();
         lucide.createIcons();
+
     </script>
 </body>
 </html>
