@@ -94,12 +94,13 @@
             </div>
 
             <nav class="flex-1 px-4 space-y-2">
+                  <button onclick="navigate('input-audit')" id="nav-input-audit" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-sm text-slate-400 hover:bg-slate-800 hover:text-white">
+                    <i data-lucide="clipboard-check" class="w-5 h-5"></i> Input Audit
+                </button>
                 <button onclick="navigate('dashboard')" id="nav-dashboard" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-sm bg-blue-600 text-white shadow-lg shadow-blue-900/20">
                     <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard
                 </button>
-                <button onclick="navigate('input-audit')" id="nav-input-audit" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-sm text-slate-400 hover:bg-slate-800 hover:text-white">
-                    <i data-lucide="clipboard-check" class="w-5 h-5"></i> Input Audit
-                </button>
+              
                 <button onclick="navigate('input-jadwal')" id="nav-input-jadwal" class="nav-item admin-only w-full hidden flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-sm text-slate-400 hover:bg-slate-800 hover:text-white">
                     <i data-lucide="calendar-plus" class="w-5 h-5"></i> Atur Jadwal
                 </button>
