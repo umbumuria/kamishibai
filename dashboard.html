@@ -25,10 +25,10 @@
         .stat-val { font-size: 22px; font-weight: 800; display: block; margin-top: 5px; }
         .stat-lbl { font-size: 9px; font-weight: bold; color: #64748b; text-transform: uppercase; }
 
-        /* Chart Grid */
-        .chart-grid { display: grid; grid-template-columns: 1fr 1fr 1.5fr; gap: 20px; margin-bottom: 25px; }
-        .chart-card { background: white; padding: 15px; border-radius: 12px; border: 1px solid var(--border); min-height: 250px; }
+        .chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 25px; }
+        .chart-card { background: white; padding: 15px; border-radius: 12px; border: 1px solid var(--border); min-height: 300px; display: flex; flex-direction: column; }
         .chart-card h4 { font-size: 11px; margin-top: 0; margin-bottom: 15px; color: #64748b; text-transform: uppercase; text-align: center; }
+        .chart-container { flex-grow: 1; position: relative; }
 
         .table-container { background: white; border-radius: 12px; border: 1px solid var(--border); overflow-x: auto; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 1200px; }
@@ -46,8 +46,6 @@
         .badge-closed { background: #dcfce7; color: #166534; }
         .badge-open { background: #fee2e2; color: #991b1b; }
         .badge-obs { background: #fef9c3; color: #854d0e; }
-
-        @media (max-width: 900px) { .chart-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
@@ -71,15 +69,15 @@
     <div class="chart-grid">
         <div class="chart-card">
             <h4>Sebaran Per Group</h4>
-            <canvas id="chartGroup"></canvas>
+            <div class="chart-container"><canvas id="chartGroup"></canvas></div>
         </div>
         <div class="chart-card">
             <h4>Status Verifikasi</h4>
-            <canvas id="chartStatus"></canvas>
+            <div class="chart-container"><canvas id="chartStatus"></canvas></div>
         </div>
         <div class="chart-card">
-            <h4>10 Dept Teraktif</h4>
-            <canvas id="chartDept"></canvas>
+            <h4>Proporsi 10 Dept Teraktif</h4>
+            <div class="chart-container"><canvas id="chartDept"></canvas></div>
         </div>
     </div>
 </div>
@@ -237,11 +235,8 @@
     }
 
     function updateCharts(data) {
-        // Group Data
         const groupCounts = { SF: 0, SP: 0, SUPPORTING: 0 };
-        // Status Data
         const statusCounts = { CLOSED: 0, OPEN: 0, OBSERVASI: 0 };
-        // Dept Data
         const deptCounts = {};
 
         data.forEach(d => {
@@ -251,12 +246,15 @@
             if(d.auditee) deptCounts[d.auditee] = (deptCounts[d.auditee] || 0) + 1;
         });
 
-        const deptLabels = Object.keys(deptCounts).sort((a,b) => deptCounts[b] - deptCounts[a]).slice(0, 10);
-        const deptValues = deptLabels.map(l => deptCounts[l]);
+        const sortedDepts = Object.keys(deptCounts).sort((a,b) => deptCounts[b] - deptCounts[a]).slice(0, 10);
+        const deptLabels = sortedDepts;
+        const deptValues = sortedDepts.map(l => deptCounts[l]);
+
+        const deptPalette = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316', '#64748b', '#84cc16'];
 
         renderChart('chartGroup', 'pie', Object.keys(groupCounts), Object.values(groupCounts), ['#2563eb', '#10b981', '#f59e0b']);
-        renderChart('chartStatus', 'doughnut', Object.keys(statusCounts), Object.values(statusCounts), ['#10b981', '#ef4444', '#f59e0b']);
-        renderChart('chartDept', 'bar', deptLabels, deptValues, '#8b5cf6');
+        renderChart('chartStatus', 'pie', Object.keys(statusCounts), Object.values(statusCounts), ['#10b981', '#ef4444', '#f59e0b']);
+        renderChart('chartDept', 'pie', deptLabels, deptValues, deptPalette);
     }
 
     function renderChart(id, type, labels, data, colors) {
@@ -269,14 +267,28 @@
                 datasets: [{
                     data: data,
                     backgroundColor: colors,
-                    borderRadius: type === 'bar' ? 5 : 0
+                    borderWidth: 1
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { display: type !== 'bar', position: 'bottom', labels: { boxWidth: 10, font: { size: 9 } } } },
-                scales: type === 'bar' ? { y: { beginAtZero: true, ticks: { font: { size: 9 } } }, x: { ticks: { font: { size: 8 } } } } : {}
+                plugins: { 
+                    legend: { 
+                        position: 'bottom', 
+                        labels: { boxWidth: 10, font: { size: 9 } } 
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const val = context.raw;
+                                const perc = ((val / total) * 100).toFixed(1);
+                                return `${context.label}: ${val} (${perc}%)`;
+                            }
+                        }
+                    }
+                }
             }
         });
     }
