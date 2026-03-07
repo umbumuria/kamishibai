@@ -88,7 +88,7 @@
             <div><label>Nama Personel Auditee</label><input type="text" id="namaAuditee" placeholder="Nama yang mendampingi audit" required></div>
             <div><label>Judul IK / Materi</label><input type="text" id="judulIK" placeholder="Materi audit..." readonly></div>
             <div><label>Jumlah Item Cek</label><input type="number" id="jmlItem" value="10" oninput="hitungNilai()" required></div>
-            <div><label>Jumlah Temuan</label><input type="number" id="jmlTemuan" value="0" oninput="hitungNilai()" required></div>
+            <div><label>Jumlah Temuan</label><input type="number" id="jmlTemuan" value="0" oninput="inputHitung()" required></div>
             <div><label>Nilai Pencapaian (%)</label><input type="text" id="nilaiTemuan" readonly></div>
             <div>
                 <label>Status Akhir</label>
@@ -104,8 +104,8 @@
         <textarea id="uraian" rows="3" placeholder="Jika ada temuan..."></textarea>
 
         <div class="grid">
-            <div><label>Analisa Penyebab</label><textarea id="penyebab" rows="2"></textarea></div>
-            <div><label>Tindakan Perbaikan</label><textarea id="tindakan" rows="2"></textarea></div>
+            <div><label>Analisa Penyebab</label><textarea id="penyebab" rows="2" placeholder="Mengapa hal ini terjadi?"></textarea></div>
+            <div><label>Tindakan Perbaikan</label><textarea id="tindakan" rows="2" placeholder="Apa tindakan yang dilakukan?"></textarea></div>
         </div>
 
         <label>Foto Bukti (Maks 5 Foto)</label>
@@ -185,7 +185,7 @@
     async function loadJadwal() {
         const groupFilter = document.getElementById('filterGroupJadwal').value;
         const sel = document.getElementById('selectJadwal');
-        if(!groupFilter) { sel.innerHTML = '<option value="">-- Pilih Group Dahulu --</option>'; return; }
+        if(!groupFilter) { sel.innerHTML = '<option value="">-- Pilih Group --</option>'; return; }
         sel.innerHTML = '<option value="">-- Memuat Data... --</option>';
         try {
             const snap = await db.collection('jadwal_audit')
@@ -208,6 +208,11 @@
         document.getElementById('judulIK').value = d.judulIK || d.materi || '';
         hitungNilai();
     }
+    
+    function inputHitung() {
+        hitungNilai();
+    }
+
     function hitungNilai() {
         const i = parseFloat(document.getElementById('jmlItem').value) || 0;
         const t = parseFloat(document.getElementById('jmlTemuan').value) || 0;
@@ -241,7 +246,6 @@
         for (let i = 0; i < rows.length; i++) {
             let rowVisible = true;
             const cells = rows[i].getElementsByTagName("td");
-            // Mapping kolom filter ke kolom tabel: tgl(0), group(1), nama(2), temuan(3), tindakan(4), nilai(5), catatan(7), status(8)
             const colMapping = [0, 1, 2, 3, 4, 5, 7, 8]; 
 
             filterInputs.forEach((input, index) => {
