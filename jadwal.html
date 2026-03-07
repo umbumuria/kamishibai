@@ -58,6 +58,13 @@
         .btn-delete { color: var(--danger); background: #fee2e2; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-left: 5px; }
 
         .editing-row { background: #fff9db !important; border: 2px solid #fab005 !important; }
+
+        /* --- STYLES UNTUK EDIT HASIL AUDIT --- */
+        .audit-edit-panel { background: #f1f5f9; padding: 10px; border-top: 1px dashed #cbd5e1; }
+        .audit-edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .audit-edit-grid div { display: flex; flex-direction: column; }
+        .audit-edit-grid label { font-size: 10px; font-weight: bold; color: #64748b; margin-bottom: 2px; }
+        .audit-edit-grid input, .audit-edit-grid textarea { padding: 5px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 12px; }
     </style>
 </head>
 <body>
@@ -126,13 +133,14 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // Penyimpanan sementara untuk data audit saat proses EDIT agar tidak hilang
     let tempAuditData = {};
 
-    function addRow(data = ['', '', '', 'SF'], isEdit = false) {
+    function addRow(data = ['', '', '', 'SF'], isEdit = false, extraData = null) {
         const tr = document.createElement('tr');
         if(isEdit) tr.className = 'editing-row';
-        tr.innerHTML = `
+        
+        // HTML untuk Baris Utama
+        let rowHtml = `
             <td><input type="month" class="cell-input" value="${data[0]}"></td>
             <td><input type="text" class="cell-input" placeholder="Nama..." value="${data[1]}"></td>
             <td><input type="text" class="cell-input" placeholder="Dept..." value="${data[2]}"></td>
@@ -147,12 +155,35 @@
                 <button onclick="this.parentElement.parentElement.remove()" style="background:none; border:none; color:#dc2626; cursor:pointer; font-weight:bold; font-size:16px;">✕</button>
             </td>
         `;
+
+        // JIKA SEDANG EDIT DATA YANG SUDAH SELESAI, TAMBAHKAN PANEL KOREKSI HASIL DI BAWAHNYA
+        if(isEdit && extraData && extraData.status === 'Selesai') {
+            tr.innerHTML = `
+                <td colspan="5">
+                    <div style="display:flex; flex-direction:column;">
+                        <table style="width:100%"><tr>${rowHtml}</tr></table>
+                        <div class="audit-edit-panel">
+                            <div style="font-size:11px; font-weight:bold; color:var(--primary); margin-bottom:8px;">KOREKSI HASIL AUDIT (SUDAH SELESAI)</div>
+                            <div class="audit-edit-grid">
+                                <div><label>SKOR RINGKAS</label><input type="number" class="res-skor1" value="${extraData.skor1 || ''}"></div>
+                                <div><label>SKOR RAPI</label><input type="number" class="res-skor2" value="${extraData.skor2 || ''}"></div>
+                                <div style="grid-column: span 2;"><label>CATATAN/TEMUAN</label><textarea class="res-catatan">${extraData.catatan || ''}</textarea></div>
+                                <div style="grid-column: span 2;"><label>LINK FOTO (URL)</label><input type="text" class="res-foto" value="${extraData.fotoUrl || ''}"></div>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            `;
+        } else {
+            tr.innerHTML = rowHtml;
+        }
+
         document.getElementById('inputBody').prepend(tr);
         return tr;
     }
 
     async function saveBulkData() {
-        const rows = document.querySelectorAll('#inputBody tr');
+        const rows = document.querySelectorAll('#inputBody > tr');
         if (rows.length === 0) return;
 
         const btn = document.getElementById('btnSaveAll');
@@ -163,20 +194,31 @@
 
         rows.forEach(row => {
             const inputs = row.querySelectorAll('.cell-input');
+            if(inputs.length === 0) return; // Skip if empty
+
             const p = inputs[0].value, a = inputs[1].value, ad = inputs[2].value, g = inputs[3].value;
 
             if (p && a && ad) {
                 const [thn, bln] = p.split('-');
                 const k = `${bln}${thn}-${a.replace(/\s+/g,'').toUpperCase()}-${ad.replace(/\s+/g,'').toUpperCase()}-${g}`;
                 
-                // Cek apakah ada data audit lama yang ditaruh di tempAuditData
                 const oldData = tempAuditData[k] || {};
                 
+                // Ambil data dari panel koreksi jika ada
+                const resSkor1 = row.querySelector('.res-skor1')?.value || oldData.skor1 || "";
+                const resSkor2 = row.querySelector('.res-skor2')?.value || oldData.skor2 || "";
+                const resCatatan = row.querySelector('.res-catatan')?.value || oldData.catatan || "";
+                const resFoto = row.querySelector('.res-foto')?.value || oldData.fotoUrl || "";
+
                 const finalData = {
                     periode: p, auditor: a, auditee: ad, group: g, kodeUnik: k,
                     status: oldData.status || "Pending",
                     createdAt: oldData.createdAt || firebase.firestore.FieldValue.serverTimestamp(),
-                    ...oldData // Masukkan foto, nilai, dll jika ada
+                    ...oldData, // Data asli (biar field lain seperti lat/lng gak hilang)
+                    skor1: resSkor1,
+                    skor2: resSkor2,
+                    catatan: resCatatan,
+                    fotoUrl: resFoto
                 };
 
                 batch.set(db.collection('jadwal_audit').doc(k), finalData);
@@ -193,7 +235,7 @@
         try {
             await batch.commit();
             alert("Perubahan Berhasil Disimpan!");
-            tempAuditData = {}; // Clear temp
+            tempAuditData = {};
             document.getElementById('inputBody').innerHTML = ''; 
             addRow(); 
             fetchHistory();
@@ -234,21 +276,19 @@
     }
 
     async function moveRowToEdit(id) {
-        if(!confirm("Naikkan data ke form edit? Data hasil audit (jika ada) akan tetap tersimpan saat disave ulang.")) return;
+        if(!confirm("Naikkan data ke form edit?")) return;
         
         const docRef = db.collection('jadwal_audit').doc(id);
         const doc = await docRef.get();
         
         if (doc.exists) {
             const d = doc.data();
-            // Simpan seluruh objek data ke memory sementara agar tidak hilang saat ditimpa batch.set
             tempAuditData[d.kodeUnik] = d;
 
-            addRow([d.periode, d.auditor, d.auditee, d.group], true);
+            // Panggil addRow dengan tambahan d (data lengkap) untuk memicu panel koreksi
+            addRow([d.periode, d.auditor, d.auditee, d.group], true, d);
             
-            // Hapus doc lama agar tidak duplikat jika Admin mengubah nama auditor/periode (yang merubah ID)
             await docRef.delete();
-            
             fetchHistory();
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
