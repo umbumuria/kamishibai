@@ -9,13 +9,23 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        #sidebar { transition: transform 0.3s ease-in-out; }
+        @media (max-width: 1024px) {
+            #sidebar.hidden-mobile { transform: translateX(-100%); }
+            #sidebar.show-mobile { transform: translateX(0); }
+        }
     </style>
 </head>
 <body class="bg-slate-50 flex h-screen overflow-hidden">
-    <aside class="w-72 bg-slate-900 text-white flex flex-col z-50">
-        <div class="p-8 flex items-center gap-3">
-            <div class="bg-blue-600 p-2 rounded-xl"><i data-lucide="clipboard-check" class="w-6 h-6"></i></div>
-            <h1 class="font-bold text-xl uppercase">Kamishibai</h1>
+    <div id="overlay" onclick="toggleMenu()" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden"></div>
+
+    <aside id="sidebar" class="fixed lg:static inset-y-0 left-0 w-72 bg-slate-900 text-white flex flex-col z-50 hidden-mobile lg:transform-none">
+        <div class="p-8 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="bg-blue-600 p-2 rounded-xl"><i data-lucide="clipboard-check" class="w-6 h-6"></i></div>
+                <h1 class="font-bold text-xl uppercase tracking-tighter">Kamishibai</h1>
+            </div>
+            <button onclick="toggleMenu()" class="lg:hidden text-slate-400"><i data-lucide="x" class="w-6 h-6"></i></button>
         </div>
         <nav class="flex-1 px-4 space-y-2">
             <a href="dashboard.html" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-blue-600 text-white text-sm font-medium">
@@ -29,29 +39,46 @@
             </a>
         </nav>
         <div class="p-6 border-t border-slate-800">
-            <button onclick="logout()" class="w-full flex items-center gap-3 px-4 py-2 text-red-400 text-sm font-medium">
+            <button onclick="logout()" class="w-full flex items-center gap-3 px-4 py-2 text-red-400 hover:bg-red-400/10 rounded-xl text-sm font-medium">
                 <i data-lucide="log-out" class="w-5 h-5"></i> Keluar
             </button>
         </div>
     </aside>
 
-    <main class="flex-1 flex flex-col overflow-hidden">
-        <header class="h-20 bg-white border-b border-slate-200 px-8 flex items-center justify-between">
-            <h2 class="font-black text-lg text-slate-800 uppercase">DASHBOARD</h2>
-        </header>
-        <div class="p-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
-                <p class="text-slate-400 text-[10px] font-black uppercase tracking-widest">Total Jadwal</p>
-                <h3 class="text-4xl font-black text-slate-900 mt-2">12</h3>
+    <main class="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <header class="h-20 bg-white border-b border-slate-200 px-4 sm:px-8 flex items-center justify-between flex-shrink-0">
+            <div class="flex items-center gap-4">
+                <button onclick="toggleMenu()" class="lg:hidden p-2 bg-slate-100 rounded-lg text-slate-600"><i data-lucide="menu" class="w-6 h-6"></i></button>
+                <h2 class="font-black text-sm sm:text-lg text-slate-800 uppercase tracking-tight">DASHBOARD</h2>
             </div>
-            <div class="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
-                <p class="text-slate-400 text-[10px] font-black uppercase tracking-widest">Audit Selesai</p>
-                <h3 class="text-4xl font-black text-blue-600 mt-2">5</h3>
+        </header>
+
+        <div class="p-4 sm:p-8 flex-1 overflow-y-auto">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                <div class="bg-white p-6 sm:p-8 rounded-[2rem] border border-slate-100 shadow-sm transition-transform hover:scale-[1.02]">
+                    <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-4">
+                        <i data-lucide="calendar-range" class="w-6 h-6"></i>
+                    </div>
+                    <p class="text-slate-400 text-[10px] font-black uppercase tracking-widest">Total Jadwal</p>
+                    <h3 class="text-3xl sm:text-4xl font-black text-slate-900 mt-2">12</h3>
+                </div>
+                <div class="bg-white p-6 sm:p-8 rounded-[2rem] border border-slate-100 shadow-sm transition-transform hover:scale-[1.02]">
+                    <div class="w-12 h-12 bg-green-50 text-green-600 rounded-2xl flex items-center justify-center mb-4">
+                        <i data-lucide="check-circle" class="w-6 h-6"></i>
+                    </div>
+                    <p class="text-slate-400 text-[10px] font-black uppercase tracking-widest">Audit Selesai</p>
+                    <h3 class="text-3xl sm:text-4xl font-black text-blue-600 mt-2">5</h3>
+                </div>
             </div>
         </div>
     </main>
 
     <script>
+        function toggleMenu() {
+            document.getElementById('sidebar').classList.toggle('hidden-mobile');
+            document.getElementById('sidebar').classList.toggle('show-mobile');
+            document.getElementById('overlay').classList.toggle('hidden');
+        }
         if(localStorage.getItem('kamishibai_role') === 'admin') document.getElementById('nav-admin').classList.remove('hidden');
         window.logout = () => { localStorage.clear(); window.location.href = 'index.html'; };
         lucide.createIcons();
