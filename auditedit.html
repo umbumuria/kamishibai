@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Data Audit Kamishibai</title>
+    <title>Form Audit Kamishibai</title>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <style>
@@ -30,47 +30,68 @@
         .photo-box span { font-size: 10px; color: #64748b; font-weight: bold; }
 
         .btn-submit { width: 100%; padding: 18px; background: var(--primary); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 18px; transition: 0.3s; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3); }
-        .btn-cancel { background: #64748b; margin-top: 10px; }
         
-        /* --- Responsive Table --- */
-        .filter-bar { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: white; padding: 15px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 15px; }
-        .table-container { background: white; border-radius: 12px; border: 1px solid var(--border); overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 950px; }
-        th { background: #f1f5f9; padding: 12px; text-align: left; color: #64748b; border-bottom: 2px solid var(--border); }
+        /* Table & Rapi Filter */
+        .table-container { background: white; border-radius: 12px; border: 1px solid var(--border); overflow-x: auto; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 1200px; }
+        
+        th { background: #f8fafc; padding: 12px 10px; text-align: left; color: #475569; border-bottom: 2px solid var(--border); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
         td { padding: 12px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
         
-        .thumb-img { width: 40px; height: 40px; object-fit: cover; border-radius: 4px; margin-right: 2px; cursor: pointer; }
-        .badge { padding: 4px 8px; border-radius: 12px; font-size: 9px; font-weight: bold; display: inline-block; }
+        .filter-row { background: #ffffff; }
+        .filter-row th { padding: 5px 10px 10px 10px; border-bottom: 1px solid var(--border); }
+        
+        .filter-input { 
+            width: 100%; padding: 8px 10px; font-size: 11px; border: 1px solid #e2e8f0; 
+            border-radius: 6px; box-sizing: border-box; font-weight: normal; outline: none;
+            transition: all 0.2s; background: #fdfdfd;
+        }
+        .filter-input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1); background: white; }
+        
+        .btn-action { padding: 5px 10px; border-radius: 6px; border: none; cursor: pointer; font-size: 10px; font-weight: bold; margin-bottom: 4px; display: block; width: 100%; text-align: center; }
+        .btn-edit { background: #dcfce7; color: #166534; }
+        .btn-delete { background: #fee2e2; color: #991b1b; }
+
+        .thumb-img { width: 45px; height: 45px; object-fit: cover; border-radius: 6px; margin-right: 4px; border: 1px solid #ddd; cursor: pointer; }
+        .badge { padding: 4px 8px; border-radius: 12px; font-size: 9px; font-weight: bold; display: inline-block; margin-top: 2px; }
         .badge-selesai { background: #e0e7ff; color: #3730a3; }
         .badge-closed { background: #dcfce7; color: #166534; }
         .badge-open { background: #fee2e2; color: #991b1b; }
 
-        .btn-edit { background: #f59e0b; color: white; padding: 5px 10px; border-radius: 6px; border: none; font-size: 10px; cursor: pointer; font-weight: bold; }
-        .btn-delete { background: var(--danger); color: white; padding: 5px 10px; border-radius: 6px; border: none; font-size: 10px; cursor: pointer; font-weight: bold; margin-top: 5px; }
-
         @media (max-width: 600px) {
-            .grid, .filter-bar { grid-template-columns: 1fr; }
+            .grid { grid-template-columns: 1fr; }
             .container { padding: 15px; }
         }
     </style>
 </head>
 <body>
 
-<div class="container" id="editFormContainer">
-    <div class="section-title">MODE EDIT DATA AUDIT</div>
+<div class="container">
+    <div class="section-title">FORM INPUT AUDIT KAMISHIBAI</div>
     
     <form id="auditForm">
-        <input type="hidden" id="editDocId">
+        <label>1. Pilih Group Unit</label>
+        <select id="filterGroupJadwal" onchange="loadJadwal()">
+            <option value="">-- Pilih Group --</option>
+            <option value="SF">SUGAR FACTORY (SF)</option>
+            <option value="SP">PLANTATION (SP)</option>
+            <option value="SUPPORTING">SUPPORTING</option>
+        </select>
+
+        <label>2. Pilih Jadwal Audit (Sesuai Periode)</label>
+        <select id="selectJadwal" onchange="fillJadwalData(this.value)" required>
+            <option value="">-- Pilih Group Dahulu --</option>
+        </select>
 
         <div class="grid">
-            <div><label>Group</label><input type="text" id="displayGroup" readonly></div>
+            <div><label>Group Terpilih</label><input type="text" id="displayGroup" readonly></div>
+            <div><label>Tanggal Audit</label><input type="date" id="tglAudit" required></div>
             <div><label>Auditor</label><input type="text" id="displayAuditor" readonly></div>
             <div><label>Dept. Auditee</label><input type="text" id="displayDept" readonly></div>
-            <div><label>Tanggal Audit</label><input type="date" id="tglAudit" required></div>
-            <div><label>Nama Personel Auditee</label><input type="text" id="namaAuditee" required></div>
-            <div><label>Judul IK / Materi</label><input type="text" id="judulIK" required></div>
-            <div><label>Jumlah Item Cek</label><input type="number" id="jmlItem" oninput="hitungNilai()" required></div>
-            <div><label>Jumlah Temuan</label><input type="number" id="jmlTemuan" oninput="hitungNilai()" required></div>
+            <div><label>Nama Personel Auditee</label><input type="text" id="namaAuditee" placeholder="Nama staf" required></div>
+            <div><label>Judul IK / Materi</label><input type="text" id="judulIK" placeholder="Materi audit..." readonly></div>
+            <div><label>Jumlah Item Cek</label><input type="number" id="jmlItem" value="10" oninput="hitungNilai()" required></div>
+            <div><label>Jumlah Temuan</label><input type="number" id="jmlTemuan" value="0" oninput="hitungNilai()" required></div>
             <div><label>Nilai Pencapaian (%)</label><input type="text" id="nilaiTemuan" readonly></div>
             <div>
                 <label>Status Akhir</label>
@@ -82,23 +103,22 @@
             </div>
         </div>
 
-        <label>Uraian Ketidaksesuaian</label>
-        <textarea id="uraian" rows="2"></textarea>
+        <label>Uraian Ketidaksesuaian (Temuan)</label>
+        <textarea id="uraian" rows="3" placeholder="Jika ada temuan..."></textarea>
 
         <div class="grid">
             <div><label>Analisa Penyebab</label><textarea id="penyebab" rows="2"></textarea></div>
             <div><label>Tindakan Perbaikan</label><textarea id="tindakan" rows="2"></textarea></div>
         </div>
 
-        <label>Foto Bukti</label>
+        <label>Foto Bukti (Maks 5 Foto)</label>
         <div class="photo-grid">
             <script>
                 for(let i=1; i<=5; i++) {
-                    let labelFoto = (i === 5) ? "FOTO BERSAMA AUDITEE" : `FOTO ${i}`;
                     document.write(`
                         <div class="photo-box" onclick="document.getElementById('file${i}').click()">
                             <img id="img${i}" src="">
-                            <span id="text${i}">${labelFoto}</span>
+                            <span id="text${i}">${i===5?'FOTO BERSAMA':`FOTO ${i}`}</span>
                             <div id="load${i}" style="display:none; font-size:10px; color:var(--primary);">Uploading...</div>
                             <input type="file" id="file${i}" accept="image/*" hidden onchange="uploadImage(this, ${i})">
                             <input type="hidden" id="url${i}">
@@ -109,36 +129,40 @@
         </div>
 
         <label>Catatan Tambahan</label>
-        <input type="text" id="updateCatatan" placeholder="Tambahkan catatan jika diperlukan...">
-
-        <button type="submit" id="btnSave" class="btn-submit">UPDATE DATA AUDIT</button>
-        <button type="button" onclick="resetForm()" class="btn-submit btn-cancel">BATAL / RESET</button>
+        <input type="text" id="updateCatatan" placeholder="Catatan singkat...">
+        <button type="submit" id="btnSave" class="btn-submit">SIMPAN HASIL AUDIT</button>
     </form>
 </div>
 
-<div style="max-width: 1150px; margin: 0 auto; margin-bottom: 80px; padding:0 15px;">
-    <div class="section-title">HISTORY & MANAJEMEN DATA</div>
+<div style="max-width: 1350px; margin: 0 auto; margin-bottom: 80px; padding:0 15px;">
+    <div class="section-title">HISTORY AUDIT LOG</div>
     
-    <div class="filter-bar">
-        <input type="text" id="fAuditor" placeholder="Cari Auditor..." oninput="fetchAuditHistory()">
-        <select id="fGroup" onchange="fetchAuditHistory()">
-            <option value="">Semua Group</option>
-            <option value="SF">SF</option><option value="SP">SP</option><option value="SUPPORTING">SUPPORTING</option>
-        </select>
-    </div>
-
     <div class="table-container">
-        <table>
+        <table id="historyTable">
             <thead>
                 <tr>
-                    <th>TGL AUDIT</th>
-                    <th>GROUP / UNIT</th>
-                    <th>AUDITOR</th>
-                    <th>MATERI & TEMUAN</th>
-                    <th>NILAI</th>
-                    <th>FOTO</th>
-                    <th>CATATAN</th> <th>STATUS</th>
-                    <th>AKSI</th>
+                    <th>Tgl Audit</th>
+                    <th>Group / Dept</th>
+                    <th>Auditor / Auditee</th>
+                    <th>Materi & Temuan</th>
+                    <th>Tindakan Perbaikan</th>
+                    <th>Nilai</th>
+                    <th>Foto</th>
+                    <th>Catatan</th>
+                    <th>Status</th>
+                    <th>Aksi</th>
+                </tr>
+                <tr class="filter-row">
+                    <th><input type="text" class="filter-input" placeholder="Tgl..." onkeyup="filterExcel()"></th>
+                    <th><input type="text" class="filter-input" placeholder="Dept..." onkeyup="filterExcel()"></th>
+                    <th><input type="text" class="filter-input" placeholder="Nama..." onkeyup="filterExcel()"></th>
+                    <th><input type="text" class="filter-input" placeholder="Temuan..." onkeyup="filterExcel()"></th>
+                    <th><input type="text" class="filter-input" placeholder="Tindakan..." onkeyup="filterExcel()"></th>
+                    <th><input type="text" class="filter-input" placeholder="Nilai..." onkeyup="filterExcel()"></th>
+                    <th></th> 
+                    <th><input type="text" class="filter-input" placeholder="Catatan..." onkeyup="filterExcel()"></th>
+                    <th><input type="text" class="filter-input" placeholder="Status..." onkeyup="filterExcel()"></th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody id="historyBody"></tbody>
@@ -147,6 +171,7 @@
 </div>
 
 <script>
+    // Firebase Setup
     const firebaseConfig = {
         apiKey: "AIzaSyCiW38hQ5ZfYnp3sa95OQw6IjxnfnM5dl4",
         authDomain: "kamishibaimsm.firebaseapp.com",
@@ -160,6 +185,58 @@
 
     const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/ddhsrvefu/image/upload";
     const CLOUDINARY_PRESET = "kamishiba_foto";
+
+    let cacheJadwal = {};
+    let cacheHistory = {};
+
+    async function loadJadwal() {
+        const groupFilter = document.getElementById('filterGroupJadwal').value;
+        const sel = document.getElementById('selectJadwal');
+        if(!groupFilter) { sel.innerHTML = '<option value="">-- Pilih Group Dahulu --</option>'; return; }
+        sel.innerHTML = '<option value="">-- Memuat Data... --</option>';
+        try {
+            const snap = await db.collection('jadwal_audit')
+                .where('status', '==', 'Pending')
+                .where('group', '==', groupFilter).get();
+            sel.innerHTML = '<option value="">-- Pilih Jadwal --</option>';
+            snap.forEach(doc => {
+                cacheJadwal[doc.id] = doc.data();
+                sel.innerHTML += `<option value="${doc.id}">${doc.data().periode} | ${doc.data().auditor}</option>`;
+            });
+        } catch (e) { console.error(e); }
+    }
+
+    function fillJadwalData(id) {
+        if(!id) return;
+        const d = cacheJadwal[id] || cacheHistory[id];
+        document.getElementById('displayGroup').value = d.group || '';
+        document.getElementById('displayAuditor').value = d.auditor || '';
+        document.getElementById('displayDept').value = d.auditee || '';
+        document.getElementById('judulIK').value = d.judulIK || d.materi || '';
+        
+        // Reset/Fill other fields if editing
+        if(d.status === "Selesai") {
+            document.getElementById('tglAudit').value = d.tglAudit;
+            document.getElementById('namaAuditee').value = d.namaAuditeePerson;
+            document.getElementById('jmlItem').value = d.jmlItem;
+            document.getElementById('jmlTemuan').value = d.jmlTemuan;
+            document.getElementById('uraian').value = d.uraian || '';
+            document.getElementById('penyebab').value = d.penyebab || '';
+            document.getElementById('tindakan').value = d.tindakan || '';
+            document.getElementById('statusVerifikasi').value = d.statusVerifikasi || 'OPEN';
+            document.getElementById('updateCatatan').value = d.updateCatatan || '';
+            // Images
+            for(let i=1; i<=5; i++) {
+                const url = d.foto && d.foto[i-1] ? d.foto[i-1] : '';
+                document.getElementById(`url${i}`).value = url;
+                const img = document.getElementById(`img${i}`);
+                const txt = document.getElementById(`text${i}`);
+                if(url) { img.src = url; img.style.display = 'block'; txt.style.display = 'none'; }
+                else { img.style.display = 'none'; txt.style.display = 'block'; }
+            }
+        }
+        hitungNilai();
+    }
 
     function hitungNilai() {
         const i = parseFloat(document.getElementById('jmlItem').value) || 0;
@@ -181,89 +258,36 @@
             document.getElementById(`img${idx}`).src = data.secure_url;
             document.getElementById(`img${idx}`).style.display = 'block';
             document.getElementById(`text${idx}`).style.display = 'none';
-        } catch (e) { alert("Upload gagal!"); }
+        } catch (e) { alert("Upload Gagal"); }
         document.getElementById(`load${idx}`).style.display = 'none';
     }
 
-    async function fetchAuditHistory() {
-        const fAud = document.getElementById('fAuditor').value.toLowerCase();
-        const fGrp = document.getElementById('fGroup').value;
-        const body = document.getElementById('historyBody');
-        try {
-            const snap = await db.collection('jadwal_audit')
-                .where('status', '==', 'Selesai')
-                .orderBy('updatedAt', 'desc')
-                .limit(30)
-                .get();
-            body.innerHTML = '';
-            snap.forEach(doc => {
-                const d = doc.data();
-                if(d.auditor.toLowerCase().includes(fAud) && (fGrp === "" || d.group === fGrp)) {
-                    let fotoHtml = '';
-                    if(d.foto) d.foto.forEach(url => { fotoHtml += `<img src="${url}" class="thumb-img" onclick="window.open('${url}')">`; });
-                    
-                    body.innerHTML += `
-                        <tr>
-                            <td>${d.tglAudit}</td>
-                            <td><b>${d.group}</b><br>${d.auditee}</td>
-                            <td>${d.auditor}</td>
-                            <td><small>${d.judulIK || '-'}</small><br><i style="color:#64748b">${d.uraian || '-'}</i></td>
-                            <td style="font-weight:bold">${d.nilaiPencapaian}</td>
-                            <td><div style="display:flex">${fotoHtml || '-'}</div></td>
-                            <td style="color:#2563eb; font-size:10px;">${d.updateCatatan || '-'}</td> <td><span class="badge ${d.statusVerifikasi==='CLOSED'?'badge-closed':'badge-open'}">${d.statusVerifikasi}</span></td>
-                            <td>
-                                <button class="btn-edit" onclick='prepareEdit("${doc.id}", ${JSON.stringify(d).replace(/'/g, "&apos;")})'>EDIT</button>
-                                <button class="btn-delete" onclick='deleteAudit("${doc.id}")'>HAPUS</button>
-                            </td>
-                        </tr>
-                    `;
-                }
+    function filterExcel() {
+        const table = document.getElementById("historyTable");
+        const filterInputs = table.querySelectorAll(".filter-input");
+        const rows = document.getElementById("historyBody").getElementsByTagName("tr");
+        for (let i = 0; i < rows.length; i++) {
+            let rowVisible = true;
+            const cells = rows[i].getElementsByTagName("td");
+            const colMapping = [0, 1, 2, 3, 4, 5, 7, 8]; 
+            filterInputs.forEach((input, index) => {
+                const filterValue = input.value.toLowerCase();
+                const targetColIndex = colMapping[index];
+                const cellValue = cells[targetColIndex] ? cells[targetColIndex].textContent.toLowerCase() : "";
+                if (filterValue && !cellValue.includes(filterValue)) rowVisible = false;
             });
-        } catch (e) { console.error(e); }
-    }
-
-    function prepareEdit(id, data) {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        document.getElementById('editDocId').value = id;
-        document.getElementById('displayGroup').value = data.group || '';
-        document.getElementById('displayAuditor').value = data.auditor || '';
-        document.getElementById('displayDept').value = data.auditee || '';
-        document.getElementById('tglAudit').value = data.tglAudit || '';
-        document.getElementById('namaAuditee').value = data.namaAuditeePerson || '';
-        document.getElementById('judulIK').value = data.judulIK || '';
-        document.getElementById('jmlItem').value = data.jmlItem || 10;
-        document.getElementById('jmlTemuan').value = data.jmlTemuan || 0;
-        document.getElementById('nilaiTemuan').value = data.nilaiPencapaian || '100%';
-        document.getElementById('statusVerifikasi').value = data.statusVerifikasi || 'OPEN';
-        document.getElementById('uraian').value = data.uraian || '';
-        document.getElementById('penyebab').value = data.penyebab || '';
-        document.getElementById('tindakan').value = data.tindakan || '';
-        document.getElementById('updateCatatan').value = data.updateCatatan || ''; // Menarik catatan ke input
-
-        for(let i=1; i<=5; i++) {
-            const img = document.getElementById(`img${i}`);
-            const urlInput = document.getElementById(`url${i}`);
-            const span = document.getElementById(`text${i}`);
-            if(data.foto && data.foto[i-1]) {
-                img.src = data.foto[i-1]; img.style.display = 'block';
-                urlInput.value = data.foto[i-1]; span.style.display = 'none';
-            } else {
-                img.src = ''; img.style.display = 'none';
-                urlInput.value = ''; span.style.display = 'block';
-            }
+            rows[i].style.display = rowVisible ? "" : "none";
         }
-        document.getElementById('btnSave').innerText = "SIMPAN PERUBAHAN";
     }
 
     document.getElementById('auditForm').onsubmit = async (e) => {
         e.preventDefault();
-        const id = document.getElementById('editDocId').value;
-        if(!id) return alert("Pilih data dari tabel di bawah dahulu!");
-        
+        const id = document.getElementById('selectJadwal').value;
+        if(!id) return alert("Pilih jadwal!");
         const btn = document.getElementById('btnSave');
-        btn.disabled = true; btn.innerText = "Memproses...";
+        btn.disabled = true; btn.innerText = "Menyimpan...";
         
-        const updateData = {
+        const data = {
             tglAudit: document.getElementById('tglAudit').value,
             namaAuditeePerson: document.getElementById('namaAuditee').value,
             judulIK: document.getElementById('judulIK').value,
@@ -274,34 +298,82 @@
             penyebab: document.getElementById('penyebab').value,
             tindakan: document.getElementById('tindakan').value,
             statusVerifikasi: document.getElementById('statusVerifikasi').value,
-            updateCatatan: document.getElementById('updateCatatan').value, // Mengirim catatan baru
+            updateCatatan: document.getElementById('updateCatatan').value,
+            status: "Selesai",
             foto: [1,2,3,4,5].map(i => document.getElementById(`url${i}`).value).filter(v => v),
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
-
+        
         try {
-            await db.collection('jadwal_audit').doc(id).update(updateData);
-            alert("Data Berhasil Diperbarui!");
-            location.reload();
-        } catch (e) { alert("Gagal update!"); btn.disabled = false; }
+            await db.collection('jadwal_audit').doc(id).update(data);
+            alert("Berhasil!"); location.reload();
+        } catch (e) { alert("Error!"); btn.disabled = false; }
     };
 
+    async function fetchAuditHistory() {
+        const body = document.getElementById('historyBody');
+        try {
+            const snap = await db.collection('jadwal_audit')
+                .where('status', '==', 'Selesai')
+                .orderBy('updatedAt', 'desc').limit(50).get();
+            body.innerHTML = '';
+            snap.forEach(doc => {
+                const d = doc.data();
+                cacheHistory[doc.id] = d;
+                let fotoHtml = '';
+                if(d.foto) d.foto.forEach(url => { fotoHtml += `<img src="${url}" class="thumb-img" onclick="window.open('${url}')">`; });
+                
+                body.innerHTML += `
+                    <tr>
+                        <td>${d.tglAudit}</td>
+                        <td><b>${d.group}</b><br>${d.auditee}</td>
+                        <td><small>Auditor:</small> ${d.auditor}<br><small>Auditee:</small> ${d.namaAuditeePerson || '-'}</td>
+                        <td><small>IK: ${d.judulIK || '-'}</small><br><i style="color:#64748b">${d.uraian || '-'}</i></td>
+                        <td>${d.tindakan || '-'}</td>
+                        <td style="font-weight:bold">${d.nilaiPencapaian}</td>
+                        <td><div style="display:flex">${fotoHtml || '-'}</div></td>
+                        <td style="color:#2563eb; font-size:10px;">${d.updateCatatan || '-'}</td>
+                        <td>
+                            <span class="badge badge-selesai">SUBMITTED</span><br>
+                            <span class="badge ${d.statusVerifikasi==='CLOSED'?'badge-closed':'badge-open'}">${d.statusVerifikasi}</span>
+                        </td>
+                        <td>
+                            <button class="btn-action btn-edit" onclick="editAudit('${doc.id}')">EDIT</button>
+                            <button class="btn-action btn-delete" onclick="deleteAudit('${doc.id}')">DELETE</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        } catch (e) { console.error(e); }
+    }
+
+    function editAudit(id) {
+        const sel = document.getElementById('selectJadwal');
+        const d = cacheHistory[id];
+        sel.innerHTML = `<option value="${id}">${d.periode} | ${d.auditor} (RE-EDIT)</option>`;
+        sel.value = id;
+        fillJadwalData(id);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
     async function deleteAudit(id) {
-        if(!confirm("Yakin ingin menghapus hasil audit ini? Data akan kembali ke status 'Pending'.")) return;
+        if(!confirm("Hapus hasil audit ini? Status akan kembali menjadi PENDING.")) return;
         try {
             await db.collection('jadwal_audit').doc(id).update({
                 status: "Pending",
                 tglAudit: "",
+                namaAuditeePerson: "",
+                jmlTemuan: 0,
+                nilaiPencapaian: "",
                 uraian: "",
-                foto: [],
-                updateCatatan: ""
+                penyebab: "",
+                tindakan: "",
+                foto: []
             });
-            alert("Hasil audit dihapus & dikembalikan ke jadwal pending.");
-            fetchAuditHistory();
-        } catch (e) { alert("Gagal menghapus!"); }
+            alert("Data dihapus!"); location.reload();
+        } catch (e) { alert("Gagal hapus!"); }
     }
 
-    function resetForm() { location.reload(); }
     fetchAuditHistory();
 </script>
 </body>
