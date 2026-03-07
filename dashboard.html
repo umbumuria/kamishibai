@@ -15,10 +15,12 @@
         .container { max-width: 1300px; margin: 0 auto; background: white; padding: 20px; border-radius: 15px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 25px; }
         .section-title { font-size: 16px; font-weight: bold; margin: 20px 0 15px 0; border-left: 5px solid var(--primary); padding-left: 12px; color: var(--primary); text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; }
         
-        .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px; }
+        /* Filter Atas (Server Side) */
+        .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px; background: #f1f5f9; padding: 15px; border-radius: 10px; }
         label { display: block; font-size: 10px; font-weight: bold; margin-bottom: 5px; color: #64748b; text-transform: uppercase; }
         select, input { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; outline: none; background: white; box-sizing: border-box; }
 
+        /* Stats Card */
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px; }
         .stat-box { padding: 15px; border-radius: 12px; border: 1px solid var(--border); text-align: center; background: #fff; cursor: pointer; transition: 0.2s; }
         .stat-box:hover { transform: translateY(-3px); border-color: var(--primary); }
@@ -26,83 +28,77 @@
         .stat-val { font-size: 22px; font-weight: 800; display: block; margin-top: 5px; }
         .stat-lbl { font-size: 9px; font-weight: bold; color: #64748b; text-transform: uppercase; }
 
-        .table-container { background: white; border-radius: 12px; border: 1px solid var(--border); overflow-x: auto; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 25px; }
-        table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 1100px; }
-        th { background: #f8fafc; padding: 12px 10px; text-align: left; color: #475569; border-bottom: 2px solid var(--border); font-size: 10px; text-transform: uppercase; white-space: nowrap; }
-        td { padding: 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        /* Table Styling */
+        .table-container { background: white; border-radius: 12px; border: 1px solid var(--border); overflow-x: auto; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 1200px; }
+        th { background: #f8fafc; padding: 12px 10px; text-align: left; color: #475569; border-bottom: 2px solid var(--border); font-size: 10px; text-transform: uppercase; }
+        td { padding: 12px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
 
-        .thumb-img { width: 45px; height: 45px; object-fit: cover; border-radius: 6px; border: 1px solid #ddd; cursor: pointer; transition: 0.2s; margin-right: 4px; }
-        .badge { padding: 4px 8px; border-radius: 12px; font-size: 9px; font-weight: bold; display: inline-block; white-space: nowrap; }
-        .badge-open { background: #fee2e2; color: #991b1b; }
-        .badge-closed { background: #dcfce7; color: #166534; }
-        .badge-pending { background: #fef3c7; color: #92400e; }
+        /* Multi-Filter Row */
+        .filter-row { background: #ffffff; }
+        .filter-row th { padding: 5px 10px 10px 10px; border-bottom: 1px solid var(--border); }
+        .filter-input { width: 100%; padding: 8px 10px; font-size: 11px; border: 1px solid #e2e8f0; border-radius: 6px; box-sizing: border-box; outline: none; background: #fdfdfd; font-weight: normal; }
+        .filter-input:focus { border-color: var(--primary); background: white; }
+
+        .thumb-img { width: 45px; height: 45px; object-fit: cover; border-radius: 6px; margin-right: 4px; border: 1px solid #ddd; cursor: pointer; }
+        .badge { padding: 4px 8px; border-radius: 12px; font-size: 9px; font-weight: bold; display: inline-block; margin-top: 2px; }
         .badge-success { background: #dcfce7; color: #166534; }
-        .badge-ontime { border: 1px solid var(--success); color: var(--success); }
-        .badge-late { border: 1px solid var(--danger); color: var(--danger); }
+        .badge-closed { background: #dcfce7; color: #166534; }
+        .badge-open { background: #fee2e2; color: #991b1b; }
 
-        .export-btn { font-size: 11px; padding: 8px 16px; background: #dc2626; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 5px; }
-        .export-btn:hover { background: #b91c1c; }
+        .export-btn { font-size: 11px; padding: 8px 16px; background: #dc2626; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="section-title" style="margin-top:0">Analisa Performa Kamishibai</div>
+    <div class="section-title" style="margin-top:0">Dashboard Analisa Performa</div>
+    
     <div class="filter-grid">
-        <div><label>Group</label><select id="fGroup" onchange="fetchData()"><option value="">Semua</option><option value="SF">SF</option><option value="SP">SP</option><option value="SUPPORTING">SUPPORTING</option></select></div>
+        <div><label>Group Unit</label><select id="fGroup" onchange="fetchData()"><option value="">Semua Group</option><option value="SF">SF</option><option value="SP">SP</option><option value="SUPPORTING">SUPPORTING</option></select></div>
         <div><label>Bulan Jadwal</label><input type="month" id="fMonth" onchange="fetchData()"></div>
-        <div><label>Auditor</label><input type="text" id="fAuditor" placeholder="Cari nama..." onkeyup="applyLocalFilters()"></div>
-        <div><label>Judul IK</label><input type="text" id="fIK" placeholder="Cari judul IK..." onkeyup="applyLocalFilters()"></div>
-        <div><label>Verifikasi</label><select id="fVerif" onchange="applyLocalFilters()"><option value="">Semua</option><option value="OPEN">OPEN</option><option value="CLOSED">CLOSED</option></select></div>
     </div>
 
     <div class="stats-grid">
-        <div class="stat-box" onclick="filterByCard('all')" id="card-all" style="border-top: 4px solid var(--primary);"><span class="stat-lbl">Total Jadwal</span><span class="stat-val" id="valTotal">0</span></div>
+        <div class="stat-box active" onclick="filterByCard('all')" id="card-all" style="border-top: 4px solid var(--primary);"><span class="stat-lbl">Total Jadwal</span><span class="stat-val" id="valTotal">0</span></div>
         <div class="stat-box" onclick="filterByCard('Selesai')" id="card-Selesai" style="border-top: 4px solid var(--success);"><span class="stat-lbl">Selesai</span><span class="stat-val" id="valSelesai" style="color: var(--success);">0</span></div>
-        <div class="stat-box" onclick="filterByCard('Pending')" id="card-Pending" style="border-top: 4px solid var(--warning);"><span class="stat-lbl">Pending</span><span class="stat-val" id="valBelum" style="color: var(--warning);">0</span></div>
         <div class="stat-box" style="border-top: 4px solid #8b5cf6;"><span class="stat-lbl">Avg Score</span><span class="stat-val" id="valAvg" style="color: #8b5cf6;">0%</span></div>
         <div class="stat-box" onclick="filterByCard('OnTime')" id="card-OnTime" style="border-top: 4px solid var(--success);"><span class="stat-lbl">On Time</span><span class="stat-val" id="valOnTime" style="color: var(--success);">0</span></div>
         <div class="stat-box" onclick="filterByCard('Late')" id="card-Late" style="border-top: 4px solid var(--danger);"><span class="stat-lbl">Late</span><span class="stat-val" id="valLate" style="color: var(--danger);">0</span></div>
     </div>
 </div>
 
-<div style="max-width: 1300px; margin: 0 auto;">
+<div style="max-width: 1300px; margin: 0 auto; padding-bottom: 50px;">
     <div class="section-title">
-        Detail Laporan Audit & IK
+        History & Detail Log Audit
         <button class="export-btn" onclick="exportPDF()">Download PDF Report</button>
     </div>
+    
     <div class="table-container">
-        <table id="tableAuditorMain">
+        <table id="mainTable">
             <thead>
                 <tr>
-                    <th>Auditor</th>
-                    <th>Judul IK</th>
-                    <th>Unit Auditee</th>
-                    <th>Periode</th>
                     <th>Tgl Audit</th>
-                    <th>Score</th>
+                    <th>Group / Dept</th>
+                    <th>Auditor / Auditee</th>
+                    <th>Materi & Temuan</th>
+                    <th>Tindakan Perbaikan</th>
+                    <th>Nilai</th>
+                    <th>Foto</th>
                     <th>Status</th>
-                    <th>Timing</th>
+                </tr>
+                <tr class="filter-row">
+                    <th><input type="text" class="filter-input" placeholder="Cari tgl..." onkeyup="filterTabel()"></th>
+                    <th><input type="text" class="filter-input" placeholder="Cari dept..." onkeyup="filterTabel()"></th>
+                    <th><input type="text" class="filter-input" placeholder="Cari nama..." onkeyup="filterTabel()"></th>
+                    <th><input type="text" class="filter-input" placeholder="Cari temuan..." onkeyup="filterTabel()"></th>
+                    <th><input type="text" class="filter-input" placeholder="Cari tindakan..." onkeyup="filterTabel()"></th>
+                    <th><input type="text" class="filter-input" placeholder="Cari nilai..." onkeyup="filterTabel()"></th>
+                    <th></th>
+                    <th><input type="text" class="filter-input" placeholder="Cari status..." onkeyup="filterTabel()"></th>
                 </tr>
             </thead>
-            <tbody id="bodyAuditor"></tbody>
-        </table>
-    </div>
-
-    <div class="section-title">Detail Temuan & Tindak Lanjut</div>
-    <div class="table-container">
-        <table id="tableTemuanMain">
-            <thead>
-                <tr>
-                    <th>Unit / Dept</th>
-                    <th>Judul IK</th>
-                    <th>Detail Temuan</th>
-                    <th>Rencana Perbaikan</th>
-                    <th>Auditor</th>
-                    <th>Status Verif</th>
-                </tr>
-            </thead>
-            <tbody id="bodyTemuan"></tbody>
+            <tbody id="mainBody"></tbody>
         </table>
     </div>
 </div>
@@ -120,7 +116,6 @@
     const db = firebase.firestore();
 
     let masterData = [];
-    let currentFilteredData = [];
     let currentCardFilter = 'all';
 
     async function fetchData() {
@@ -130,6 +125,7 @@
             let query = db.collection('jadwal_audit');
             if(g) query = query.where('group', '==', g);
             if(m) query = query.where('periode', '==', m);
+            
             const snap = await query.get();
             masterData = snap.docs.map(doc => {
                 const d = doc.data();
@@ -139,111 +135,115 @@
                 }
                 return { ...d, timing };
             });
-            applyLocalFilters();
-        } catch (e) { console.error(e); }
+            
+            updateStats(masterData);
+            renderTable(masterData);
+        } catch (e) { console.error("Fetch Error:", e); }
     }
 
     function filterByCard(type) {
         currentCardFilter = type;
         document.querySelectorAll('.stat-box').forEach(b => b.classList.remove('active'));
         document.getElementById('card-' + type).classList.add('active');
-        applyLocalFilters();
+        filterTabel();
     }
 
-    function applyLocalFilters() {
-        const audSearch = document.getElementById('fAuditor').value.toLowerCase();
-        const ikSearch = document.getElementById('fIK').value.toLowerCase();
-        const verifFilter = document.getElementById('fVerif').value;
+    function filterTabel() {
+        const table = document.getElementById("mainTable");
+        const filterInputs = table.querySelectorAll(".filter-input");
+        const rows = document.getElementById("mainBody").getElementsByTagName("tr");
 
-        currentFilteredData = masterData.filter(d => {
-            const mAud = d.auditor?.toLowerCase().includes(audSearch);
-            const mIK = d.judul_ik?.toLowerCase().includes(ikSearch);
-            const mVer = !verifFilter || d.statusVerifikasi === verifFilter;
-            let mCard = true;
-            if(currentCardFilter === 'Selesai') mCard = d.status === 'Selesai';
-            else if(currentCardFilter === 'Pending') mCard = d.status === 'Pending';
-            else if(currentCardFilter === 'OnTime') mCard = d.timing === 'OnTime';
-            else if(currentCardFilter === 'Late') mCard = d.timing === 'Late';
-            return mAud && mIK && mVer && mCard;
-        });
-        updateStats(masterData);
-        renderTables(currentFilteredData);
+        for (let i = 0; i < rows.length; i++) {
+            let rowVisible = true;
+            const cells = rows[i].getElementsByTagName("td");
+            
+            // Kolom mapping sesuai index <td> (Tgl:0, Group:1, Nama:2, Materi:3, Tindakan:4, Nilai:5, Status:7)
+            const colMapping = [0, 1, 2, 3, 4, 5, 7]; 
+
+            // 1. Filter dari Input Kolom
+            filterInputs.forEach((input, index) => {
+                const filterValue = input.value.toLowerCase();
+                const targetColIndex = colMapping[index];
+                const cellValue = cells[targetColIndex] ? cells[targetColIndex].textContent.toLowerCase() : "";
+                if (filterValue && !cellValue.includes(filterValue)) rowVisible = false;
+            });
+
+            // 2. Filter dari Card Stat (Selesai/OnTime/Late)
+            const rowDataStatus = rows[i].getAttribute('data-status');
+            const rowDataTiming = rows[i].getAttribute('data-timing');
+
+            if(currentCardFilter === 'Selesai' && rowDataStatus !== 'Selesai') rowVisible = false;
+            if(currentCardFilter === 'OnTime' && rowDataTiming !== 'OnTime') rowVisible = false;
+            if(currentCardFilter === 'Late' && rowDataTiming !== 'Late') rowVisible = false;
+            if(currentCardFilter === 'Pending' && rowDataStatus !== 'Pending') rowVisible = false;
+
+            rows[i].style.display = rowVisible ? "" : "none";
+        }
     }
 
     function updateStats(data) {
         const fin = data.filter(d => d.status === 'Selesai');
-        const avg = fin.length ? (fin.reduce((a, b) => a + (parseFloat(b.nilaiPencapaian) || 0), 0) / fin.length).toFixed(1) : 0;
+        const avg = fin.length ? (fin.reduce((a, b) => a + (parseFloat(b.nilaiPencapaian?.toString().replace('%','')) || 0), 0) / fin.length).toFixed(1) : 0;
+
         document.getElementById('valTotal').innerText = data.length;
         document.getElementById('valSelesai').innerText = fin.length;
-        document.getElementById('valBelum').innerText = data.length - fin.length;
         document.getElementById('valAvg').innerText = avg + "%";
         document.getElementById('valOnTime').innerText = data.filter(d => d.timing === 'OnTime').length;
         document.getElementById('valLate').innerText = data.filter(d => d.timing === 'Late').length;
     }
 
-    function renderTables(data) {
-        let hAud = '', hTem = '';
+    function renderTable(data) {
+        const body = document.getElementById('mainBody');
+        body.innerHTML = '';
+        
         data.forEach(d => {
-            const ik = d.judul_ik || 'N/A';
-            hAud += `<tr>
-                <td>${d.auditor}</td>
-                <td style="font-weight:500">${ik}</td>
-                <td><b>${d.group}</b> / ${d.auditee}</td>
-                <td>${d.periode}</td>
-                <td>${d.tglAudit || '-'}</td>
-                <td><b>${d.nilaiPencapaian ? d.nilaiPencapaian + '%' : '-'}</b></td>
-                <td><span class="badge ${d.status==='Selesai'?'badge-success':'badge-pending'}">${d.status}</span></td>
-                <td>${d.timing === 'OnTime' ? `<span class="badge badge-ontime">ON TIME</span>` : (d.timing === 'Late' ? `<span class="badge badge-late">TERLAMBAT</span>` : '-')}</td>
-            </tr>`;
-
-            if(d.uraian || d.statusVerifikasi) {
-                hTem += `<tr>
-                    <td><b>${d.auditee}</b><br><small>${d.group}</small></td>
-                    <td>${ik}</td>
-                    <td style="color:var(--danger)">${d.uraian || '-'}</td>
-                    <td>${d.tindakan || '-'}</td>
-                    <td>${d.auditor}</td>
-                    <td><span class="badge ${d.statusVerifikasi==='CLOSED'?'badge-closed':'badge-open'}">${d.statusVerifikasi || 'OPEN'}</span></td>
-                </tr>`;
+            let fotoHtml = '';
+            if(d.foto && Array.isArray(d.foto)) {
+                d.foto.forEach(url => { fotoHtml += `<img src="${url}" class="thumb-img" onclick="window.open('${url}')">`; });
             }
+
+            body.innerHTML += `
+                <tr data-status="${d.status}" data-timing="${d.timing}">
+                    <td>${d.tglAudit || '-'}</td>
+                    <td><b>${d.group}</b><br>${d.auditee}</td>
+                    <td><small>Auditor:</small> ${d.auditor}<br><small>Auditee:</small> ${d.namaAuditeePerson || '-'}</td>
+                    <td><small>IK: ${d.judulIK || '-'}</small><br><i style="color:#64748b">${d.uraian || '-'}</i></td>
+                    <td>${d.tindakan || '-'}</td>
+                    <td style="font-weight:bold">${d.nilaiPencapaian || '-'}</td>
+                    <td><div style="display:flex">${fotoHtml || '-'}</div></td>
+                    <td>
+                        <span class="badge ${d.status==='Selesai'?'badge-success':'badge-pending'}">${d.status}</span><br>
+                        <span class="badge ${d.statusVerifikasi==='CLOSED'?'badge-closed':'badge-open'}">${d.statusVerifikasi || 'OPEN'}</span>
+                    </td>
+                </tr>
+            `;
         });
-        document.getElementById('bodyAuditor').innerHTML = hAud || '<tr><td colspan="8" align="center">Data tidak ditemukan</td></tr>';
-        document.getElementById('bodyTemuan').innerHTML = hTem || '<tr><td colspan="6" align="center">Tidak ada temuan</td></tr>';
+
+        if(data.length === 0) {
+            body.innerHTML = '<tr><td colspan="8" align="center">Data tidak ditemukan</td></tr>';
+        }
     }
 
     function exportPDF() {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF('l', 'mm', 'a4');
-        const bulan = document.getElementById('fMonth').value || 'Semua Periode';
-        const group = document.getElementById('fGroup').value || 'Semua Group';
-
-        doc.setFontSize(16);
-        doc.text('LAPORAN HASIL AUDIT KAMISHIBAI', 14, 15);
-        doc.setFontSize(10);
-        doc.text(`Periode: ${bulan} | Group: ${group} | Filter Card: ${currentCardFilter.toUpperCase()}`, 14, 22);
-
-        // Tabel 1: Monitoring
+        doc.setFontSize(14);
+        doc.text('LAPORAN AUDIT KAMISHIBAI', 14, 15);
         doc.autoTable({
-            html: '#tableAuditorMain',
-            startY: 30,
+            html: '#mainTable',
+            startY: 25,
             theme: 'grid',
             headStyles: { fillColor: [37, 99, 235] },
-            styles: { fontSize: 8 },
-            margin: { top: 30 }
+            styles: { fontSize: 7 },
+            margin: { top: 25 },
+            // Sembunyikan baris filter saat di-export ke PDF
+            didParseCell: function(data) {
+                if (data.row.section === 'head' && data.row.index === 1) {
+                    data.cell.styles.fontSize = 0;
+                }
+            }
         });
-
-        // Tabel 2: Temuan
-        const finalY = doc.lastAutoTable.finalY || 30;
-        doc.text('RINGKASAN TEMUAN & TINDAK LANJUT', 14, finalY + 10);
-        doc.autoTable({
-            html: '#tableTemuanMain',
-            startY: finalY + 15,
-            theme: 'grid',
-            headStyles: { fillColor: [220, 38, 38] },
-            styles: { fontSize: 8 },
-        });
-
-        doc.save(`Report_Kamishibai_${bulan}_${group}.pdf`);
+        doc.save('Report_Analisa.pdf');
     }
 
     fetchData();
