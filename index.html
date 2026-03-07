@@ -4,171 +4,158 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Kamishibai MSM System</title>
-    
     <link rel="icon" type="image/png" href="https://res.cloudinary.com/ddhsrvefu/image/upload/v1772248994/Gemini_Generated_Image_ilzww2ilzww2ilzw_vhl8zx.png">
     
     <style>
-        *{ box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
-        
-        html, body { 
-            margin: 0; 
-            overflow: hidden; 
-            background: #0f172a;
-            height: 100dvh; 
+        :root {
+            --sidebar-width: 260px;
+            --primary: #3b82f6;
+            --bg-dark: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.9);
         }
 
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        *{ box-sizing:border-box; -webkit-tap-highlight-color: transparent; transition: all 0.3s ease; }
+        
+        html, body { margin: 0; padding: 0; background: var(--bg-dark); font-family: -apple-system, sans-serif; color: white; height: 100dvh; overflow: hidden; }
+
+        /* --- LOGIN SECTION --- */
+        #login-overlay {
+            position: fixed; inset: 0; z-index: 1000;
             background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
-            padding: 20px;
+            display: flex; justify-content: center; align-items: center; padding: 20px;
         }
 
-        /* Container Utama untuk membungkus Login & Menu */
-        .container {
-            width: 100%;
-            max-width: 350px;
-            display: flex;
-            justify-content: center;
+        .login-card {
+            background: var(--card-bg); backdrop-filter: blur(10px);
+            border-top: 4px solid var(--primary); border-radius: 20px;
+            padding: 30px; text-align: center; width: 100%; max-width: 350px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1);
         }
 
-        .card {
-            background: rgba(30, 41, 59, 0.85);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border-top: 4px solid #3b82f6;
-            border-radius: 20px;
-            padding: 25px;
-            text-align: center;
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
-            color: white;
-            border: 1px solid rgba(255,255,255,0.1);
-            width: 100%;
+        /* --- SIDEBAR NAVIGATION --- */
+        .sidebar {
+            position: fixed; top: 0; left: 0; bottom: 0;
+            width: var(--sidebar-width); background: #1e293b;
+            border-right: 1px solid rgba(255,255,255,0.1);
+            display: flex; flex-direction: column; z-index: 900;
+            transform: translateX(-100%); /* Hide by default */
         }
 
-        .status-dots { display: flex; justify-content: center; gap: 8px; margin-bottom: 15px; }
-        .dot { width: 10px; height: 10px; border-radius: 50%; }
-        .dot.green { background: #22c55e; box-shadow: 0 0 10px #22c55e; }
-        .dot.red { background: #ef4444; box-shadow: 0 0 10px #ef4444; }
+        .sidebar.active { transform: translateX(0); }
 
-        .logo { width: 75px; height: auto; margin-bottom: 10px; }
-        .title { font-size: 19px; font-weight: 800; letter-spacing: 1px; margin-bottom: 5px; }
-        .subtitle { font-size: 10px; opacity: 0.7; margin-bottom: 20px; text-transform: uppercase; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;}
+        .sidebar-header { padding: 30px 20px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .sidebar-logo { width: 60px; margin-bottom: 10px; }
 
+        .nav-links { flex: 1; padding: 20px 10px; }
+        .nav-item {
+            display: flex; align-items: center; padding: 15px;
+            color: #cbd5e1; text-decoration: none; border-radius: 12px;
+            margin-bottom: 5px; font-weight: 500; font-size: 14px;
+        }
+        .nav-item:hover, .nav-item.active { background: rgba(59, 130, 246, 0.1); color: var(--primary); }
+        .nav-item span { font-size: 20px; margin-right: 15px; }
+
+        .btn-logout-sidebar {
+            margin: 20px; padding: 12px; background: #ef4444; 
+            border: none; border-radius: 10px; color: white; cursor: pointer;
+        }
+
+        /* --- MAIN CONTENT AREA --- */
+        .main-content {
+            margin-left: 0; height: 100%; display: flex; flex-direction: column;
+        }
+
+        header {
+            height: 60px; display: flex; align-items: center; padding: 0 20px;
+            background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(5px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .menu-toggle {
+            font-size: 24px; cursor: pointer; color: var(--primary);
+            display: block; margin-right: 15px;
+        }
+
+        /* --- DESKTOP ADAPTATION --- */
+        @media (min-width: 992px) {
+            .sidebar { transform: translateX(0); }
+            .main-content { margin-left: var(--sidebar-width); }
+            .menu-toggle { display: none; }
+        }
+
+        /* Form Elements inside login */
         .input-group { text-align: left; margin-bottom: 15px; }
-        .input-group label { display: block; font-size: 11px; margin-bottom: 6px; color: #cbd5e1; font-weight: 600; margin-left: 4px;}
-        
+        .input-group label { display: block; font-size: 11px; color: #cbd5e1; margin-bottom: 5px; }
         select, input {
-            width: 100%; height: 50px; padding: 0 15px; border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.2); background: rgba(15, 23, 42, 0.9);
-            color: white; outline: none; font-size: 16px; -webkit-appearance: none;
+            width: 100%; height: 45px; background: #0f172a; border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 10px; color: white; padding: 0 12px; outline: none;
         }
-
-        .select-wrapper { position: relative; }
-        .select-wrapper::after {
-            content: "▼"; font-size: 10px; position: absolute;
-            right: 15px; top: 20px; color: #3b82f6; pointer-events: none;
-        }
-
-        button {
-            width: 100%; height: 50px; margin-top: 10px; border: none;
-            border-radius: 12px; background: #3b82f6; color: white;
-            font-weight: 700; font-size: 15px; text-transform: uppercase; cursor: pointer;
-        }
-        button:active { transform: scale(0.97); background: #2563eb; }
-
-        .footer { margin-top: 25px; font-size: 9px; opacity: 0.5; line-height: 1.5; }
         .hidden { display: none !important; }
-
-        /* --- Style untuk Menu Utama --- */
-        .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
-        .menu-item {
-            background: rgba(15, 23, 42, 0.5);
-            padding: 20px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.1);
-            color: white; text-decoration: none; display: flex; flex-direction: column;
-            align-items: center; justify-content: center; transition: 0.2s;
-        }
-        .menu-item:active { transform: scale(0.95); background: #3b82f6; }
-        .menu-item span { font-size: 30px; margin-bottom: 8px; }
-        .menu-item small { font-size: 11px; font-weight: bold; text-transform: uppercase; }
-        .btn-logout { margin-top: 30px; background: #ef4444; height: 40px; font-size: 11px; }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-in { animation: fadeIn 0.5s ease forwards; }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <div id="login-section" class="card">
-            <div class="status-dots">
-                <div class="dot green"></div>
-                <div class="dot red"></div>
-                <div class="dot green"></div>
-            </div>
-            <img class="logo" src="https://res.cloudinary.com/ddhsrvefu/image/upload/v1772248994/Gemini_Generated_Image_ilzww2ilzww2ilzw_vhl8zx.png" alt="Logo">
-            <div class="title">AUDIT KAMISHIBAI</div>
-            <div class="subtitle">MSM SP/SF/SUPPORTING</div>
+    <div id="login-overlay">
+        <div class="login-card">
+            <img class="sidebar-logo" src="https://res.cloudinary.com/ddhsrvefu/image/upload/v1772248994/Gemini_Generated_Image_ilzww2ilzww2ilzw_vhl8zx.png">
+            <h3 style="margin: 0;">MSM LOGIN</h3>
+            <p style="font-size: 10px; opacity: 0.6; margin-bottom: 25px;">SISTEM AUDIT KAMISHIBAI</p>
             
             <div class="input-group">
-                <label>PILIH USER</label>
-                <div class="select-wrapper">
-                    <select id="username" onchange="togglePassword()">
-                        <option value="auditor">AUDITOR</option>
-                        <option value="admin">ADMIN</option>
-                    </select>
-                </div>
+                <label>USER ROLE</label>
+                <select id="username" onchange="togglePassword()">
+                    <option value="auditor">AUDITOR</option>
+                    <option value="admin">ADMIN</option>
+                </select>
             </div>
-
             <div class="input-group hidden" id="pwd-group">
-                <label>PASSWORD ADMIN</label>
+                <label>ADMIN PASSWORD</label>
                 <input type="password" id="password" placeholder="••••••••">
             </div>
-
-            <button onclick="loginLokal()">Masuk Sistem</button>
-            <div class="footer">SISTEM KONTROL KUALITAS MSM<br>© 2025 Arifianto Hidayat</div>
-        </div>
-
-        <div id="main-menu" class="card hidden animate-in">
-            <div class="status-dots">
-                <div class="dot green"></div>
-                <div class="dot red"></div>
-                <div class="dot green"></div>
-            </div>
-            <img class="logo" src="https://res.cloudinary.com/ddhsrvefu/image/upload/v1772248994/Gemini_Generated_Image_ilzww2ilzww2ilzw_vhl8zx.png">
-            <div class="title">MENU UTAMA</div>
-            <div class="subtitle">SISTEM KAMISHIBAI MSM</div>
-
-            <div class="menu-grid">
-                <a href="audit.html" class="menu-item">
-                    <span>📋</span>
-                    <small>Input Audit</small>
-                </a>
-                <a href="jadwal.html" id="link-jadwal" class="menu-item">
-                    <span>📅</span>
-                    <small>Jadwal Audit</small>
-                </a>
-                <a href="dashboard.html" class="menu-item" style="grid-column: span 2;">
-                    <span>📊</span>
-                    <small>Analisa Dashboard</small>
-                </a>
-            </div>
-            <button class="btn-logout" onclick="location.reload()">LOGOUT</button>
+            <button onclick="loginLokal()" style="width: 100%; height: 45px; background: var(--primary); border: none; border-radius: 10px; color: white; font-weight: bold; cursor: pointer;">MASUK</button>
         </div>
     </div>
 
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <img class="sidebar-logo" src="https://res.cloudinary.com/ddhsrvefu/image/upload/v1772248994/Gemini_Generated_Image_ilzww2ilzww2ilzw_vhl8zx.png">
+            <div style="font-weight: 800; font-size: 14px;">MSM SYSTEM</div>
+            <div id="user-display" style="font-size: 10px; color: var(--primary); margin-top: 5px; text-transform: uppercase;">Role: Guest</div>
+        </div>
+
+        <div class="nav-links">
+            <a href="audit.html" class="nav-item"><span>📋</span> Input Audit</a>
+            <a href="jadwal.html" id="link-jadwal" class="nav-item"><span>📅</span> Jadwal Audit</a>
+            <a href="dashboard.html" class="nav-item"><span>📊</span> Analisa Data</a>
+        </div>
+
+        <button class="btn-logout-sidebar" onclick="location.reload()">LOGOUT</button>
+    </nav>
+
+    <div class="main-content">
+        <header>
+            <div class="menu-toggle" onclick="toggleSidebar()">☰</div>
+            <div style="font-weight: bold; font-size: 16px;">Dashboard Utama</div>
+        </header>
+
+        <main style="padding: 20px; flex: 1; display: flex; justify-content: center; align-items: center; text-align: center;">
+            <div style="background: rgba(255,255,255,0.05); padding: 40px; border-radius: 20px; border: 1px dashed rgba(255,255,255,0.1); max-width: 500px;">
+                <h2 style="color: var(--primary);">Selamat Datang!</h2>
+                <p style="opacity: 0.7; font-size: 14px;">Silakan pilih menu di samping untuk memulai aktivitas audit atau melihat laporan hasil pemeriksaan.</p>
+                
+            </div>
+        </main>
+    </div>
+
     <script>
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+        }
+
         function togglePassword() {
             const user = document.getElementById("username").value;
             const pwdGroup = document.getElementById("pwd-group");
-            if (user === "admin") {
-                pwdGroup.classList.remove("hidden");
-            } else {
-                pwdGroup.classList.add("hidden");
-                document.getElementById("password").value = "";
-            }
+            pwdGroup.classList.toggle("hidden", user !== "admin");
         }
 
         function loginLokal() {
@@ -180,18 +167,15 @@
                 return;
             }
 
-            // Pindah Tampilan
-            document.getElementById('login-section').classList.add('hidden');
-            document.getElementById('main-menu').classList.remove('hidden');
+            // Transisi: Sembunyikan Login Overlay
+            document.getElementById('login-overlay').classList.add('hidden');
+            document.getElementById('user-display').innerText = "Role: " + user;
 
-            // Hak Akses
+            // Hak Akses Sidebar
             if (user === "auditor") {
-                const jadwalBtn = document.getElementById('link-jadwal');
-                if(jadwalBtn) jadwalBtn.style.display = 'none';
+                document.getElementById('link-jadwal').style.display = 'none';
             }
         }
-
-        window.onload = togglePassword;
     </script>
 </body>
 </html>
