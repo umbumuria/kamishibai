@@ -34,10 +34,11 @@
         .badge-open { background: #fee2e2; color: #991b1b; }
         .badge-closed { background: #dcfce7; color: #166534; }
         .badge-pending { background: #fef3c7; color: #92400e; }
+        .badge-success { background: #dcfce7; color: #166534; }
+        .badge-ontime { border: 1px solid var(--success); color: var(--success); background: transparent; }
+        .badge-late { border: 1px solid var(--danger); color: var(--danger); background: transparent; }
 
-        .grid-tables { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-
-        @media (max-width: 850px) { .grid-tables { grid-template-columns: 1fr; } }
+        @media (max-width: 850px) { .stats-grid { grid-template-columns: 1fr 1fr; } }
     </style>
 </head>
 <body>
@@ -90,25 +91,22 @@
 </div>
 
 <div style="max-width: 1100px; margin: 0 auto;">
-    <div class="grid-tables">
-        <div>
-            <div class="section-title">Status Auditor (Belum Audit)</div>
-            <div class="table-container">
-                <table>
-                    <thead><tr><th>Auditor</th><th>Unit Auditee</th><th>Status</th></tr></thead>
-                    <tbody id="bodyBelum"></tbody>
-                </table>
-            </div>
-        </div>
-        <div>
-            <div class="section-title">Status Auditor (Sudah Audit)</div>
-            <div class="table-container">
-                <table>
-                    <thead><tr><th>Auditor</th><th>Tanggal Selesai</th><th>Score</th></tr></thead>
-                    <tbody id="bodySudah"></tbody>
-                </table>
-            </div>
-        </div>
+    <div class="section-title">Status Auditor & Ketepatan Waktu</div>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Auditor</th>
+                    <th>Unit Auditee</th>
+                    <th>Jadwal</th>
+                    <th>Tgl Selesai</th>
+                    <th>Score</th>
+                    <th>Status</th>
+                    <th>Keterangan</th>
+                </tr>
+            </thead>
+            <tbody id="bodyAuditor"></tbody>
+        </table>
     </div>
 
     <div class="section-title">Ringkasan Temuan & Foto (Outstanding vs Closed)</div>
@@ -159,38 +157,48 @@
         let finished = data.filter(d => d.status === 'Selesai');
         let pending = data.filter(d => d.status === 'Pending');
         
-        // 1. Stats Calculation
         let totalScore = 0;
         let onTime = 0, late = 0;
         
-        finished.forEach(d => {
-            totalScore += parseFloat(d.nilaiPencapaian) || 0;
-            
-            // Logic OnTime: Jika tglAudit (Y-m-d) berada di bulan yang sama dengan periode (Y-m)
-            if(d.tglAudit && d.periode) {
-                const auditMonth = d.tglAudit.substring(0, 7);
-                if(auditMonth === d.periode) onTime++; else late++;
+        // Render Auditor Table
+        let htmlAuditor = '';
+        data.forEach(d => {
+            let ketWaktu = '-';
+            let tglSelesai = d.tglAudit || '-';
+            let score = d.nilaiPencapaian ? d.nilaiPencapaian + '%' : '-';
+            let statusBadge = `<span class="badge badge-pending">PENDING</span>`;
+
+            if(d.status === 'Selesai') {
+                totalScore += parseFloat(d.nilaiPencapaian) || 0;
+                statusBadge = `<span class="badge badge-success">SELESAI</span>`;
+                
+                if(d.tglAudit && d.periode) {
+                    const auditMonth = d.tglAudit.substring(0, 7);
+                    if(auditMonth === d.periode) {
+                        onTime++;
+                        ketWaktu = `<span class="badge badge-ontime">ON TIME</span>`;
+                    } else {
+                        late++;
+                        ketWaktu = `<span class="badge badge-late">TERLAMBAT</span>`;
+                    }
+                }
             }
+
+            htmlAuditor += `
+                <tr>
+                    <td>${d.auditor}</td>
+                    <td><b>${d.group}</b><br>${d.auditee}</td>
+                    <td>${d.periode}</td>
+                    <td>${tglSelesai}</td>
+                    <td>${score}</td>
+                    <td>${statusBadge}</td>
+                    <td>${ketWaktu}</td>
+                </tr>`;
         });
 
-        document.getElementById('valTotal').innerText = data.length;
-        document.getElementById('valSelesai').innerText = finished.length;
-        document.getElementById('valBelum').innerText = pending.length;
-        document.getElementById('valAvg').innerText = finished.length ? (totalScore/finished.length).toFixed(1) + "%" : "0%";
-        document.getElementById('valOnTime').innerText = onTime;
-        document.getElementById('valLate').innerText = late;
-
-        // 2. Render Tables
-        let htmlBelum = '', htmlSudah = '', htmlTemuan = '';
-
-        pending.forEach(d => {
-            htmlBelum += `<tr><td>${d.auditor}</td><td>${d.auditee}</td><td><span class="badge badge-pending">PENDING</span></td></tr>`;
-        });
-
+        // Render Temuan Table
+        let htmlTemuan = '';
         finished.forEach(d => {
-            htmlSudah += `<tr><td>${d.auditor}</td><td>${d.tglAudit}</td><td><b>${d.nilaiPencapaian}</b></td></tr>`;
-            
-            // Temuan: Muncul jika ada uraian atau nilai < 100%
             if(d.uraian || d.statusVerifikasi === 'OPEN') {
                 let fotos = '';
                 if(d.foto) d.foto.forEach(url => fotos += `<img src="${url}" class="thumb-img" onclick="window.open('${url}')">`);
@@ -206,12 +214,17 @@
             }
         });
 
-        document.getElementById('bodyBelum').innerHTML = htmlBelum || '<tr><td colspan="3" align="center">Semua sudah audit</td></tr>';
-        document.getElementById('bodySudah').innerHTML = htmlSudah || '<tr><td colspan="3" align="center">Belum ada data</td></tr>';
+        document.getElementById('valTotal').innerText = data.length;
+        document.getElementById('valSelesai').innerText = finished.length;
+        document.getElementById('valBelum').innerText = pending.length;
+        document.getElementById('valAvg').innerText = finished.length ? (totalScore/finished.length).toFixed(1) + "%" : "0%";
+        document.getElementById('valOnTime').innerText = onTime;
+        document.getElementById('valLate').innerText = late;
+
+        document.getElementById('bodyAuditor').innerHTML = htmlAuditor || '<tr><td colspan="7" align="center">Tidak ada data jadwal</td></tr>';
         document.getElementById('bodyTemuan').innerHTML = htmlTemuan || '<tr><td colspan="5" align="center">Tidak ada temuan</td></tr>';
     }
 
-    // Load awal
     fetchData();
 </script>
 </body>
