@@ -1,81 +1,189 @@
-<div id="dashboard-module">
-    <div class="section-title">DASHBOARD ANALISA KAMISHIBAI</div>
+<div id="dashboard-content">
+    <div class="section-title">
+        DASHBOARD ANALISA KINERJA KAMISHIBAI
+        <div style="font-size: 11px; font-weight: normal; color: #64748b;">Data real-time dari sistem CIQA</div>
+    </div>
 
-    <div class="container" style="margin-bottom: 20px;">
-        <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));">
-            <div>
-                <label>Group Unit</label>
-                <select id="dashFilterGroup" onchange="applyDashFilters()">
-                    <option value="">Semua Group</option>
-                    <option value="SF">SUGAR FACTORY (SF)</option>
-                    <option value="SP">PLANTATION (SP)</option>
-                    <option value="SUPPORTING">SUPPORTING</option>
-                </select>
-            </div>
-            <div>
-                <label>Auditor</label>
-                <select id="dashFilterAuditor" onchange="applyDashFilters()">
-                    <option value="">Semua Auditor</option>
-                </select>
-            </div>
-            <div>
-                <label>Periode Bulan</label>
-                <input type="month" id="dashFilterMonth" onchange="applyDashFilters()">
-            </div>
-            <div style="display: flex; align-items: flex-end;">
-                <button onclick="resetDashFilters()" style="width:100%; height:48px; background:#f1f5f9; border:1px solid var(--border); border-radius:10px; cursor:pointer; font-weight:bold; margin-bottom:15px;">RESET</button>
-            </div>
+    <div class="filter-bar" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+        <div>
+            <label style="font-size: 11px; font-weight: bold; color: #64748b;">GROUP UNIT</label>
+            <select id="dashFilterGroup" class="cell-input" style="border: 1px solid var(--border); border-radius: 8px; margin-top: 5px;" onchange="applyDashFilters()">
+                <option value="">Semua Group</option>
+                <option value="SF">SUGAR FACTORY</option>
+                <option value="SP">PLANTATION</option>
+                <option value="SUPPORTING">SUPPORTING</option>
+            </select>
+        </div>
+        <div>
+            <label style="font-size: 11px; font-weight: bold; color: #64748b;">AUDITOR</label>
+            <select id="dashFilterAuditor" class="cell-input" style="border: 1px solid var(--border); border-radius: 8px; margin-top: 5px;" onchange="applyDashFilters()">
+                <option value="">Semua Auditor</option>
+            </select>
+        </div>
+        <div>
+            <label style="font-size: 11px; font-weight: bold; color: #64748b;">PERIODE BULAN</label>
+            <input type="month" id="dashFilterMonth" class="cell-input" style="border: 1px solid var(--border); border-radius: 8px; margin-top: 5px;" onchange="applyDashFilters()">
         </div>
     </div>
 
-    <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); margin-bottom: 20px;">
-        <div class="card-stat">
-            <label>Total Audit</label>
-            <div class="value" id="valTotal">0</div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 25px;">
+        <div class="excel-container" style="padding: 20px; text-align: center; margin-bottom: 0;">
+            <div style="font-size: 12px; color: #64748b; font-weight: bold;">TOTAL AUDIT</div>
+            <div id="valTotal" style="font-size: 28px; font-weight: bold; color: var(--text-main);">0</div>
         </div>
-        <div class="card-stat">
-            <label>Avg Kepatuhan</label>
-            <div class="value" id="valAvg" style="color: var(--primary);">0%</div>
+        <div class="excel-container" style="padding: 20px; text-align: center; margin-bottom: 0;">
+            <div style="font-size: 12px; color: #64748b; font-weight: bold;">AVG KEPATUHAN</div>
+            <div id="valAvg" style="font-size: 28px; font-weight: bold; color: var(--primary);">0%</div>
         </div>
-        <div class="card-stat">
-            <label>Temuan OPEN</label>
-            <div class="value" id="valOpen" style="color: #ef4444;">0</div>
+        <div class="excel-container" style="padding: 20px; text-align: center; margin-bottom: 0;">
+            <div style="font-size: 12px; color: #64748b; font-weight: bold;">TEMUAN OPEN</div>
+            <div id="valOpen" style="font-size: 28px; font-weight: bold; color: var(--danger);">0</div>
         </div>
     </div>
 
-    <div class="grid" style="grid-template-columns: 1.5fr 1fr; gap: 20px; margin-bottom: 30px;">
-        <div class="container" style="margin-bottom:0;">
-            <label>Tren Performa per Group</label>
-            <canvas id="chartTrend" height="150"></canvas>
+    <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; margin-bottom: 30px;">
+        <div class="excel-container" style="padding: 15px; margin-bottom: 0;">
+            <div style="font-size: 13px; font-weight: bold; margin-bottom: 10px; color: #64748b;">TREN SKOR PER GROUP</div>
+            <canvas id="chartTrend" height="120"></canvas>
         </div>
-        <div class="container" style="margin-bottom:0;">
-            <label>Rasio Status Perbaikan</label>
+        <div class="excel-container" style="padding: 15px; margin-bottom: 0;">
+            <div style="font-size: 13px; font-weight: bold; margin-bottom: 10px; color: #64748b;">STATUS TEMUAN</div>
             <canvas id="chartStatus"></canvas>
         </div>
     </div>
 
-    <div class="section-title" style="font-size: 14px;">DAFTAR TEMUAN OPEN (OUTSTANDING)</div>
-    <div class="table-container">
-        <table id="tableOpen">
+    <div class="section-title">DAFTAR TEMUAN KRITIS (OPEN)</div>
+    <div class="excel-container">
+        <table>
             <thead>
                 <tr>
-                    <th>TGL</th>
-                    <th>UNIT / DEPT</th>
+                    <th width="120" style="padding-left:15px">TGL AUDIT</th>
+                    <th width="150">UNIT/DEPT</th>
                     <th>URAIAN TEMUAN</th>
                     <th>RENCANA PERBAIKAN</th>
-                    <th>AUDITOR</th>
+                    <th width="130">AUDITOR</th>
                 </tr>
             </thead>
-            <tbody id="bodyOpen">
+            <tbody id="bodyOpen" style="background: #fff;">
                 </tbody>
         </table>
     </div>
 </div>
 
-<style>
-    /* Tambahan Style khusus Dashboard agar match dengan SPA */
-    .card-stat { background: white; padding: 15px; border-radius: 12px; border: 1px solid var(--border); text-align: center; }
-    .card-stat .value { font-size: 24px; font-weight: bold; margin-top: 5px; }
-    #dashboard-module .container { padding: 15px; background: white; border-radius: 12px; border: 1px solid var(--border); }
-    canvas { width: 100% !important; }
-</style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Logika Dashboard Terintegrasi
+    let rawData = [];
+    let trendChart, statusChart;
+
+    async function initDashboard() {
+        const snap = await db.collection('jadwal_audit').where('status', '==', 'Selesai').get();
+        rawData = snap.docs.map(doc => doc.data());
+        
+        updateAuditorList();
+        applyDashFilters();
+    }
+
+    function updateAuditorList() {
+        const groupVal = document.getElementById('dashFilterGroup').value;
+        const sel = document.getElementById('dashFilterAuditor');
+        
+        // Cascading Filter: Filter auditor berdasarkan group
+        const filtered = groupVal ? rawData.filter(d => d.group === groupVal) : rawData;
+        const auditors = [...new Set(filtered.map(d => d.auditor))];
+        
+        sel.innerHTML = '<option value="">Semua Auditor</option>';
+        auditors.forEach(a => {
+            sel.innerHTML += `<option value="${a}">${a}</option>`;
+        });
+    }
+
+    function applyDashFilters() {
+        const g = document.getElementById('dashFilterGroup').value;
+        const a = document.getElementById('dashFilterAuditor').value;
+        const m = document.getElementById('dashFilterMonth').value;
+
+        // Jika group berubah, update list auditor (logic cascading)
+        // Note: kita panggil hanya jika trigger-nya adalah dropdown Group
+        if (event && event.target.id === 'dashFilterGroup') updateAuditorList();
+
+        const filtered = rawData.filter(d => {
+            return (!g || d.group === g) && 
+                   (!a || d.auditor === a) && 
+                   (!m || (d.tglAudit && d.tglAudit.startsWith(m)));
+        });
+
+        renderDashboardUI(filtered);
+    }
+
+    function renderDashboardUI(data) {
+        let sumNilai = 0, openCount = 0, tableHtml = '';
+        let statusCounts = { OPEN: 0, CLOSED: 0, OBSERVASI: 0 };
+        let grpScore = { SF: {s:0, c:0}, SP: {s:0, c:0}, SUPPORTING: {s:0, c:0} };
+
+        data.forEach(d => {
+            const n = parseFloat(d.nilaiPencapaian) || 0;
+            sumNilai += n;
+            if(grpScore[d.group]) { grpScore[d.group].s += n; grpScore[d.group].c += 1; }
+            if(statusCounts[d.statusVerifikasi] !== undefined) statusCounts[d.statusVerifikasi]++;
+
+            if(d.statusVerifikasi === 'OPEN') {
+                openCount++;
+                tableHtml += `
+                    <tr>
+                        <td style="padding:12px 15px;">${d.tglAudit}</td>
+                        <td><b>${d.group}</b><br><span style="font-size:11px">${d.auditee}</span></td>
+                        <td style="padding:10px; color:var(--danger); font-size:12px;">${d.uraian || '-'}</td>
+                        <td style="padding:10px; font-size:12px;">${d.tindakan || '-'}</td>
+                        <td style="padding:10px;">${d.auditor}</td>
+                    </tr>`;
+            }
+        });
+
+        // Update Cards
+        document.getElementById('valTotal').innerText = data.length;
+        document.getElementById('valAvg').innerText = data.length > 0 ? (sumNilai/data.length).toFixed(1) + "%" : "0%";
+        document.getElementById('valOpen').innerText = openCount;
+        document.getElementById('bodyOpen').innerHTML = tableHtml || '<tr><td colspan="5" style="text-align:center; padding:20px; color:#94a3b8;">Tidak ada temuan open</td></tr>';
+
+        drawCharts(grpScore, statusCounts);
+    }
+
+    function drawCharts(grp, stat) {
+        const ctxT = document.getElementById('chartTrend').getContext('2d');
+        const ctxS = document.getElementById('chartStatus').getContext('2d');
+        if(trendChart) trendChart.destroy();
+        if(statusChart) statusChart.destroy();
+
+        const calc = (g) => g.c > 0 ? (g.s/g.c).toFixed(1) : 0;
+
+        trendChart = new Chart(ctxT, {
+            type: 'bar',
+            data: {
+                labels: ['SF', 'SP', 'SUPP'],
+                datasets: [{
+                    label: 'Score %',
+                    data: [calc(grp.SF), calc(grp.SP), calc(grp.SUPPORTING)],
+                    backgroundColor: ['#2563eb', '#10b981', '#f59e0b'],
+                    borderRadius: 6
+                }]
+            },
+            options: { responsive: true, plugins: { legend: { display: false } } }
+        });
+
+        statusChart = new Chart(ctxS, {
+            type: 'doughnut',
+            data: {
+                labels: ['OPEN', 'CLOSED', 'OBS'],
+                datasets: [{
+                    data: [stat.OPEN, stat.CLOSED, stat.OBSERVASI],
+                    backgroundColor: ['#dc2626', '#10b981', '#e2e8f0']
+                }]
+            },
+            options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } } } }
+        });
+    }
+
+    // Jalankan Dashboard
+    initDashboard();
+</script>
