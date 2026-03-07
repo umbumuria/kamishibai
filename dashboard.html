@@ -6,8 +6,7 @@
     <title>Dashboard Analisa Kamishibai</title>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --primary: #2563eb; --bg: #f8fafc; --border: #e2e8f0; --text: #1e293b; --danger: #ef4444; --success: #10b981; --warning: #f59e0b; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding: 15px; margin: 0; }
@@ -15,12 +14,10 @@
         .container { max-width: 1300px; margin: 0 auto; background: white; padding: 20px; border-radius: 15px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 25px; }
         .section-title { font-size: 16px; font-weight: bold; margin: 20px 0 15px 0; border-left: 5px solid var(--primary); padding-left: 12px; color: var(--primary); text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; }
         
-        /* Filter Atas (Server Side) */
         .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px; background: #f1f5f9; padding: 15px; border-radius: 10px; }
         label { display: block; font-size: 10px; font-weight: bold; margin-bottom: 5px; color: #64748b; text-transform: uppercase; }
         select, input { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; outline: none; background: white; box-sizing: border-box; }
 
-        /* Stats Card */
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px; }
         .stat-box { padding: 15px; border-radius: 12px; border: 1px solid var(--border); text-align: center; background: #fff; cursor: pointer; transition: 0.2s; }
         .stat-box:hover { transform: translateY(-3px); border-color: var(--primary); }
@@ -28,13 +25,16 @@
         .stat-val { font-size: 22px; font-weight: 800; display: block; margin-top: 5px; }
         .stat-lbl { font-size: 9px; font-weight: bold; color: #64748b; text-transform: uppercase; }
 
-        /* Table Styling */
+        /* Chart Grid */
+        .chart-grid { display: grid; grid-template-columns: 1fr 1fr 1.5fr; gap: 20px; margin-bottom: 25px; }
+        .chart-card { background: white; padding: 15px; border-radius: 12px; border: 1px solid var(--border); min-height: 250px; }
+        .chart-card h4 { font-size: 11px; margin-top: 0; margin-bottom: 15px; color: #64748b; text-transform: uppercase; text-align: center; }
+
         .table-container { background: white; border-radius: 12px; border: 1px solid var(--border); overflow-x: auto; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 1200px; }
         th { background: #f8fafc; padding: 12px 10px; text-align: left; color: #475569; border-bottom: 2px solid var(--border); font-size: 10px; text-transform: uppercase; }
         td { padding: 12px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
 
-        /* Multi-Filter Row */
         .filter-row { background: #ffffff; }
         .filter-row th { padding: 5px 10px 10px 10px; border-bottom: 1px solid var(--border); }
         .filter-input { width: 100%; padding: 8px 10px; font-size: 11px; border: 1px solid #e2e8f0; border-radius: 6px; box-sizing: border-box; outline: none; background: #fdfdfd; font-weight: normal; }
@@ -45,8 +45,9 @@
         .badge-success { background: #dcfce7; color: #166534; }
         .badge-closed { background: #dcfce7; color: #166534; }
         .badge-open { background: #fee2e2; color: #991b1b; }
+        .badge-obs { background: #fef9c3; color: #854d0e; }
 
-        .export-btn { font-size: 11px; padding: 8px 16px; background: #dc2626; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        @media (max-width: 900px) { .chart-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
@@ -66,13 +67,25 @@
         <div class="stat-box" onclick="filterByCard('OnTime')" id="card-OnTime" style="border-top: 4px solid var(--success);"><span class="stat-lbl">On Time</span><span class="stat-val" id="valOnTime" style="color: var(--success);">0</span></div>
         <div class="stat-box" onclick="filterByCard('Late')" id="card-Late" style="border-top: 4px solid var(--danger);"><span class="stat-lbl">Late</span><span class="stat-val" id="valLate" style="color: var(--danger);">0</span></div>
     </div>
+
+    <div class="chart-grid">
+        <div class="chart-card">
+            <h4>Sebaran Per Group</h4>
+            <canvas id="chartGroup"></canvas>
+        </div>
+        <div class="chart-card">
+            <h4>Status Verifikasi</h4>
+            <canvas id="chartStatus"></canvas>
+        </div>
+        <div class="chart-card">
+            <h4>10 Dept Teraktif</h4>
+            <canvas id="chartDept"></canvas>
+        </div>
+    </div>
 </div>
 
 <div style="max-width: 1300px; margin: 0 auto; padding-bottom: 50px;">
-    <div class="section-title">
-        History & Detail Log Audit
-        <button class="export-btn" onclick="exportPDF()">Download PDF Report</button>
-    </div>
+    <div class="section-title">History & Detail Log Audit</div>
     
     <div class="table-container">
         <table id="mainTable">
@@ -117,6 +130,7 @@
 
     let masterData = [];
     let currentCardFilter = 'all';
+    let charts = {};
 
     async function fetchData() {
         const g = document.getElementById('fGroup').value;
@@ -138,6 +152,7 @@
             
             updateStats(masterData);
             renderTable(masterData);
+            updateCharts(masterData);
         } catch (e) { console.error("Fetch Error:", e); }
     }
 
@@ -152,15 +167,13 @@
         const table = document.getElementById("mainTable");
         const filterInputs = table.querySelectorAll(".filter-input");
         const rows = document.getElementById("mainBody").getElementsByTagName("tr");
+        let filteredData = [];
 
         for (let i = 0; i < rows.length; i++) {
             let rowVisible = true;
             const cells = rows[i].getElementsByTagName("td");
-            
-            // Kolom mapping sesuai index <td> (Tgl:0, Group:1, Nama:2, Materi:3, Tindakan:4, Nilai:5, Status:7)
             const colMapping = [0, 1, 2, 3, 4, 5, 7]; 
 
-            // 1. Filter dari Input Kolom
             filterInputs.forEach((input, index) => {
                 const filterValue = input.value.toLowerCase();
                 const targetColIndex = colMapping[index];
@@ -168,17 +181,21 @@
                 if (filterValue && !cellValue.includes(filterValue)) rowVisible = false;
             });
 
-            // 2. Filter dari Card Stat (Selesai/OnTime/Late)
             const rowDataStatus = rows[i].getAttribute('data-status');
             const rowDataTiming = rows[i].getAttribute('data-timing');
 
             if(currentCardFilter === 'Selesai' && rowDataStatus !== 'Selesai') rowVisible = false;
             if(currentCardFilter === 'OnTime' && rowDataTiming !== 'OnTime') rowVisible = false;
             if(currentCardFilter === 'Late' && rowDataTiming !== 'Late') rowVisible = false;
-            if(currentCardFilter === 'Pending' && rowDataStatus !== 'Pending') rowVisible = false;
 
             rows[i].style.display = rowVisible ? "" : "none";
+            
+            if(rowVisible) {
+                const originalIndex = rows[i].getAttribute('data-index');
+                filteredData.push(masterData[originalIndex]);
+            }
         }
+        updateCharts(filteredData);
     }
 
     function updateStats(data) {
@@ -195,15 +212,14 @@
     function renderTable(data) {
         const body = document.getElementById('mainBody');
         body.innerHTML = '';
-        
-        data.forEach(d => {
+        data.forEach((d, index) => {
             let fotoHtml = '';
             if(d.foto && Array.isArray(d.foto)) {
                 d.foto.forEach(url => { fotoHtml += `<img src="${url}" class="thumb-img" onclick="window.open('${url}')">`; });
             }
 
             body.innerHTML += `
-                <tr data-status="${d.status}" data-timing="${d.timing}">
+                <tr data-status="${d.status}" data-timing="${d.timing}" data-index="${index}">
                     <td>${d.tglAudit || '-'}</td>
                     <td><b>${d.group}</b><br>${d.auditee}</td>
                     <td><small>Auditor:</small> ${d.auditor}<br><small>Auditee:</small> ${d.namaAuditeePerson || '-'}</td>
@@ -213,37 +229,56 @@
                     <td><div style="display:flex">${fotoHtml || '-'}</div></td>
                     <td>
                         <span class="badge ${d.status==='Selesai'?'badge-success':'badge-pending'}">${d.status}</span><br>
-                        <span class="badge ${d.statusVerifikasi==='CLOSED'?'badge-closed':'badge-open'}">${d.statusVerifikasi || 'OPEN'}</span>
+                        <span class="badge ${d.statusVerifikasi==='CLOSED'?'badge-closed':(d.statusVerifikasi==='OBSERVASI'?'badge-obs':'badge-open')}">${d.statusVerifikasi || 'OPEN'}</span>
                     </td>
                 </tr>
             `;
         });
-
-        if(data.length === 0) {
-            body.innerHTML = '<tr><td colspan="8" align="center">Data tidak ditemukan</td></tr>';
-        }
     }
 
-    function exportPDF() {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF('l', 'mm', 'a4');
-        doc.setFontSize(14);
-        doc.text('LAPORAN AUDIT KAMISHIBAI', 14, 15);
-        doc.autoTable({
-            html: '#mainTable',
-            startY: 25,
-            theme: 'grid',
-            headStyles: { fillColor: [37, 99, 235] },
-            styles: { fontSize: 7 },
-            margin: { top: 25 },
-            // Sembunyikan baris filter saat di-export ke PDF
-            didParseCell: function(data) {
-                if (data.row.section === 'head' && data.row.index === 1) {
-                    data.cell.styles.fontSize = 0;
-                }
+    function updateCharts(data) {
+        // Group Data
+        const groupCounts = { SF: 0, SP: 0, SUPPORTING: 0 };
+        // Status Data
+        const statusCounts = { CLOSED: 0, OPEN: 0, OBSERVASI: 0 };
+        // Dept Data
+        const deptCounts = {};
+
+        data.forEach(d => {
+            if(groupCounts[d.group] !== undefined) groupCounts[d.group]++;
+            const s = d.statusVerifikasi || 'OPEN';
+            if(statusCounts[s] !== undefined) statusCounts[s]++;
+            if(d.auditee) deptCounts[d.auditee] = (deptCounts[d.auditee] || 0) + 1;
+        });
+
+        const deptLabels = Object.keys(deptCounts).sort((a,b) => deptCounts[b] - deptCounts[a]).slice(0, 10);
+        const deptValues = deptLabels.map(l => deptCounts[l]);
+
+        renderChart('chartGroup', 'pie', Object.keys(groupCounts), Object.values(groupCounts), ['#2563eb', '#10b981', '#f59e0b']);
+        renderChart('chartStatus', 'doughnut', Object.keys(statusCounts), Object.values(statusCounts), ['#10b981', '#ef4444', '#f59e0b']);
+        renderChart('chartDept', 'bar', deptLabels, deptValues, '#8b5cf6');
+    }
+
+    function renderChart(id, type, labels, data, colors) {
+        if(charts[id]) charts[id].destroy();
+        const ctx = document.getElementById(id).getContext('2d');
+        charts[id] = new Chart(ctx, {
+            type: type,
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: colors,
+                    borderRadius: type === 'bar' ? 5 : 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: type !== 'bar', position: 'bottom', labels: { boxWidth: 10, font: { size: 9 } } } },
+                scales: type === 'bar' ? { y: { beginAtZero: true, ticks: { font: { size: 9 } } }, x: { ticks: { font: { size: 8 } } } } : {}
             }
         });
-        doc.save('Report_Analisa.pdf');
     }
 
     fetchData();
