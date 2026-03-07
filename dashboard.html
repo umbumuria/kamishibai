@@ -1,4 +1,22 @@
-<div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
-    <h2 class="text-2xl font-bold text-slate-800 mb-6">Manajemen Jadwal</h2>
-    <p class="text-slate-500">Khusus Admin: Tambah atau edit jadwal auditor di sini.</p>
+<div class="card" style="margin-bottom: 25px; display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;">
+    <div style="flex: 1; min-width: 200px;">
+        <label>Filter Group</label>
+        <select id="mainFilterGroup" onchange="applyFilters()">
+            <option value="">Semua Group</option>
+            <option value="SF">SUGAR FACTORY (SF)</option>
+            <option value="SP">PLANTATION (SP)</option>
+            <option value="SUPPORTING">SUPPORTING</option>
+        </select>
+    </div>
+    <div style="flex: 1; min-width: 200px;">
+        <label>Filter Auditor</label>
+        <select id="mainFilterAuditor" onchange="applyFilters()">
+            <option value="">Semua Auditor</option>
+        </select>
+    </div>
+    <div style="flex: 1; min-width: 200px;">
+        <label>Filter Periode</label>
+        <input type="month" id="mainFilterMonth" onchange="applyFilters()">
+    </div>
+    <button onclick="resetFilters()" style="padding: 12px; background: #e2e8f0; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">Reset</button>
 </div>
