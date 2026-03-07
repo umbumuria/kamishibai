@@ -3,159 +3,128 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Analisa</title>
+    <title>Dashboard Analisa Kamishibai</title>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
     <style>
-        :root {
-            --primary: #3b82f6;
-            --bg-light: #f8fafc;
-            --card-bg: #ffffff;
-            --text-main: #1e293b;
-            --border: #e2e8f0;
-            --danger: #dc2626;
-        }
+        :root { --primary: #2563eb; --bg: #f8fafc; --border: #e2e8f0; --text: #1e293b; --danger: #ef4444; --success: #10b981; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding: 15px; margin: 0; }
         
-        body {
-            margin: 0; padding: 15px;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: var(--bg-light); color: var(--text-main);
-            overflow-x: hidden;
-        }
-
-        /* Gaya Header & Section (Sesuai Admin) */
-        .section-title { 
-            font-size: 16px; font-weight: bold; margin-bottom: 15px; 
-            border-left: 4px solid var(--primary); padding-left: 12px; 
-            display: flex; justify-content: space-between; align-items: center;
-        }
-
-        /* Filter Bar */
-        .filter-bar {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 10px; margin-bottom: 15px; background: #fff; padding: 12px; 
-            border-radius: 10px; border: 1px solid var(--border);
-        }
+        .container { max-width: 900px; margin: 0 auto; background: white; padding: 20px; border-radius: 15px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 30px; }
+        .section-title { font-size: 18px; font-weight: bold; margin-bottom: 20px; border-left: 5px solid var(--primary); padding-left: 15px; color: var(--primary); }
         
-        .filter-item label { display: block; font-size: 10px; font-weight: bold; color: #64748b; margin-bottom: 4px; }
-
-        .cell-input {
-            width: 100%; border: 1px solid var(--border); background: white; 
-            color: var(--text-main); padding: 8px; outline: none; border-radius: 6px; font-size: 13px;
+        /* Filter Style (Sesuai audit.html) */
+        label { display: block; font-size: 10px; font-weight: bold; margin-bottom: 5px; color: #64748b; text-transform: uppercase; }
+        select, input { 
+            width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid var(--border); 
+            border-radius: 10px; font-size: 16px; box-sizing: border-box; outline: none; background: white;
         }
 
-        /* Statistik Cards */
-        .stats-grid {
-            display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px;
-        }
-        .stat-card {
-            background: white; padding: 15px; border-radius: 10px; 
-            border: 1px solid var(--border); text-align: center;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-        }
-        .stat-card .label { font-size: 10px; font-weight: bold; color: #64748b; margin-bottom: 5px; text-transform: uppercase; }
-        .stat-card .value { font-size: 20px; font-weight: 800; color: var(--text-main); }
+        /* Stats Grid */
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+        .stat-box { padding: 15px; border-radius: 12px; border: 1px solid var(--border); text-align: center; background: #fff; }
+        .stat-val { font-size: 22px; font-weight: 800; display: block; }
+        .stat-lbl { font-size: 9px; font-weight: bold; color: #64748b; text-transform: uppercase; }
 
-        /* Charts Section */
-        .charts-grid {
-            display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 10px; margin-bottom: 20px;
-        }
-        @media (max-width: 600px) { .charts-grid { grid-template-columns: 1fr; } .stats-grid { grid-template-columns: 1fr; } }
+        /* Chart Grid */
+        .chart-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 15px; margin-bottom: 20px; }
+        .chart-card { border: 1px solid var(--border); border-radius: 12px; padding: 15px; background: white; height: 250px; }
 
-        .chart-container {
-            background: white; padding: 12px; border-radius: 10px; 
-            border: 1px solid var(--border); height: 220px;
-        }
+        /* Table Style (Sama dengan audit.html) */
+        .table-container { background: white; border-radius: 12px; border: 1px solid var(--border); overflow-x: auto; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 900px; }
+        th { background: #f8fafc; padding: 12px 10px; text-align: left; color: #475569; border-bottom: 2px solid var(--border); font-size: 10px; text-transform: uppercase; }
+        td { padding: 12px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
 
-        /* Excel Table Style */
-        .excel-container {
-            background: white; border-radius: 10px; border: 1px solid var(--border);
-            overflow-x: auto; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        }
-        table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 600px; }
-        th { background: #f1f5f9; padding: 10px; text-align: left; border-bottom: 2px solid var(--border); color: #64748b; font-weight: bold; }
-        td { padding: 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+        .filter-row th { padding: 5px 10px 10px 10px; }
+        .filter-input { width: 100%; padding: 8px 10px; font-size: 11px; border: 1px solid #e2e8f0; border-radius: 6px; outline: none; }
         
-        .badge-open { background: #fee2e2; color: #991b1b; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 10px; }
+        .badge { padding: 4px 8px; border-radius: 12px; font-size: 9px; font-weight: bold; }
+        .badge-open { background: #fee2e2; color: #991b1b; }
+
+        @media (max-width: 600px) { .chart-grid, .stats-grid { grid-template-columns: 1fr; } .chart-card { height: 200px; } }
     </style>
 </head>
 <body>
 
-    <div class="section-title">
-        RINGKASAN ANALISA CIQA
-        <div id="last-sync" style="font-size: 10px; font-weight: normal; color: #94a3b8;">Syncing...</div>
-    </div>
-
-    <div class="filter-bar">
-        <div class="filter-item">
-            <label>GROUP UNIT</label>
-            <select id="fGroup" class="cell-input" onchange="applyFilters()">
-                <option value="">SEMUA GROUP</option>
-                <option value="SF">SUGAR FACTORY</option>
-                <option value="SP">PLANTATION</option>
+<div class="container">
+    <div class="section-title">RINGKASAN ANALISA KINERJA</div>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div>
+            <label>Filter Group Unit</label>
+            <select id="fGroup" onchange="applyDashboardFilters()">
+                <option value="">-- Semua Group --</option>
+                <option value="SF">SUGAR FACTORY (SF)</option>
+                <option value="SP">PLANTATION (SP)</option>
                 <option value="SUPPORTING">SUPPORTING</option>
             </select>
         </div>
-        <div class="filter-item">
-            <label>AUDITOR</label>
-            <select id="fAuditor" class="cell-input" onchange="applyFilters()">
-                <option value="">SEMUA AUDITOR</option>
-            </select>
-        </div>
-        <div class="filter-item">
-            <label>PERIODE</label>
-            <input type="month" id="fMonth" class="cell-input" onchange="applyFilters()">
+        <div>
+            <label>Filter Periode Bulan</label>
+            <input type="month" id="fMonth" onchange="applyDashboardFilters()">
         </div>
     </div>
 
     <div class="stats-grid">
-        <div class="stat-card">
-            <div class="label">Total Audit</div>
-            <div class="value" id="valTotal">0</div>
+        <div class="stat-box" style="border-top: 4px solid var(--primary);">
+            <span class="stat-lbl">Total Audit</span>
+            <span class="stat-val" id="valTotal">0</span>
         </div>
-        <div class="stat-card" style="border-top: 3px solid var(--primary);">
-            <div class="label">Avg Score</div>
-            <div class="value" id="valAvg" style="color: var(--primary);">0%</div>
+        <div class="stat-box" style="border-top: 4px solid var(--success);">
+            <span class="stat-lbl">Avg Score</span>
+            <span class="stat-val" id="valAvg" style="color: var(--success);">0%</span>
         </div>
-        <div class="stat-card" style="border-top: 3px solid var(--danger);">
-            <div class="label">Temuan Open</div>
-            <div class="value" id="valOpen" style="color: var(--danger);">0</div>
+        <div class="stat-box" style="border-top: 4px solid var(--danger);">
+            <span class="stat-lbl">Outstanding</span>
+            <span class="stat-val" id="valOpen" style="color: var(--danger);">0</span>
         </div>
     </div>
 
-    <div class="charts-grid">
-        <div class="chart-container">
-            <div class="label" style="font-size: 11px; margin-bottom: 10px; font-weight: bold; color: #64748b;">PERFORMA PER UNIT (%)</div>
+    <div class="chart-grid">
+        <div class="chart-card">
+            <label style="margin-bottom: 10px;">Performa Score per Unit (%)</label>
             <canvas id="barChart"></canvas>
         </div>
-        <div class="chart-container">
-            <div class="label" style="font-size: 11px; margin-bottom: 10px; font-weight: bold; color: #64748b;">STATUS TEMUAN</div>
+        <div class="chart-card">
+            <label style="margin-bottom: 10px;">Status Verifikasi</label>
             <canvas id="pieChart"></canvas>
         </div>
     </div>
+</div>
 
+<div style="max-width: 1100px; margin: 0 auto; margin-bottom: 50px; padding: 0 15px;">
     <div class="section-title">DAFTAR TEMUAN OPEN (OUTSTANDING)</div>
-    <div class="excel-container">
-        <table>
+    <div class="table-container">
+        <table id="dashTable">
             <thead>
                 <tr>
-                    <th width="80">BULAN</th>
-                    <th width="120">DEPT/UNIT</th>
-                    <th>URAIAN TEMUAN</th>
-                    <th>RENCANA PERBAIKAN</th>
-                    <th width="100">AUDITOR</th>
+                    <th>Periode</th>
+                    <th>Group / Unit Auditee</th>
+                    <th>Detail Temuan (Ketidaksesuaian)</th>
+                    <th>Rencana Perbaikan</th>
+                    <th>Auditor</th>
+                    <th>Status</th>
+                </tr>
+                <tr class="filter-row">
+                    <th><input type="text" class="filter-input" placeholder="Cari..." onkeyup="filterTable()"></th>
+                    <th><input type="text" class="filter-input" placeholder="Cari..." onkeyup="filterTable()"></th>
+                    <th><input type="text" class="filter-input" placeholder="Cari..." onkeyup="filterTable()"></th>
+                    <th><input type="text" class="filter-input" placeholder="Cari..." onkeyup="filterTable()"></th>
+                    <th><input type="text" class="filter-input" placeholder="Cari..." onkeyup="filterTable()"></th>
+                    <th></th>
                 </tr>
             </thead>
-            <tbody id="tableBody">
-                <tr><td colspan="5" style="text-align:center; padding:20px; color:#94a3b8;">Mengambil data dari Firebase...</td></tr>
+            <tbody id="dashBody">
+                <tr><td colspan="6" style="text-align:center; padding:30px; color:#94a3b8;">Memproses data...</td></tr>
             </tbody>
         </table>
     </div>
+</div>
 
 <script>
-    // Config Firebase (Sudah disesuaikan dengan milik Anda)
+    // Firebase Setup (Sesuai Config Anda)
     const firebaseConfig = {
         apiKey: "AIzaSyCiW38hQ5ZfYnp3sa95OQw6IjxnfnM5dl4",
         authDomain: "kamishibaimsm.firebaseapp.com",
@@ -168,113 +137,110 @@
     const db = firebase.firestore();
 
     let masterData = [];
-    let charts = { bar: null, pie: null };
+    let barChart, pieChart;
 
-    async function loadData() {
+    async function getDashboardData() {
         try {
-            const snap = await db.collection('jadwal_audit').get();
+            const snap = await db.collection('jadwal_audit')
+                .where('status', '==', 'Selesai').get();
             masterData = snap.docs.map(doc => doc.data());
-            
-            updateAuditorDropdown();
-            applyFilters();
-            document.getElementById('last-sync').innerText = "Update: " + new Date().toLocaleTimeString();
-        } catch (e) {
-            console.error(e);
-            document.getElementById('tableBody').innerHTML = `<tr><td colspan="5" style="text-align:center; color:red;">Gagal Koneksi ke Firebase</td></tr>`;
-        }
+            applyDashboardFilters();
+        } catch (e) { console.error(e); }
     }
 
-    function updateAuditorDropdown() {
-        const group = document.getElementById('fGroup').value;
-        const sel = document.getElementById('fAuditor');
-        const filtered = group ? masterData.filter(d => d.group === group) : masterData;
-        const unique = [...new Set(filtered.map(d => d.auditor).filter(a => a))];
-        
-        sel.innerHTML = '<option value="">SEMUA AUDITOR</option>';
-        unique.forEach(a => sel.innerHTML += `<option value="${a}">${a}</option>`);
-    }
-
-    function applyFilters() {
+    function applyDashboardFilters() {
         const g = document.getElementById('fGroup').value;
-        const a = document.getElementById('fAuditor').value;
         const m = document.getElementById('fMonth').value;
 
-        if (event && event.target.id === 'fGroup') updateAuditorDropdown();
-
         const filtered = masterData.filter(d => {
-            return (!g || d.group === g) && 
-                   (!a || d.auditor === a) && 
-                   (!m || d.periode === m) &&
-                   (d.status === "Selesai"); // Hanya data yang sudah diaudit
+            return (!g || d.group === g) && (!m || d.periode === m);
         });
 
-        renderUI(filtered);
+        renderStats(filtered);
     }
 
-    function renderUI(data) {
-        let sumNilai = 0, openCount = 0, html = '';
+    function renderStats(data) {
+        let totalScore = 0, openCount = 0, html = '';
         let grpScore = { SF: {s:0, c:0}, SP: {s:0, c:0}, SUPPORTING: {s:0, c:0} };
         let stCount = { OPEN: 0, CLOSED: 0, OBSERVASI: 0 };
 
         data.forEach(d => {
             const val = parseFloat(d.nilaiPencapaian) || 0;
-            sumNilai += val;
+            totalScore += val;
             if(grpScore[d.group]) { grpScore[d.group].s += val; grpScore[d.group].c++; }
-            if(stCount[d.statusVerifikasi] !== undefined) stCount[d.statusVerifikasi]++;
+            
+            const st = (d.statusVerifikasi || "").toUpperCase();
+            if(stCount.hasOwnProperty(st)) stCount[st]++;
 
-            if(d.statusVerifikasi === "OPEN") {
+            if(st === "OPEN") {
                 openCount++;
                 html += `<tr>
                     <td>${d.periode}</td>
-                    <td><b>${d.group}</b><br><small>${d.auditee}</small></td>
+                    <td><b>${d.group}</b><br>${d.auditee}</td>
                     <td style="color:var(--danger)">${d.uraian || '-'}</td>
                     <td>${d.tindakan || '-'}</td>
                     <td>${d.auditor}</td>
+                    <td><span class="badge badge-open">OPEN</span></td>
                 </tr>`;
             }
         });
 
         document.getElementById('valTotal').innerText = data.length;
-        document.getElementById('valAvg').innerText = data.length > 0 ? (sumNilai/data.length).toFixed(1) + "%" : "0%";
+        document.getElementById('valAvg').innerText = data.length > 0 ? (totalScore/data.length).toFixed(1) + "%" : "0%";
         document.getElementById('valOpen').innerText = openCount;
-        document.getElementById('tableBody').innerHTML = html || '<tr><td colspan="5" style="text-align:center; padding:20px;">Tidak ada temuan OPEN</td></tr>';
+        document.getElementById('dashBody').innerHTML = html || '<tr><td colspan="6" style="text-align:center; padding:20px;">Tidak ada temuan OPEN</td></tr>';
 
-        drawCharts(grpScore, stCount);
+        updateCharts(grpScore, stCount);
     }
 
-    function drawCharts(grp, st) {
-        if(charts.bar) charts.bar.destroy();
-        if(charts.pie) charts.pie.destroy();
+    function updateCharts(grp, st) {
+        if(barChart) barChart.destroy();
+        if(pieChart) pieChart.destroy();
 
         const calc = (o) => o.c > 0 ? (o.s/o.c).toFixed(0) : 0;
 
-        charts.bar = new Chart(document.getElementById('barChart'), {
+        barChart = new Chart(document.getElementById('barChart'), {
             type: 'bar',
             data: {
                 labels: ['SF', 'SP', 'SUPP'],
                 datasets: [{
                     data: [calc(grp.SF), calc(grp.SP), calc(grp.SUPPORTING)],
-                    backgroundColor: ['#3b82f6', '#10b981', '#f59e0b'],
-                    borderRadius: 5
+                    backgroundColor: ['#2563eb', '#10b981', '#f59e0b'],
+                    borderRadius: 6
                 }]
             },
             options: { maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 100 } } }
         });
 
-        charts.pie = new Chart(document.getElementById('pieChart'), {
+        pieChart = new Chart(document.getElementById('pieChart'), {
             type: 'doughnut',
             data: {
                 labels: ['OPEN', 'CLOSED', 'OBS'],
                 datasets: [{
                     data: [st.OPEN, st.CLOSED, st.OBSERVASI],
-                    backgroundColor: ['#dc2626', '#10b981', '#e2e8f0']
+                    backgroundColor: ['#ef4444', '#10b981', '#cbd5e1']
                 }]
             },
             options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } } }
         });
     }
 
-    loadData();
+    // Fungsi Filter Tabel (Persis logic audit.html)
+    function filterTable() {
+        const inputs = document.querySelectorAll(".filter-input");
+        const rows = document.getElementById("dashBody").getElementsByTagName("tr");
+        for (let i = 0; i < rows.length; i++) {
+            let visible = true;
+            const cells = rows[i].getElementsByTagName("td");
+            inputs.forEach((input, idx) => {
+                const filter = input.value.toLowerCase();
+                if (filter && cells[idx] && !cells[idx].textContent.toLowerCase().includes(filter)) visible = false;
+            });
+            rows[i].style.display = visible ? "" : "none";
+        }
+    }
+
+    getDashboardData();
 </script>
 </body>
 </html>
