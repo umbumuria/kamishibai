@@ -130,7 +130,7 @@
                 <input type="password" id="password" placeholder="••••••••">
             </div>
             <button class="btn-login" onclick="loginLokal()">Masuk Sistem</button>
-            <div class="footer">SISTEM KONTROL KUALITAS MSM<br>© 2025 Arifianto Hidayat</div>
+            <div class="footer">SISTEM KONTROL KUALITAS MSM<br>© 2026 Arifianto Hidayat</div>
         </div>
     </div>
 
@@ -146,6 +146,9 @@
             </div>
             <div onclick="loadPage('audit.html', 'Audit System', this)" id="menu-audit" class="nav-item">
                 <span>📋</span> Input Audit
+            </div>
+            <div onclick="loadPage('auditedit.html', 'Edit Data Audit', this)" id="menu-edit" class="nav-item">
+                <span>✏️</span> Edit Data Audit
             </div>
             <div onclick="loadPage('jadwal.html', 'Audit Schedule', this)" id="menu-jadwal" class="nav-item">
                 <span>📅</span> Jadwal Audit
@@ -182,7 +185,6 @@
             document.getElementById("pwd-group").classList.toggle("hidden", user !== "admin");
         }
 
-        // Fungsi SPA Loader
         function loadPage(url, title, element) {
             const iframe = document.getElementById('main-frame');
             const pageTitle = document.getElementById('page-title');
@@ -190,11 +192,9 @@
             iframe.src = url;
             pageTitle.innerText = title;
 
-            // Update status active di menu
             document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
             if(element) element.classList.add('active');
 
-            // Tutup sidebar jika di mobile setelah pilih menu
             if(window.innerWidth < 992) toggleSidebar();
         }
 
@@ -210,18 +210,17 @@
             document.getElementById('login-overlay').classList.add('hidden');
             document.getElementById('user-display').innerText = "Role: " + user;
             
-            // LOGIKA HAK AKSES DAN REDIRECT
             if (user === "auditor") {
-                // Sembunyikan Jadwal, tapi Dashboard tetap ada
+                // Sembunyikan Jadwal & Edit untuk Auditor
                 document.getElementById('menu-jadwal').classList.add('hidden');
+                document.getElementById('menu-edit').classList.add('hidden');
                 
-                // Redirect awal ke Audit
                 loadPage('audit.html', 'Audit System', document.getElementById('menu-audit'));
             } else {
-                // Admin lihat semua
+                // Tampilkan Semua untuk Admin
                 document.getElementById('menu-jadwal').classList.remove('hidden');
+                document.getElementById('menu-edit').classList.remove('hidden');
                 
-                // Redirect awal ke Dashboard
                 loadPage('dashboard.html', 'Admin Dashboard', document.getElementById('menu-dashboard'));
             }
 
