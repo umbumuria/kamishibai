@@ -33,7 +33,7 @@
         
         /* Table & Rapi Filter */
         .table-container { background: white; border-radius: 12px; border: 1px solid var(--border); overflow-x: auto; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 950px; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 1100px; }
         
         th { background: #f8fafc; padding: 12px 10px; text-align: left; color: #475569; border-bottom: 2px solid var(--border); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
         td { padding: 12px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
@@ -86,7 +86,7 @@
             <div><label>Auditor</label><input type="text" id="displayAuditor" readonly></div>
             <div><label>Dept. Auditee</label><input type="text" id="displayDept" readonly></div>
             <div><label>Nama Personel Auditee</label><input type="text" id="namaAuditee" placeholder="Nama staf" required></div>
-           <div><label>Judul IK / Materi</label><input type="text" id="judulIK" placeholder="Materi audit..." readonly></div>
+            <div><label>Judul IK / Materi</label><input type="text" id="judulIK" placeholder="Materi audit..." readonly></div>
             <div><label>Jumlah Item Cek</label><input type="number" id="jmlItem" value="10" oninput="hitungNilai()" required></div>
             <div><label>Jumlah Temuan</label><input type="number" id="jmlTemuan" value="0" oninput="hitungNilai()" required></div>
             <div><label>Nilai Pencapaian (%)</label><input type="text" id="nilaiTemuan" readonly></div>
@@ -131,7 +131,7 @@
     </form>
 </div>
 
-<div style="max-width: 1200px; margin: 0 auto; margin-bottom: 80px; padding:0 15px;">
+<div style="max-width: 1300px; margin: 0 auto; margin-bottom: 80px; padding:0 15px;">
     <div class="section-title">HISTORY AUDIT LOG</div>
     
     <div class="table-container">
@@ -140,8 +140,9 @@
                 <tr>
                     <th>Tgl Audit</th>
                     <th>Group / Dept</th>
-                    <th>Auditor</th>
+                    <th>Auditor / Auditee</th>
                     <th>Materi & Temuan</th>
+                    <th>Tindakan Perbaikan</th>
                     <th>Nilai</th>
                     <th>Foto</th>
                     <th>Catatan</th>
@@ -152,6 +153,7 @@
                     <th><input type="text" class="filter-input" placeholder="Cari dept..." onkeyup="filterExcel()"></th>
                     <th><input type="text" class="filter-input" placeholder="Cari nama..." onkeyup="filterExcel()"></th>
                     <th><input type="text" class="filter-input" placeholder="Cari temuan..." onkeyup="filterExcel()"></th>
+                    <th><input type="text" class="filter-input" placeholder="Cari tindakan..." onkeyup="filterExcel()"></th>
                     <th><input type="text" class="filter-input" placeholder="Cari nilai..." onkeyup="filterExcel()"></th>
                     <th></th> <th><input type="text" class="filter-input" placeholder="Cari catatan..." onkeyup="filterExcel()"></th>
                     <th><input type="text" class="filter-input" placeholder="Cari status..." onkeyup="filterExcel()"></th>
@@ -203,10 +205,7 @@
         document.getElementById('displayGroup').value = d.group || '';
         document.getElementById('displayAuditor').value = d.auditor || '';
         document.getElementById('displayDept').value = d.auditee || '';
-        
-        // Perbaikan: Gunakan d.judulIK, jika kosong coba cari di d.materi (fallback)
         document.getElementById('judulIK').value = d.judulIK || d.materi || '';
-        
         hitungNilai();
     }
     function hitungNilai() {
@@ -242,7 +241,8 @@
         for (let i = 0; i < rows.length; i++) {
             let rowVisible = true;
             const cells = rows[i].getElementsByTagName("td");
-            const colMapping = [0, 1, 2, 3, 4, 6, 7]; 
+            // Mapping kolom filter ke kolom tabel: tgl(0), group(1), nama(2), temuan(3), tindakan(4), nilai(5), catatan(7), status(8)
+            const colMapping = [0, 1, 2, 3, 4, 5, 7, 8]; 
 
             filterInputs.forEach((input, index) => {
                 const filterValue = input.value.toLowerCase();
@@ -304,8 +304,9 @@
                     <tr>
                         <td>${d.tglAudit}</td>
                         <td><b>${d.group}</b><br>${d.auditee}</td>
-                        <td>${d.auditor}</td>
+                        <td><small>Auditor:</small> ${d.auditor}<br><small>Auditee:</small> ${d.namaAuditeePerson || '-'}</td>
                         <td><small>IK: ${d.judulIK || '-'}</small><br><i style="color:#64748b">${d.uraian || '-'}</i></td>
+                        <td>${d.tindakan || '-'}</td>
                         <td style="font-weight:bold">${d.nilaiPencapaian}</td>
                         <td><div style="display:flex">${fotoHtml || '-'}</div></td>
                         <td style="color:#2563eb; font-size:10px;">${d.updateCatatan || '-'}</td>
