@@ -197,17 +197,18 @@
         } catch (e) { console.error(e); }
     }
 
-    function fillJadwalData(id) {
+ function fillJadwalData(id) {
         if(!id) return;
         const d = cacheJadwal[id];
         document.getElementById('displayGroup').value = d.group || '';
         document.getElementById('displayAuditor').value = d.auditor || '';
         document.getElementById('displayDept').value = d.auditee || '';
-        // Bagian yang diperbarui: Isi field judulIK secara otomatis
-        document.getElementById('judulIK').value = d.judulIK || '';
+        
+        // Perbaikan: Gunakan d.judulIK, jika kosong coba cari di d.materi (fallback)
+        document.getElementById('judulIK').value = d.judulIK || d.materi || '';
+        
         hitungNilai();
     }
-
     function hitungNilai() {
         const i = parseFloat(document.getElementById('jmlItem').value) || 0;
         const t = parseFloat(document.getElementById('jmlTemuan').value) || 0;
