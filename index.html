@@ -2,154 +2,140 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Kamishibai MSM System</title>
     
     <link rel="icon" type="image/png" href="https://res.cloudinary.com/ddhsrvefu/image/upload/v1772248994/Gemini_Generated_Image_ilzww2ilzww2ilzw_vhl8zx.png">
     
     <style>
-        *{ box-sizing:border-box; }
-        body{
-            margin:0;
-            min-height:100vh;
-            display:flex;
-            justify-content:center;
-            align-items:center;
-            font-family:'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            /* Warna Latar Belakang Nuansa Industri/Pabrik Modern */
+        *{ box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+        
+        html, body { 
+            height: 100%; 
+            margin: 0; 
+            overflow: hidden; 
+            background: #0f172a;
+            /* Menggunakan dvh agar pas di layar HP yang ada bar navigasi browsernya */
+            height: 100dvh; 
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
             padding: 20px;
         }
 
-        /* Garis indikator di atas kartu (Ciri khas papan Kamishibai) */
-        .login-wrapper{
+        .login-wrapper {
             width: 100%;
-            max-width: 400px;
-            position: relative;
+            max-width: 350px;
         }
 
-        .login-card{
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(15px);
-            border-top: 5px solid #3b82f6; /* Aksen Biru Audit */
-            border-left: 1px solid rgba(255,255,255,0.1);
-            border-right: 1px solid rgba(255,255,255,0.1);
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            border-radius: 12px;
-            padding: 40px 30px;
+        .login-card {
+            background: rgba(30, 41, 59, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-top: 4px solid #3b82f6;
+            border-radius: 20px;
+            padding: 30px 25px;
             text-align: center;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
             color: white;
+            border: 1px solid rgba(255,255,255,0.1);
         }
 
-        /* Indikator Status Kamishibai (Merah/Hijau) */
-        .status-dots {
-            display: flex;
-            justify-content: center;
-            gap: 8px;
-            margin-bottom: 20px;
+        .status-dots { 
+            display: flex; 
+            justify-content: center; 
+            gap: 8px; 
+            margin-bottom: 20px; 
         }
-        .dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
+        .dot { 
+            width: 10px; 
+            height: 10px; 
+            border-radius: 50%; 
         }
         .dot.green { background: #22c55e; box-shadow: 0 0 10px #22c55e; }
         .dot.red { background: #ef4444; box-shadow: 0 0 10px #ef4444; }
 
-        .logo{
-            width: 85px;
-            margin-bottom: 15px;
-            filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.5));
-            transition: transform 0.3s ease;
-        }
-        .logo:hover {
-            transform: rotate(5deg) scale(1.05);
+        .logo { 
+            width: 80px; 
+            height: auto; 
+            margin-bottom: 15px; 
         }
 
-        .title{ 
-            font-size: 22px; 
+        .title { 
+            font-size: 20px; 
             font-weight: 800; 
             letter-spacing: 1px; 
             margin-bottom: 5px;
-            color: #f8fafc;
-            text-transform: uppercase;
+            color: #ffffff;
         }
-        .subtitle{ 
+        .subtitle { 
             font-size: 11px; 
             opacity: 0.8; 
-            margin-bottom: 30px; 
-            color: #94a3b8;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            padding-bottom: 15px;
+            margin-bottom: 25px; 
+            color: #94a3b8; 
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
         }
 
-        .input-group {
-            text-align: left;
-            margin-bottom: 20px;
-        }
-        .input-group label {
-            display: block;
-            font-size: 12px;
-            margin-bottom: 5px;
+        .input-group { text-align: left; margin-bottom: 15px; }
+        .input-group label { 
+            display: block; 
+            font-size: 12px; 
+            margin-bottom: 6px; 
             color: #cbd5e1;
-            margin-left: 5px;
+            margin-left: 4px;
         }
-        input{
+        input {
             width: 100%;
-            padding: 14px;
-            border-radius: 8px;
+            height: 50px; /* Lebih tinggi agar mudah di-tap di HP */
+            padding: 0 15px;
+            border-radius: 12px;
             border: 1px solid rgba(255,255,255,0.1);
-            background: rgba(15, 23, 42, 0.6);
+            background: rgba(15, 23, 42, 0.9);
             color: white;
             outline: none;
-            transition: all 0.3s;
+            font-size: 16px; /* Font 16px mencegah iPhone auto-zoom saat fokus */
+            transition: 0.2s;
         }
-        input:focus {
-            border-color: #3b82f6;
-            background: rgba(15, 23, 42, 0.9);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        input:focus { 
+            border-color: #3b82f6; 
+            background: #0f172a;
         }
 
-        button{
+        button {
             width: 100%;
-            padding: 14px;
+            height: 50px;
+            margin-top: 10px;
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;
             background: #3b82f6;
             color: white;
             font-weight: 700;
+            font-size: 15px;
             text-transform: uppercase;
-            letter-spacing: 1px;
             cursor: pointer;
-            transition: background 0.3s;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
         }
-        button:hover {
+        button:active { 
+            transform: scale(0.97); 
             background: #2563eb;
         }
 
-        .forgot-link {
-            display: block; 
-            margin-top: 20px; 
-            color: #94a3b8; 
-            text-decoration: none; 
-            font-size: 12px;
-            transition: color 0.3s;
-        }
-        .forgot-link:hover { color: #3b82f6; }
-
-        .footer{ 
+        .footer { 
             margin-top: 30px; 
             font-size: 10px; 
             opacity: 0.5; 
-            letter-spacing: 0.5px;
+            line-height: 1.5;
         }
-
-        #loading { color: #3b82f6; font-weight: bold; }
     </style>
 </head>
 <body>
+
     <div class="login-wrapper">
         <div class="login-card">
             <div class="status-dots">
@@ -164,19 +150,16 @@
             <div class="subtitle">MSM TERINTEGRASI</div>
             
             <div class="input-group">
-                <label>User ID / Email</label>
-                <input type="email" id="email" placeholder="Masukkan email anda...">
+                <label>USER ID</label>
+                <input type="text" id="username" placeholder="Masukkan ID" autocomplete="off">
             </div>
 
             <div class="input-group">
-                <label>Password</label>
+                <label>PASSWORD</label>
                 <input type="password" id="password" placeholder="••••••••">
             </div>
 
-            <button onclick="login()">Verifikasi Log</button>
-            
-            <a href="lupapwd.html" class="forgot-link">Masalah akses akun?</a>
-            <div id="loading" style="font-size:12px; margin-top:15px;"></div>
+            <button onclick="loginLokal()">Masuk Sistem</button>
             
             <div class="footer">
                 SISTEM KONTROL KUALITAS MSM<br>
@@ -185,49 +168,33 @@
         </div>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    <script>
+        const users = [
+            { user: "admin", pass: "admin123", role: "admin" },
+            { user: "auditor", pass: "audit2026", role: "auditor" }
+        ];
 
-        const firebaseConfig = { 
-            apiKey: "AIzaSyC1VaTDtWBkhhcpbjTb9Njw6JHHqNq9dBg", 
-            authDomain: "rtestingbro.firebaseapp.com", 
-            projectId: "rtestingbro", 
-            storageBucket: "rtestingbro.firebasestorage.app", 
-            messagingSenderId: "930800737947", 
-            appId: "1:930800737947:web:51b4b4ab68dc068b95b03e" 
-        };
+        function loginLokal() {
+            const userInput = document.getElementById("username").value.trim();
+            const passInput = document.getElementById("password").value;
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+            const foundUser = users.find(u => u.user.toLowerCase() === userInput.toLowerCase() && u.pass === passInput);
 
-        window.login = async function(){
-            const email = document.getElementById("email").value;
-            const password = document.getElementById("password").value;
-            const loading = document.getElementById("loading");
-
-            if(!email || !password){ alert("Input diperlukan!"); return; }
-            
-            try{
-                loading.innerText = "MENGOTENTIKASI...";
-                const userCredential = await signInWithEmailAndPassword(auth, email, password);
-                const userDoc = await getDoc(doc(db, "users", userCredential.user.uid));
-                
-                if(!userDoc.exists()){ 
-                    alert("Akses Ditolak: User tidak ditemukan dalam database."); 
-                    loading.innerText = "";
-                    return; 
+            if (foundUser) {
+                if (foundUser.role === "admin") {
+                    window.location.href = "dashboard-admin.html";
+                } else {
+                    window.location.href = "dashboard-auditor.html";
                 }
-                
-                const role = userDoc.data().role;
-                window.location.href = role === "admin" ? "dashboard-admin.html" : "dashboard-staff.html";
-            } catch(e){ 
-                loading.innerText = ""; 
-                alert("Gagal Masuk: Periksa kembali kredensial Anda."); 
+            } else {
+                alert("ID atau Password salah!");
             }
         }
+
+        // Handle enter key
+        document.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') loginLokal();
+        });
     </script>
 </body>
 </html>
