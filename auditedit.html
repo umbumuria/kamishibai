@@ -35,7 +35,7 @@
         /* --- Responsive Table --- */
         .filter-bar { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: white; padding: 15px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 15px; }
         .table-container { background: white; border-radius: 12px; border: 1px solid var(--border); overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 850px; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 950px; }
         th { background: #f1f5f9; padding: 12px; text-align: left; color: #64748b; border-bottom: 2px solid var(--border); }
         td { padding: 12px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
         
@@ -94,10 +94,11 @@
         <div class="photo-grid">
             <script>
                 for(let i=1; i<=5; i++) {
+                    let labelFoto = (i === 5) ? "FOTO BERSAMA AUDITEE" : `FOTO ${i}`;
                     document.write(`
                         <div class="photo-box" onclick="document.getElementById('file${i}').click()">
                             <img id="img${i}" src="">
-                            <span id="text${i}">FOTO ${i}</span>
+                            <span id="text${i}">${labelFoto}</span>
                             <div id="load${i}" style="display:none; font-size:10px; color:var(--primary);">Uploading...</div>
                             <input type="file" id="file${i}" accept="image/*" hidden onchange="uploadImage(this, ${i})">
                             <input type="hidden" id="url${i}">
@@ -107,12 +108,15 @@
             </script>
         </div>
 
+        <label>Catatan Tambahan</label>
+        <input type="text" id="updateCatatan" placeholder="Tambahkan catatan jika diperlukan...">
+
         <button type="submit" id="btnSave" class="btn-submit">UPDATE DATA AUDIT</button>
         <button type="button" onclick="resetForm()" class="btn-submit btn-cancel">BATAL / RESET</button>
     </form>
 </div>
 
-<div style="max-width: 1100px; margin: 0 auto; margin-bottom: 80px; padding:0 15px;">
+<div style="max-width: 1150px; margin: 0 auto; margin-bottom: 80px; padding:0 15px;">
     <div class="section-title">HISTORY & MANAJEMEN DATA</div>
     
     <div class="filter-bar">
@@ -133,7 +137,7 @@
                     <th>MATERI & TEMUAN</th>
                     <th>NILAI</th>
                     <th>FOTO</th>
-                    <th>STATUS</th>
+                    <th>CATATAN</th> <th>STATUS</th>
                     <th>AKSI</th>
                 </tr>
             </thead>
@@ -181,7 +185,6 @@
         document.getElementById(`load${idx}`).style.display = 'none';
     }
 
-    // Fungsi Ambil History
     async function fetchAuditHistory() {
         const fAud = document.getElementById('fAuditor').value.toLowerCase();
         const fGrp = document.getElementById('fGroup').value;
@@ -207,7 +210,7 @@
                             <td><small>${d.judulIK || '-'}</small><br><i style="color:#64748b">${d.uraian || '-'}</i></td>
                             <td style="font-weight:bold">${d.nilaiPencapaian}</td>
                             <td><div style="display:flex">${fotoHtml || '-'}</div></td>
-                            <td><span class="badge ${d.statusVerifikasi==='CLOSED'?'badge-closed':'badge-open'}">${d.statusVerifikasi}</span></td>
+                            <td style="color:#2563eb; font-size:10px;">${d.updateCatatan || '-'}</td> <td><span class="badge ${d.statusVerifikasi==='CLOSED'?'badge-closed':'badge-open'}">${d.statusVerifikasi}</span></td>
                             <td>
                                 <button class="btn-edit" onclick='prepareEdit("${doc.id}", ${JSON.stringify(d).replace(/'/g, "&apos;")})'>EDIT</button>
                                 <button class="btn-delete" onclick='deleteAudit("${doc.id}")'>HAPUS</button>
@@ -219,7 +222,6 @@
         } catch (e) { console.error(e); }
     }
 
-    // Fungsi Pindahkan Data ke Form
     function prepareEdit(id, data) {
         window.scrollTo({ top: 0, behavior: 'smooth' });
         document.getElementById('editDocId').value = id;
@@ -236,17 +238,15 @@
         document.getElementById('uraian').value = data.uraian || '';
         document.getElementById('penyebab').value = data.penyebab || '';
         document.getElementById('tindakan').value = data.tindakan || '';
+        document.getElementById('updateCatatan').value = data.updateCatatan || ''; // Menarik catatan ke input
 
-        // Reset Foto
         for(let i=1; i<=5; i++) {
             const img = document.getElementById(`img${i}`);
             const urlInput = document.getElementById(`url${i}`);
             const span = document.getElementById(`text${i}`);
             if(data.foto && data.foto[i-1]) {
-                img.src = data.foto[i-1];
-                img.style.display = 'block';
-                urlInput.value = data.foto[i-1];
-                span.style.display = 'none';
+                img.src = data.foto[i-1]; img.style.display = 'block';
+                urlInput.value = data.foto[i-1]; span.style.display = 'none';
             } else {
                 img.src = ''; img.style.display = 'none';
                 urlInput.value = ''; span.style.display = 'block';
@@ -255,7 +255,6 @@
         document.getElementById('btnSave').innerText = "SIMPAN PERUBAHAN";
     }
 
-    // Submit Update
     document.getElementById('auditForm').onsubmit = async (e) => {
         e.preventDefault();
         const id = document.getElementById('editDocId').value;
@@ -275,6 +274,7 @@
             penyebab: document.getElementById('penyebab').value,
             tindakan: document.getElementById('tindakan').value,
             statusVerifikasi: document.getElementById('statusVerifikasi').value,
+            updateCatatan: document.getElementById('updateCatatan').value, // Mengirim catatan baru
             foto: [1,2,3,4,5].map(i => document.getElementById(`url${i}`).value).filter(v => v),
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
@@ -286,7 +286,6 @@
         } catch (e) { alert("Gagal update!"); btn.disabled = false; }
     };
 
-    // Fungsi Hapus (Kembalikan ke Pending)
     async function deleteAudit(id) {
         if(!confirm("Yakin ingin menghapus hasil audit ini? Data akan kembali ke status 'Pending'.")) return;
         try {
@@ -294,17 +293,15 @@
                 status: "Pending",
                 tglAudit: "",
                 uraian: "",
-                foto: []
+                foto: [],
+                updateCatatan: ""
             });
             alert("Hasil audit dihapus & dikembalikan ke jadwal pending.");
             fetchAuditHistory();
         } catch (e) { alert("Gagal menghapus!"); }
     }
 
-    function resetForm() {
-        location.reload();
-    }
-
+    function resetForm() { location.reload(); }
     fetchAuditHistory();
 </script>
 </body>
