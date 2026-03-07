@@ -3,76 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - CIQA</title>
+    <title>CIQA System</title>
     <style>
-        :root { --sidebar-width: 260px; --sidebar-collapsed-width: 75px; --primary-blue: #3b82f6; --dark-navy: #0f172a; }
+        :root { --sidebar-width: 260px; --primary: #3b82f6; --dark: #0f172a; }
         body { margin:0; font-family:'Segoe UI', sans-serif; display:flex; height:100vh; background:#f1f5f9; overflow: hidden; }
-
-        .sidebar { width: var(--sidebar-width); background: var(--dark-navy); color: white; padding: 25px 15px; display: flex; flex-direction: column; transition: 0.3s; z-index: 1000; }
-        .sidebar.collapsed { width: var(--sidebar-collapsed-width); }
-        .sidebar.collapsed span, .sidebar.collapsed h2 { display: none; }
         
-        .nav-group { flex: 1; margin-top: 20px; }
+        /* SIDEBAR */
+        .sidebar { width: var(--sidebar-width); background: var(--dark); color: white; padding: 25px 15px; display: flex; flex-direction: column; transition: 0.3s; }
+        .sidebar h2 { color: var(--primary); text-align: center; font-size: 20px; margin-bottom: 30px; }
+        .nav-group { flex: 1; }
         .sidebar button { 
-            width:100%; padding:12px 15px; margin-bottom:10px; background:#1e293b; border:none; color:white; 
-            border-radius:10px; cursor:pointer; text-align: left; display: flex; align-items: center; transition: 0.3s;
+            width:100%; padding:12px; margin-bottom:10px; background:#1e293b; border:none; color:white; 
+            border-radius:10px; cursor:pointer; text-align: left; display: flex; align-items: center;
         }
-        .sidebar button:hover { background: var(--primary-blue); transform: translateX(5px); }
-        .sidebar button i { margin-right: 15px; font-style: normal; }
-
+        .sidebar button:hover { background: var(--primary); }
+        .sidebar button i { margin-right: 12px; font-style: normal; }
+        
+        /* MAIN CONTENT */
         .main { flex:1; display: flex; flex-direction: column; height: 100vh; }
         .topbar { background:white; padding:15px 20px; display:flex; justify-content:space-between; align-items:center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .content-area { padding: 20px; overflow-y: auto; flex: 1; }
-        .btn-logout { background: #ef4444 !important; color: white !important; }
+        .content-area { padding: 25px; overflow-y: auto; flex: 1; }
+        
+        .hidden { display: none !important; }
+        .card { background:white; padding:20px; border-radius:15px; box-shadow:0 4px 6px rgba(0,0,0,0.05); }
     </style>
 </head>
 <body>
 
 <div class="sidebar" id="sidebar">
-    <h2 style="color:var(--primary-blue); text-align:center;">CIQA ADMIN</h2>
+    <h2 id="roleLabel">CIQA SYSTEM</h2>
     <div class="nav-group">
-        <button onclick="loadPage('data-staff.html')"><i>👥</i> <span>Data Staff</span></button>
-        <button onclick="loadPage('kelola-jadwal.html')"><i>📅</i> <span>Kelola Jadwal</span></button>
-        <button onclick="loadPage('analisa.html')"><i>📊</i> <span>Analisa Data</span></button>
+        <button onclick="loadPage('input.html')"><i>📝</i> <span>Input Audit</span></button>
+        
+        <div id="adminMenu" class="hidden">
+            <button onclick="loadPage('jadwal.html')"><i>📅</i> <span>Kelola Jadwal</span></button>
+            <button onclick="alert('Fitur Analisa')"><i>📊</i> <span>Analisa</span></button>
+        </div>
     </div>
-    <button class="btn-logout" onclick="logout()"><i>🚪</i> <span>Logout</span></button>
+    <button onclick="logout()" style="background:#ef4444; margin-top: auto;"><i>🚪</i> <span>Logout</span></button>
 </div>
 
 <div class="main">
     <div class="topbar">
-        <button onclick="document.getElementById('sidebar').classList.toggle('collapsed')" style="cursor:pointer; background:none; border:none; font-size:20px;">☰</button>
-        <div id="statusInfo" style="font-weight:bold;">DASHBOARD ADMIN</div>
-        <div id="userName">Admin</div>
+        <div style="font-weight: bold;" id="pageTitle">DASHBOARD</div>
+        <div id="userName">User</div>
     </div>
     <div class="content-area" id="mainContent">
-        <div style="background:white; padding:30px; border-radius:15px; box-shadow:0 4px 6px rgba(0,0,0,0.05);">
-            <h3>Selamat Datang, Admin!</h3>
-            <p>Gunakan menu samping untuk mengatur sistem CIQA.</p>
+        <div class="card">
+            <h3>Selamat Datang di CIQA</h3>
+            <p>Pilih menu di samping untuk memulai aktivitas.</p>
         </div>
     </div>
 </div>
 
 <script>
-    // Cek Role
-    if(localStorage.getItem('role') !== 'admin') window.location.href = "index.html";
-    document.getElementById('userName').innerText = localStorage.getItem('name');
+    // 1. Cek Sesi & Role
+    const role = localStorage.getItem('role');
+    if(!role) window.location.href = "index.html";
 
+    document.getElementById('roleLabel').innerText = "CIQA " + role.toUpperCase();
+    document.getElementById('userName').innerText = role === 'admin' ? 'Super Admin' : 'Auditor Lapangan';
+
+    // Munculkan menu admin jika role-nya admin
+    if(role === 'admin') {
+        document.getElementById('adminMenu').classList.remove('hidden');
+    }
+
+    // 2. Fungsi SPA (Load Content)
     async function loadPage(url) {
         const area = document.getElementById("mainContent");
+        document.getElementById('pageTitle').innerText = url.replace('.html', '').toUpperCase();
         area.innerHTML = "<p>Memuat...</p>";
+        
         try {
             const res = await fetch(url);
-            const html = await res.text();
-            area.innerHTML = html;
+            if(!res.ok) throw new Error();
+            area.innerHTML = await res.text();
             
-            // Script runner agar script di file yang di-fetch tetap jalan
+            // Jalankan script jika ada di file yang di-load
             const scripts = area.querySelectorAll("script");
             scripts.forEach(s => {
                 const newScript = document.createElement("script");
                 newScript.text = s.text;
                 document.body.appendChild(newScript).parentNode.removeChild(newScript);
             });
-        } catch (e) { area.innerHTML = "Error memuat halaman."; }
+        } catch (e) {
+            area.innerHTML = "<div class='card'>Halaman <b>" + url + "</b> belum dibuat atau error.</div>";
+        }
     }
 
     function logout() { localStorage.clear(); window.location.href = "index.html"; }
