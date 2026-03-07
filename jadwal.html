@@ -1,4 +1,162 @@
-<div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
-    <h2 class="text-2xl font-bold text-slate-800 mb-6">Manajemen Jadwal</h2>
-    <p class="text-slate-500">Khusus Admin: Tambah atau edit jadwal auditor di sini.</p>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jadwal Audit - Kamishibai</title>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --bg-dark: #0f172a;
+            --card-bg: #1e293b;
+        }
+        body {
+            margin: 0; font-family: sans-serif; background: transparent; color: white;
+            padding: 20px; overflow-y: auto;
+        }
+        .container { max-width: 800px; margin: 0 auto; }
+        
+        .card {
+            background: var(--card-bg); padding: 25px; border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+
+        .form-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+        }
+
+        .input-group { margin-bottom: 15px; }
+        .input-group.full { grid-column: span 2; }
+        label { display: block; font-size: 12px; color: #94a3b8; margin-bottom: 8px; font-weight: 600; text-transform: uppercase; }
+        
+        input, select {
+            width: 100%; height: 45px; background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(255,255,255,0.2); border-radius: 8px;
+            color: white; padding: 0 15px; font-size: 14px; outline: none;
+        }
+        input:focus { border-color: var(--primary); }
+
+        .kode-display {
+            background: rgba(59, 130, 246, 0.1); border: 1px dashed var(--primary);
+            padding: 12px; border-radius: 8px; color: var(--primary);
+            font-family: monospace; font-weight: bold; font-size: 13px; margin-top: 5px;
+        }
+
+        .btn-submit {
+            grid-column: span 2; height: 50px; background: var(--primary);
+            border: none; border-radius: 10px; color: white; font-weight: 700;
+            cursor: pointer; margin-top: 10px; transition: 0.3s;
+        }
+        .btn-submit:hover { opacity: 0.9; transform: translateY(-2px); }
+
+        @media (max-width: 600px) {
+            .form-grid { grid-template-columns: 1fr; }
+            .input-group.full { grid-column: span 1; }
+            .btn-submit { grid-column: span 1; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="card">
+        <h2 style="margin-top:0; font-size: 18px; border-left: 4px solid var(--primary); padding-left: 15px;">Buat Jadwal Audit Baru</h2>
+        
+        <form id="formJadwal" class="form-grid">
+            <div class="input-group">
+                <label>Periode Audit (Bulan-Tahun)</label>
+                <input type="month" id="periode" required oninput="generateKode()">
+            </div>
+
+            <div class="input-group">
+                <label>Nama Auditor</label>
+                <input type="text" id="auditor" placeholder="Contoh: Arifianto" required oninput="generateKode()">
+            </div>
+
+            <div class="input-group">
+                <label>Group</label>
+                <select id="group" required onchange="generateKode()">
+                    <option value="SF">SUGAR FACTORY (SF)</option>
+                    <option value="SP">PLANTATION (SP)</option>
+                    <option value="SUPPORTING">SUPPORTING</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label>Dept. Auditee</label>
+                <input type="text" id="auditee" placeholder="Contoh: Quality Assurance" required oninput="generateKode()">
+            </div>
+
+            <div class="input-group full">
+                <label>Kode Unik (Otomatis)</label>
+                <div class="kode-display" id="displayKode">-- Menunggu Input --</div>
+                <input type="hidden" id="kodeUnik">
+            </div>
+
+            <button type="submit" class="btn-submit">SIMPAN JADWAL</button>
+        </form>
+    </div>
 </div>
+
+<script>
+    // Firebase Configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyCiW38hQ5ZfYnp3sa95OQw6IjxnfnM5dl4",
+        authDomain: "kamishibaimsm.firebaseapp.com",
+        projectId: "kamishibaimsm",
+        storageBucket: "kamishibaimsm.firebasestorage.app",
+        messagingSenderId: "184420389379",
+        appId: "1:184420389379:web:51bbb78ce5fa8e8d227436"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // Fungsi Generate Kode Unik
+    function generateKode() {
+        const periode = document.getElementById('periode').value; // format: 2026-03
+        const auditor = document.getElementById('auditor').value.replace(/\s+/g, '').toUpperCase();
+        const auditee = document.getElementById('auditee').value.replace(/\s+/g, '').toUpperCase();
+        const group = document.getElementById('group').value;
+
+        if (periode && auditor && auditee) {
+            const [tahun, bulan] = periode.split('-');
+            const kode = `${bulan}${tahun}-${auditor}-${auditee}-${group}`;
+            document.getElementById('displayKode').innerText = kode;
+            document.getElementById('kodeUnik').value = kode;
+        } else {
+            document.getElementById('displayKode').innerText = "-- Lengkapi Form --";
+        }
+    }
+
+    // Submit ke Firestore
+    document.getElementById('formJadwal').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const data = {
+            periode: document.getElementById('periode').value,
+            auditor: document.getElementById('auditor').value,
+            auditee: document.getElementById('auditee').value,
+            group: document.getElementById('group').value,
+            kodeUnik: document.getElementById('kodeUnik').value,
+            status: "Pending", // Default status sebelum diaudit
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        try {
+            await db.collection('jadwal_audit').doc(data.kodeUnik).set(data);
+            alert("✅ Jadwal berhasil disimpan!");
+            document.getElementById('formJadwal').reset();
+            document.getElementById('displayKode').innerText = "-- Menunggu Input --";
+        } catch (error) {
+            console.error("Error saving document: ", error);
+            alert("❌ Gagal menyimpan data.");
+        }
+    });
+</script>
+
+</body>
+</html>
