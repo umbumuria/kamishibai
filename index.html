@@ -40,42 +40,20 @@
         .title { font-size: 19px; font-weight: 800; letter-spacing: 1px; margin-bottom: 5px; }
         .subtitle { font-size: 10px; opacity: 0.7; margin-bottom: 20px; text-transform: uppercase; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;}
 
-        .input-group { text-align: left; margin-bottom: 15px; }
-        .input-group label { display: block; font-size: 11px; margin-bottom: 6px; color: #cbd5e1; font-weight: 600; margin-left: 4px;}
-        
-        select, input {
-            width: 100%; height: 50px; padding: 0 15px; border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.2); background: rgba(15, 23, 42, 0.9);
-            color: white; outline: none; font-size: 16px; -webkit-appearance: none;
-        }
-
-        .select-wrapper { position: relative; }
-        .select-wrapper::after {
-            content: "▼"; font-size: 10px; position: absolute;
-            right: 15px; top: 20px; color: var(--primary); pointer-events: none;
-        }
-
-        .btn-login {
-            width: 100%; height: 50px; margin-top: 10px; border: none;
-            border-radius: 12px; background: var(--primary); color: white;
-            font-weight: 700; font-size: 15px; text-transform: uppercase; cursor: pointer;
-        }
-
-        /* --- SIDEBAR & CONTENT --- */
+        /* --- SIDEBAR & NAVIGATION --- */
         .sidebar {
             position: fixed; top: 0; left: 0; bottom: 0;
             width: var(--sidebar-width); background: #1e293b;
             border-right: 1px solid rgba(255,255,255,0.1);
             display: flex; flex-direction: column; z-index: 999;
-            transform: translateX(-100%); /* Default sembunyi */
+            transform: translateX(-100%);
         }
 
         .sidebar.active { transform: translateX(0); }
 
-        /* Overlay gelap saat menu terbuka di mobile */
         .sidebar-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.5);
-            z-index: 998; display: none;
+            position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+            z-index: 998; display: none; backdrop-filter: blur(2px);
         }
         .sidebar-overlay.active { display: block; }
 
@@ -89,12 +67,12 @@
         .nav-item:hover { background: rgba(59, 130, 246, 0.1); color: var(--primary); }
         .nav-item span { font-size: 18px; margin-right: 12px; }
 
+        /* --- MAIN AREA --- */
         .main-content { 
             margin-left: 0; height: 100%; display: flex; flex-direction: column; 
             transition: margin-left 0.3s ease;
         }
 
-        /* Jika sidebar aktif di desktop, konten geser */
         @media (min-width: 992px) {
             .main-content.shifted { margin-left: var(--sidebar-width); }
         }
@@ -106,8 +84,23 @@
 
         .menu-toggle { font-size: 24px; cursor: pointer; color: var(--primary); margin-right: 15px; }
 
+        /* Konten Iframe untuk Simulasi Halaman */
+        #main-frame { width: 100%; height: 100%; border: none; background: transparent; }
+
+        /* Utility */
+        .input-group { text-align: left; margin-bottom: 15px; }
+        .input-group label { display: block; font-size: 11px; margin-bottom: 6px; color: #cbd5e1; font-weight: 600; margin-left: 4px;}
+        select, input {
+            width: 100%; height: 50px; padding: 0 15px; border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.2); background: rgba(15, 23, 42, 0.9);
+            color: white; outline: none; font-size: 16px;
+        }
+        .btn-login {
+            width: 100%; height: 50px; border: none; border-radius: 12px; 
+            background: var(--primary); color: white; font-weight: 700; cursor: pointer;
+        }
         .hidden { display: none !important; }
-        .footer { margin-top: 25px; font-size: 9px; opacity: 0.5; line-height: 1.5; }
+        .footer { margin-top: 25px; font-size: 9px; opacity: 0.5; }
     </style>
 </head>
 <body>
@@ -119,18 +112,16 @@
             <div class="status-dots">
                 <div class="dot green"></div><div class="dot red"></div><div class="dot green"></div>
             </div>
-            <img class="logo" src="https://res.cloudinary.com/ddhsrvefu/image/upload/v1772248994/Gemini_Generated_Image_ilzww2ilzww2ilzw_vhl8zx.png" alt="Logo">
+            <img class="logo" src="https://res.cloudinary.com/ddhsrvefu/image/upload/v1772248994/Gemini_Generated_Image_ilzww2ilzww2ilzw_vhl8zx.png">
             <div class="title">AUDIT KAMISHIBAI</div>
             <div class="subtitle">MSM SP/SF/SUPPORTING</div>
             
             <div class="input-group">
                 <label>PILIH USER</label>
-                <div class="select-wrapper">
-                    <select id="username" onchange="togglePassword()">
-                        <option value="auditor">AUDITOR</option>
-                        <option value="admin">ADMIN</option>
-                    </select>
-                </div>
+                <select id="username" onchange="togglePassword()">
+                    <option value="auditor">AUDITOR</option>
+                    <option value="admin">ADMIN</option>
+                </select>
             </div>
             <div class="input-group hidden" id="pwd-group">
                 <label>PASSWORD ADMIN</label>
@@ -148,23 +139,20 @@
             <div id="user-display" style="font-size: 10px; color: var(--primary); text-transform: uppercase;">Role: Guest</div>
         </div>
         <div class="nav-links">
-            <a href="audit.html" class="nav-item"><span>📋</span> Input Audit</a>
-            <a href="jadwal.html" id="link-jadwal" class="nav-item"><span>📅</span> Jadwal Audit</a>
-            <a href="dashboard.html" class="nav-item"><span>📊</span> Analisa Dashboard</a>
+            <a href="audit.html" target="content-frame" class="nav-item"><span>📋</span> Input Audit</a>
+            <a href="jadwal.html" target="content-frame" id="link-jadwal" class="nav-item"><span>📅</span> Jadwal Audit</a>
+            <a href="dashboard.html" target="content-frame" id="link-dashboard" class="nav-item"><span>📊</span> Analisa Dashboard</a>
         </div>
-        <button onclick="location.reload()" style="margin: 20px; background: #ef4444; border: none; padding: 10px; border-radius: 8px; color: white; cursor: pointer; font-size: 12px; font-weight: bold;">LOGOUT</button>
+        <button onclick="location.reload()" style="margin: 20px; background: #ef4444; border: none; padding: 10px; border-radius: 8px; color: white; cursor: pointer; font-weight: bold;">LOGOUT</button>
     </nav>
 
     <div class="main-content" id="content">
         <header>
             <div class="menu-toggle" onclick="toggleSidebar()">☰</div>
-            <div style="font-weight: bold; font-size: 15px;">MSM Integrated System</div>
+            <div id="page-title" style="font-weight: bold; font-size: 15px;">MSM Integrated System</div>
         </header>
-        <main style="padding: 20px; flex: 1; display: flex; align-items: center; justify-content: center; text-align: center;">
-            <div style="border: 1px dashed rgba(255,255,255,0.1); padding: 40px; border-radius: 20px; max-width: 400px;">
-                <h3 style="color: var(--primary); margin-top: 0;">Berhasil Masuk</h3>
-                <p style="font-size: 14px; opacity: 0.7;">Klik tombol ☰ untuk membuka atau menutup menu navigasi.</p>
-            </div>
+        <main style="flex: 1; overflow: hidden;">
+            <iframe name="content-frame" id="main-frame" src="about:blank"></iframe>
         </main>
     </div>
 
@@ -173,36 +161,49 @@
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('overlay');
             const content = document.getElementById('content');
-            
             sidebar.classList.toggle('active');
-            overlay.classList.toggle('active');
-            
-            // Khusus Desktop: Geser konten utama
-            if(window.innerWidth >= 992) {
+            if(window.innerWidth < 992) {
+                overlay.classList.toggle('active');
+            } else {
                 content.classList.toggle('shifted');
             }
         }
 
         function togglePassword() {
             const user = document.getElementById("username").value;
-            const pwdGroup = document.getElementById("pwd-group");
-            pwdGroup.classList.toggle("hidden", user !== "admin");
+            document.getElementById("pwd-group").classList.toggle("hidden", user !== "admin");
         }
 
         function loginLokal() {
             const user = document.getElementById("username").value;
             const pass = document.getElementById("password").value;
-            if (user === "admin" && pass !== "admin123") { alert("Password Salah!"); return; }
+            const iframe = document.getElementById('main-frame');
+            const pageTitle = document.getElementById('page-title');
 
+            if (user === "admin" && pass !== "admin123") { 
+                alert("Password Salah!"); 
+                return; 
+            }
+
+            // Hilangkan overlay login
             document.getElementById('login-overlay').classList.add('hidden');
             document.getElementById('user-display').innerText = "Role: " + user;
             
-            // Jika login di desktop, otomatis buka sidebar
-            if(window.innerWidth >= 992) {
-                toggleSidebar();
+            // LOGIKA REDIRECT OTOMATIS
+            if (user === "auditor") {
+                iframe.src = "audit.html"; // Auditor langsung ke form audit
+                pageTitle.innerText = "Audit Entry Mode";
+                document.getElementById('link-jadwal').style.display = 'none';
+                document.getElementById('link-dashboard').style.display = 'none';
+            } else {
+                iframe.src = "dashboard.html"; // Admin langsung ke dashboard
+                pageTitle.innerText = "Admin Dashboard";
+                document.getElementById('link-jadwal').style.display = 'flex';
+                document.getElementById('link-dashboard').style.display = 'flex';
             }
 
-            if (user === "auditor") { document.getElementById('link-jadwal').style.display = 'none'; }
+            // Buka sidebar otomatis di desktop
+            if(window.innerWidth >= 992) toggleSidebar();
         }
     </script>
 </body>
