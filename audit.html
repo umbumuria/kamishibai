@@ -1,78 +1,13 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Audit - Kamishibai</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-        html { background-color: #0f172a; }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; overflow: hidden; background-color: #f8fafc; opacity: 0; animation: pageShow 0.4s forwards; }
-        @keyframes pageShow { to { opacity: 1; } }
-        .content-fade-in { animation: contentUp 0.5s ease-out forwards; }
-        @keyframes contentUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
-        #sidebar { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 50; }
-        #main-content { transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .sidebar-open { transform: translateX(0); }
-        .sidebar-closed { transform: translateX(-100%); }
-        @media (min-width: 1024px) { .content-standard { margin-left: 18rem; } .content-expanded { margin-left: 0; } }
-    </style>
-</head>
-<body class="flex h-screen">
-    <div id="overlay" onclick="toggleMenu()" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden"></div>
-    <aside id="sidebar" class="fixed inset-y-0 left-0 w-72 bg-slate-900 text-white flex flex-col sidebar-open">
-        <div class="p-8 flex items-center justify-between">
-            <div class="flex items-center gap-3"><div class="bg-blue-600 p-2 rounded-xl"><i data-lucide="clipboard-check" class="w-6 h-6"></i></div><h1 class="font-bold text-xl uppercase tracking-tighter">Kamishibai</h1></div>
-            <button onclick="toggleMenu()" class="lg:hidden text-slate-400"><i data-lucide="x" class="w-6 h-6"></i></button>
+<div class="card">
+    <h3 style="margin-top:0">Form Input Hasil Audit</h3>
+    <div style="display:flex; flex-direction:column; gap:15px;">
+        <label>Poin Pemeriksaan:</label>
+        <p><b>Apakah kebersihan area kerja (5S) sudah terjaga?</b></p>
+        <div style="display:flex; gap:10px;">
+            <button style="flex:1; padding:15px; background:#10b981; color:white; border:none; border-radius:10px; cursor:pointer;">OK</button>
+            <button style="flex:1; padding:15px; background:#ef4444; color:white; border:none; border-radius:10px; cursor:pointer;">NG</button>
         </div>
-        <nav class="flex-1 px-4 space-y-2">
-            <a href="dashboard.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition-all text-sm font-medium"><i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard</a>
-            <a href="audit.html" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-blue-600 text-white text-sm font-medium"><i data-lucide="file-edit" class="w-5 h-5"></i> Input Hasil Audit</a>
-            <a href="jadwal.html" id="nav-admin" class="hidden flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition-all text-sm font-medium"><i data-lucide="table-2" class="w-5 h-5"></i> Atur Jadwal</a>
-        </nav>
-        <div class="p-6 border-t border-slate-800"><button onclick="logout()" class="w-full flex items-center gap-3 px-4 py-2 text-red-400 hover:bg-red-400/10 rounded-xl transition-all text-sm font-medium"><i data-lucide="log-out" class="w-5 h-5"></i> Keluar</button></div>
-    </aside>
-
-    <main id="main-content" class="flex-1 flex flex-col min-w-0 content-standard">
-        <header class="h-20 bg-white border-b border-slate-200 px-4 sm:px-8 flex items-center justify-between sticky top-0 z-30">
-            <div class="flex items-center gap-4"><button onclick="toggleMenu()" class="p-2 bg-slate-100 rounded-lg text-slate-600 hover:bg-slate-200 transition-colors"><i data-lucide="menu" class="w-6 h-6"></i></button><h2 class="font-black text-slate-800 uppercase tracking-tight">INPUT AUDIT</h2></div>
-        </header>
-        <div class="p-4 sm:p-8 flex-1 overflow-y-auto content-fade-in">
-            <div class="max-w-3xl mx-auto space-y-6">
-                <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
-                    <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Poin Pemeriksaan 1</h4>
-                    <p class="text-slate-700 font-bold mb-6">Apakah APD digunakan secara lengkap sesuai standar di area welding?</p>
-                    <div class="grid grid-cols-2 gap-4">
-                        <button class="flex flex-col items-center gap-2 p-6 rounded-2xl border-2 border-slate-100 hover:border-emerald-500 hover:bg-emerald-50 group transition-all">
-                            <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform"><i data-lucide="check" class="w-6 h-6"></i></div>
-                            <span class="font-bold text-slate-600">OK</span>
-                        </button>
-                        <button class="flex flex-col items-center gap-2 p-6 rounded-2xl border-2 border-slate-100 hover:border-red-500 hover:bg-red-50 group transition-all">
-                            <div class="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform"><i data-lucide="x" class="w-6 h-6"></i></div>
-                            <span class="font-bold text-slate-600">NG</span>
-                        </button>
-                    </div>
-                </div>
-                <button class="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold shadow-lg shadow-slate-200 active:scale-[0.98] transition-all">Simpan Hasil Audit</button>
-            </div>
-        </div>
-    </main>
-    <script>
-        function toggleMenu() {
-            const sidebar = document.getElementById('sidebar');
-            const mainContent = document.getElementById('main-content');
-            if (sidebar.classList.contains('sidebar-open')) {
-                sidebar.classList.replace('sidebar-open', 'sidebar-closed');
-                if (window.innerWidth >= 1024) mainContent.classList.replace('content-standard', 'content-expanded');
-            } else {
-                sidebar.classList.replace('sidebar-closed', 'sidebar-open');
-                if (window.innerWidth >= 1024) mainContent.classList.replace('content-expanded', 'content-standard');
-            }
-        }
-        window.onload = () => { if(localStorage.getItem('kamishibai_role') === 'admin') document.getElementById('nav-admin')?.classList.remove('hidden'); lucide.createIcons(); };
-        function logout() { localStorage.clear(); window.location.href = 'index.html'; }
-    </script>
-</body>
-</html>
+        <textarea placeholder="Keterangan jika NG..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;"></textarea>
+        <button style="padding:12px; background:#3b82f6; color:white; border:none; border-radius:8px;">Simpan Audit</button>
+    </div>
+</div>
