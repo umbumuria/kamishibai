@@ -8,39 +8,51 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <style>
         :root { --primary: #2563eb; --bg: #f8fafc; --border: #e2e8f0; --text: #1e293b; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding: 20px; }
-        .container { max-width: 900px; margin: 0 auto; background: white; padding: 30px; border-radius: 15px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 30px; }
-        .section-title { font-size: 20px; font-weight: bold; margin-bottom: 20px; border-left: 5px solid var(--primary); padding-left: 15px; color: var(--primary); display: flex; justify-content: space-between; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding: 15px; margin: 0; }
+        .container { max-width: 900px; margin: 0 auto; background: white; padding: 20px; border-radius: 15px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 30px; }
+        .section-title { font-size: 18px; font-weight: bold; margin-bottom: 20px; border-left: 5px solid var(--primary); padding-left: 15px; color: var(--primary); }
         
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        label { display: block; font-size: 11px; font-weight: bold; margin-bottom: 5px; color: #64748b; text-transform: uppercase; }
-        input, select, textarea { width: 100%; padding: 10px; margin-bottom: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; box-sizing: border-box; outline: none; }
-        input:focus, select:focus, textarea:focus { border-color: var(--primary); }
+        /* Form Optimasi Mobile */
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        label { display: block; font-size: 10px; font-weight: bold; margin-bottom: 5px; color: #64748b; text-transform: uppercase; }
+        
+        /* Input diperbesar untuk jari */
+        input, select, textarea { 
+            width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid var(--border); 
+            border-radius: 10px; font-size: 16px; box-sizing: border-box; outline: none; 
+            min-height: 48px; /* Standard touch target */
+        }
+        textarea { min-height: 80px; }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary); background: #f0f7ff; }
         input:read-only { background: #f1f5f9; color: #64748b; }
 
-        .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-bottom: 20px; }
-        .photo-box { border: 2px dashed var(--border); border-radius: 10px; padding: 10px; text-align: center; cursor: pointer; min-height: 100px; display: flex; align-items: center; justify-content: center; flex-direction: column; overflow: hidden; }
+        .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; margin-bottom: 20px; }
+        .photo-box { border: 2px dashed var(--border); border-radius: 10px; padding: 5px; text-align: center; cursor: pointer; min-height: 100px; display: flex; align-items: center; justify-content: center; flex-direction: column; overflow: hidden; background: #fafafa; }
         .photo-box img { width: 100%; border-radius: 5px; display: none; margin-bottom: 5px; object-fit: cover; }
-        .photo-box span { font-size: 10px; color: #64748b; }
-        .loading-spin { font-size: 10px; color: var(--primary); display: none; }
+        .photo-box span { font-size: 10px; color: #64748b; font-weight: bold; }
 
-        .btn-submit { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 16px; transition: 0.3s; }
+        .btn-submit { width: 100%; padding: 18px; background: var(--primary); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 18px; transition: 0.3s; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3); }
         
-        /* --- TABLE STYLE --- */
-        .filter-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; background: white; padding: 15px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 15px; }
-        .table-container { background: white; border-radius: 12px; border: 1px solid var(--border); overflow-x: auto; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        table { width: 100%; border-collapse: collapse; font-size: 11px; }
-        th { background: #f1f5f9; padding: 12px; text-align: left; color: #64748b; border-bottom: 2px solid var(--border); white-space: nowrap; }
-        td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
-        .btn-edit { color: #2563eb; background: #dbeafe; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; }
-        .badge { padding: 4px 8px; border-radius: 12px; font-size: 10px; font-weight: bold; display: inline-block; }
+        /* --- Responsive Table --- */
+        .filter-bar { display: grid; grid-template-columns: 1fr; gap: 10px; background: white; padding: 15px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 15px; }
+        .table-container { background: white; border-radius: 12px; border: 1px solid var(--border); overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 600px; }
+        th { background: #f1f5f9; padding: 12px; text-align: left; color: #64748b; border-bottom: 2px solid var(--border); }
+        td { padding: 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+        
+        .thumb-img { width: 50px; height: 50px; object-fit: cover; border-radius: 6px; margin-right: 4px; }
+        .badge { padding: 4px 8px; border-radius: 12px; font-size: 9px; font-weight: bold; display: inline-block; margin-top: 2px; }
+        .badge-selesai { background: #e0e7ff; color: #3730a3; }
         .badge-closed { background: #dcfce7; color: #166534; }
         .badge-open { background: #fee2e2; color: #991b1b; }
-        .badge-selesai { background: #e0e7ff; color: #3730a3; }
-        
-        /* Thumbnail Style */
-        .thumb-img { width: 45px; height: 45px; object-fit: cover; border-radius: 4px; border: 1px solid var(--border); margin-right: 3px; cursor: pointer; }
-        .detail-text { max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-style: italic; color: #475569; display: block; }
+
+        /* Media Query khusus HP */
+        @media (max-width: 600px) {
+            .grid { grid-template-columns: 1fr; }
+            .section-title { font-size: 16px; }
+            .container { padding: 15px; }
+            .filter-bar { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
@@ -49,48 +61,56 @@
     <div class="section-title">LAPORAN HASIL AUDIT KAMISHIBAI</div>
     
     <form id="auditForm">
-        <label>Pilih Jadwal Audit (Pending)</label>
+        <label>1. Pilih Group Unit</label>
+        <select id="filterGroupJadwal" onchange="loadJadwal()">
+            <option value="">-- Pilih Group --</option>
+            <option value="SF">SUGAR FACTORY (SF)</option>
+            <option value="SP">PLANTATION (SP)</option>
+            <option value="SUPPORTING">SUPPORTING</option>
+        </select>
+
+        <label>2. Pilih Nama Auditor / Periode</label>
         <select id="selectJadwal" onchange="fillJadwalData(this.value)" required>
-            <option value="">-- Memuat Jadwal... --</option>
+            <option value="">-- Pilih Group Dahulu --</option>
         </select>
 
         <div class="grid">
-            <div><label>Group</label><input type="text" id="displayGroup" readonly></div>
+            <div><label>Group Terpilih</label><input type="text" id="displayGroup" readonly></div>
             <div><label>Tanggal Audit</label><input type="date" id="tglAudit" required></div>
             <div><label>Auditor</label><input type="text" id="displayAuditor" readonly></div>
             <div><label>Dept. Auditee</label><input type="text" id="displayDept" readonly></div>
-            <div><label>Nama Personel Auditee</label><input type="text" id="namaAuditee" placeholder="..." required></div>
-            <div><label>Judul IK / Materi</label><input type="text" id="judulIK" placeholder="..." required></div>
-            <div><label>Jumlah Item</label><input type="number" id="jmlItem" value="10" oninput="hitungNilai()" required></div>
+            <div><label>Nama Personel Auditee</label><input type="text" id="namaAuditee" placeholder="Siapa yang diaudit?" required></div>
+            <div><label>Judul IK / Materi</label><input type="text" id="judulIK" placeholder="Contoh: IK Pengoperasian Gilingan" required></div>
+            <div><label>Jumlah Item Cek</label><input type="number" id="jmlItem" value="10" oninput="hitungNilai()" required></div>
             <div><label>Jumlah Temuan</label><input type="number" id="jmlTemuan" value="0" oninput="hitungNilai()" required></div>
-            <div><label>Nilai (%)</label><input type="text" id="nilaiTemuan" readonly></div>
+            <div><label>Nilai Pencapaian (%)</label><input type="text" id="nilaiTemuan" readonly></div>
             <div>
                 <label>Status Verifikasi</label>
                 <select id="statusVerifikasi">
-                    <option value="OPEN">OPEN</option>
-                    <option value="CLOSED">CLOSED</option>
+                    <option value="OPEN">OPEN (Belum Selesai)</option>
+                    <option value="CLOSED">CLOSED (Sudah OK)</option>
                     <option value="OBSERVASI">OBSERVASI</option>
                 </select>
             </div>
         </div>
 
-        <label>Uraian Ketidaksesuaian</label>
-        <textarea id="uraian" rows="2" placeholder="Detail temuan..."></textarea>
+        <label>Uraian Ketidaksesuaian (Temuan)</label>
+        <textarea id="uraian" rows="3" placeholder="Jelaskan apa yang salah..."></textarea>
 
         <div class="grid">
-            <div><label>Penyebab</label><textarea id="penyebab" rows="2"></textarea></div>
-            <div><label>Tindakan Perbaikan</label><textarea id="tindakan" rows="2"></textarea></div>
+            <div><label>Penyebab</label><textarea id="penyebab" rows="2" placeholder="Kenapa terjadi?"></textarea></div>
+            <div><label>Tindakan Perbaikan</label><textarea id="tindakan" rows="2" placeholder="Apa tindakannya?"></textarea></div>
         </div>
 
-        <label>Foto Temuan (Maks 5)</label>
+        <label>Foto Temuan (Klik kotak untuk Upload)</label>
         <div class="photo-grid">
             <script>
                 for(let i=1; i<=5; i++) {
                     document.write(`
                         <div class="photo-box" onclick="document.getElementById('file${i}').click()">
                             <img id="img${i}" src="">
-                            <span id="text${i}">Foto ${i}</span>
-                            <div id="load${i}" class="loading-spin">Uploading...</div>
+                            <span id="text${i}">FOTO ${i}</span>
+                            <div id="load${i}" style="display:none; font-size:10px; color:blue;">Uploading...</div>
                             <input type="file" id="file${i}" accept="image/*" hidden onchange="uploadImage(this, ${i})">
                             <input type="hidden" id="url${i}">
                         </div>
@@ -99,22 +119,22 @@
             </script>
         </div>
 
-        <label>Update Catatan</label>
-        <input type="text" id="updateCatatan">
+        <label>Catatan Tambahan</label>
+        <input type="text" id="updateCatatan" placeholder="Catatan lainnya jika ada...">
+        
         <button type="submit" id="btnSave" class="btn-submit">SIMPAN HASIL AUDIT</button>
     </form>
 </div>
 
-<div style="max-width: 1100px; margin: 0 auto; margin-bottom: 50px;">
+<div style="max-width: 1100px; margin: 0 auto; margin-bottom: 80px;">
     <div class="section-title">HISTORY HASIL AUDIT</div>
     
     <div class="filter-bar">
-        <input type="text" id="fAuditor" placeholder="Filter Auditor..." oninput="fetchAuditHistory()">
-        <input type="text" id="fAuditee" placeholder="Filter Auditee..." oninput="fetchAuditHistory()">
-        <select id="fGroup" onchange="fetchAuditHistory()">
+        <input type="text" id="fAuditor" placeholder="Cari Auditor..." oninput="fetchAuditHistory()" style="margin-bottom:0">
+        <select id="fGroup" onchange="fetchAuditHistory()" style="margin-bottom:0">
             <option value="">Semua Group</option>
-            <option value="SF">SUGAR FACTORY</option>
-            <option value="SP">PLANTATION</option>
+            <option value="SF">SF</option>
+            <option value="SP">SP</option>
             <option value="SUPPORTING">SUPPORTING</option>
         </select>
     </div>
@@ -123,14 +143,14 @@
         <table>
             <thead>
                 <tr>
-                    <th>TGL AUDIT</th>
+                    <th>TGL</th>
                     <th>GROUP / DEPT</th>
                     <th>AUDITOR</th>
                     <th>DETAIL TEMUAN</th>
                     <th>NILAI</th>
                     <th>FOTO</th>
                     <th>STATUS</th>
-                    <th style="text-align:center">AKSI</th>
+                    <th>AKSI</th>
                 </tr>
             </thead>
             <tbody id="historyBody"></tbody>
@@ -139,6 +159,7 @@
 </div>
 
 <script>
+    // Firebase Config (Tetap sama)
     const firebaseConfig = {
         apiKey: "AIzaSyCiW38hQ5ZfYnp3sa95OQw6IjxnfnM5dl4",
         authDomain: "kamishibaimsm.firebaseapp.com",
@@ -155,16 +176,35 @@
 
     let cacheJadwal = {};
 
+    // FUNGSI LOAD JADWAL DENGAN FILTER GROUP
     async function loadJadwal() {
+        const groupFilter = document.getElementById('filterGroupJadwal').value;
+        const sel = document.getElementById('selectJadwal');
+        
+        if(!groupFilter) {
+            sel.innerHTML = '<option value="">-- Pilih Group Dahulu --</option>';
+            return;
+        }
+
+        sel.innerHTML = '<option value="">-- Memuat Jadwal... --</option>';
+        
         try {
-            const snap = await db.collection('jadwal_audit').where('status', '==', 'Pending').get();
-            const sel = document.getElementById('selectJadwal');
+            let q = db.collection('jadwal_audit')
+                      .where('status', '==', 'Pending')
+                      .where('group', '==', groupFilter);
+
+            const snap = await q.get();
             sel.innerHTML = '<option value="">-- Pilih Jadwal --</option>';
+            
+            if(snap.empty) {
+                sel.innerHTML = '<option value="">Tidak ada jadwal pending</option>';
+            }
+
             snap.forEach(doc => {
                 cacheJadwal[doc.id] = doc.data();
                 sel.innerHTML += `<option value="${doc.id}">${doc.data().periode} | ${doc.data().auditor}</option>`;
             });
-        } catch (e) { console.error("Gagal muat jadwal:", e); }
+        } catch (e) { console.error(e); }
     }
 
     function fillJadwalData(id) {
@@ -203,10 +243,10 @@
     document.getElementById('auditForm').onsubmit = async (e) => {
         e.preventDefault();
         const id = document.getElementById('selectJadwal').value;
-        if(!id) { alert("Pilih jadwal dulu!"); return; }
+        if(!id) return alert("Pilih jadwal!");
         
         const btn = document.getElementById('btnSave');
-        btn.disabled = true; btn.innerText = "Menyimpan...";
+        btn.disabled = true; btn.innerText = "Proses Menyimpan...";
         
         const data = {
             tglAudit: document.getElementById('tglAudit').value,
@@ -227,9 +267,9 @@
         
         try {
             await db.collection('jadwal_audit').doc(id).update(data);
-            alert("Berhasil!"); 
+            alert("Hasil Audit Berhasil Disimpan!"); 
             location.reload();
-        } catch (e) { alert("Error: " + e.message); btn.disabled = false; btn.innerText = "SIMPAN HASIL AUDIT"; }
+        } catch (e) { alert("Gagal!"); btn.disabled = false; }
     };
 
     async function fetchAuditHistory() {
@@ -241,54 +281,49 @@
             const snap = await db.collection('jadwal_audit')
                 .where('status', '==', 'Selesai')
                 .orderBy('updatedAt', 'desc')
+                .limit(20)
                 .get();
                 
             body.innerHTML = '';
             snap.forEach(doc => {
                 const d = doc.data();
                 if(d.auditor.toLowerCase().includes(fAud) && (fGrp === "" || d.group === fGrp)) {
-                    // Render Foto Thumbnails
                     let fotoHtml = '';
                     if(d.foto && d.foto.length > 0) {
                         d.foto.forEach(url => {
-                            fotoHtml += `<img src="${url}" class="thumb-img" onclick="window.open('${url}','_blank')">`;
+                            fotoHtml += `<img src="${url}" class="thumb-img" onclick="window.open('${url}')">`;
                         });
-                    } else { fotoHtml = '-'; }
+                    }
 
                     body.innerHTML += `
                         <tr>
                             <td>${d.tglAudit}</td>
-                            <td><b>${d.group}</b><br><small>${d.auditee}</small></td>
+                            <td><b>${d.group}</b><br>${d.auditee}</td>
                             <td>${d.auditor}</td>
-                            <td>
-                                <small>IK: ${d.judulIK || '-'}</small>
-                                <span class="detail-text" title="${d.uraian}">${d.uraian || 'Tidak ada temuan'}</span>
-                            </td>
+                            <td><small>IK: ${d.judulIK || '-'}</small><br><i style="color:#666">${d.uraian || '-'}</i></td>
                             <td style="font-weight:bold">${d.nilaiPencapaian}</td>
-                            <td><div style="display:flex">${fotoHtml}</div></td>
+                            <td><div style="display:flex">${fotoHtml || '-'}</div></td>
                             <td>
                                 <span class="badge badge-selesai">SELESAI</span><br>
-                                <span class="badge ${d.statusVerifikasi === 'CLOSED' ? 'badge-closed' : 'badge-open'}">${d.statusVerifikasi}</span>
+                                <span class="badge ${d.statusVerifikasi==='CLOSED'?'badge-closed':'badge-open'}">${d.statusVerifikasi}</span>
                             </td>
-                            <td style="text-align:center">
-                                <button class="btn-edit" onclick="editAudit('${doc.id}')">EDIT</button>
-                            </td>
+                            <td><button onclick="editAudit('${doc.id}')" style="background:#dbeafe; border:none; padding:8px; border-radius:5px; cursor:pointer; font-weight:bold; color:#2563eb;">EDIT</button></td>
                         </tr>
                     `;
                 }
             });
-        } catch (e) { 
-            console.error(e);
-            body.innerHTML = `<tr><td colspan="8" style="text-align:center">Gagal memuat history. Cek koneksi atau Index Firestore.</td></tr>`;
-        }
+        } catch (e) { console.error(e); }
     }
 
     async function editAudit(id) {
         const doc = await db.collection('jadwal_audit').doc(id).get();
         const d = doc.data();
         cacheJadwal[id] = d;
+        
+        // Paksa filter group ke group data yang diedit agar daftar muncul
+        document.getElementById('filterGroupJadwal').value = d.group;
         const sel = document.getElementById('selectJadwal');
-        sel.innerHTML = `<option value="${id}" selected>${d.periode} | ${d.auditor} (EDITING)</option>`;
+        sel.innerHTML = `<option value="${id}" selected>${d.periode} | ${d.auditor} (EDIT)</option>`;
         
         document.getElementById('tglAudit').value = d.tglAudit;
         document.getElementById('namaAuditee').value = d.namaAuditeePerson;
@@ -301,26 +336,17 @@
         document.getElementById('tindakan').value = d.tindakan;
         document.getElementById('updateCatatan').value = d.updateCatatan;
         
-        // Reset foto box
-        for(let i=1; i<=5; i++) {
-            document.getElementById(`url${i}`).value = '';
-            document.getElementById(`img${i}`).style.display = 'none';
-            document.getElementById(`text${i}`).style.display = 'block';
+        for(let i=1; i<=5; i++){
+            const u = d.foto && d.foto[i-1] ? d.foto[i-1] : '';
+            document.getElementById(`url${i}`).value = u;
+            document.getElementById(`img${i}`).src = u;
+            document.getElementById(`img${i}`).style.display = u ? 'block' : 'none';
+            document.getElementById(`text${i}`).style.display = u ? 'none' : 'block';
         }
-
-        if(d.foto) d.foto.forEach((url, i) => {
-            const idx = i + 1;
-            document.getElementById(`url${idx}`).value = url;
-            const img = document.getElementById(`img${idx}`);
-            img.src = url; img.style.display = 'block';
-            document.getElementById(`text${idx}`).style.display = 'none';
-        });
-
         fillJadwalData(id);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    loadJadwal(); 
     fetchAuditHistory();
 </script>
 </body>
