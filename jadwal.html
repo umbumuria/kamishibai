@@ -95,9 +95,12 @@
 
     <script>
         function toggleMenu() {
-            document.getElementById('sidebar').classList.toggle('hidden-mobile');
-            document.getElementById('sidebar').classList.toggle('show-mobile');
-            document.getElementById('overlay').classList.toggle('hidden');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+    sidebar.classList.toggle('sidebar-closed');
+    sidebar.classList.toggle('sidebar-open');
+    overlay.classList.toggle('hidden');
+}
         }
 
         function addRow() {
