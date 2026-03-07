@@ -31,18 +31,25 @@
 
         .btn-submit { width: 100%; padding: 18px; background: var(--primary); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 18px; transition: 0.3s; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3); }
         
-        .table-container { background: white; border-radius: 12px; border: 1px solid var(--border); overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 900px; }
-        th { background: #f1f5f9; padding: 10px; text-align: left; color: #64748b; border-bottom: 2px solid var(--border); }
-        td { padding: 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+        /* Table & Rapi Filter */
+        .table-container { background: white; border-radius: 12px; border: 1px solid var(--border); overflow-x: auto; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 950px; }
         
-        /* Excel Filter Style */
+        th { background: #f8fafc; padding: 12px 10px; text-align: left; color: #475569; border-bottom: 2px solid var(--border); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+        td { padding: 12px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+        
+        .filter-row { background: #ffffff; }
+        .filter-row th { padding: 5px 10px 10px 10px; border-bottom: 1px solid var(--border); }
+        
         .filter-input { 
-            width: 100%; padding: 6px; font-size: 10px; border: 1px solid #cbd5e1; 
-            border-radius: 4px; margin-top: 5px; box-sizing: border-box; font-weight: normal;
+            width: 100%; padding: 8px 10px; font-size: 11px; border: 1px solid #e2e8f0; 
+            border-radius: 6px; box-sizing: border-box; font-weight: normal; outline: none;
+            transition: all 0.2s; background: #fdfdfd;
         }
+        .filter-input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1); background: white; }
+        .filter-input::placeholder { color: #cbd5e1; font-style: italic; }
 
-        .thumb-img { width: 45px; height: 45px; object-fit: cover; border-radius: 6px; margin-right: 4px; border: 1px solid #ddd; }
+        .thumb-img { width: 45px; height: 45px; object-fit: cover; border-radius: 6px; margin-right: 4px; border: 1px solid #ddd; cursor: pointer; }
         .badge { padding: 4px 8px; border-radius: 12px; font-size: 9px; font-weight: bold; display: inline-block; margin-top: 2px; }
         .badge-selesai { background: #e0e7ff; color: #3730a3; }
         .badge-closed { background: #dcfce7; color: #166534; }
@@ -120,26 +127,34 @@
 
         <label>Catatan Tambahan</label>
         <input type="text" id="updateCatatan" placeholder="Catatan singkat...">
-        
         <button type="submit" id="btnSave" class="btn-submit">SIMPAN HASIL AUDIT</button>
     </form>
 </div>
 
 <div style="max-width: 1200px; margin: 0 auto; margin-bottom: 80px; padding:0 15px;">
-    <div class="section-title">HISTORY AUDIT (EXCEL FILTER)</div>
+    <div class="section-title">HISTORY AUDIT LOG</div>
     
     <div class="table-container">
         <table id="historyTable">
             <thead>
                 <tr>
-                    <th>TGL AUDIT<br><input type="text" class="filter-input" placeholder="Filter..." onkeyup="filterExcel(0)"></th>
-                    <th>GROUP / DEPT<br><input type="text" class="filter-input" placeholder="Filter..." onkeyup="filterExcel(1)"></th>
-                    <th>AUDITOR<br><input type="text" class="filter-input" placeholder="Filter..." onkeyup="filterExcel(2)"></th>
-                    <th>MATERI & TEMUAN<br><input type="text" class="filter-input" placeholder="Filter..." onkeyup="filterExcel(3)"></th>
-                    <th>NILAI<br><input type="text" class="filter-input" placeholder="Filter..." onkeyup="filterExcel(4)"></th>
-                    <th>FOTO</th>
-                    <th>CATATAN<br><input type="text" class="filter-input" placeholder="Filter..." onkeyup="filterExcel(6)"></th>
-                    <th>STATUS<br><input type="text" class="filter-input" placeholder="Filter..." onkeyup="filterExcel(7)"></th>
+                    <th>Tgl Audit</th>
+                    <th>Group / Dept</th>
+                    <th>Auditor</th>
+                    <th>Materi & Temuan</th>
+                    <th>Nilai</th>
+                    <th>Foto</th>
+                    <th>Catatan</th>
+                    <th>Status</th>
+                </tr>
+                <tr class="filter-row">
+                    <th><input type="text" class="filter-input" placeholder="Cari tgl..." onkeyup="filterExcel()"></th>
+                    <th><input type="text" class="filter-input" placeholder="Cari dept..." onkeyup="filterExcel()"></th>
+                    <th><input type="text" class="filter-input" placeholder="Cari nama..." onkeyup="filterExcel()"></th>
+                    <th><input type="text" class="filter-input" placeholder="Cari temuan..." onkeyup="filterExcel()"></th>
+                    <th><input type="text" class="filter-input" placeholder="Cari nilai..." onkeyup="filterExcel()"></th>
+                    <th></th> <th><input type="text" class="filter-input" placeholder="Cari catatan..." onkeyup="filterExcel()"></th>
+                    <th><input type="text" class="filter-input" placeholder="Cari status..." onkeyup="filterExcel()"></th>
                 </tr>
             </thead>
             <tbody id="historyBody"></tbody>
@@ -148,7 +163,7 @@
 </div>
 
 <script>
-    // Firebase Config
+    // Firebase Setup
     const firebaseConfig = {
         apiKey: "AIzaSyCiW38hQ5ZfYnp3sa95OQw6IjxnfnM5dl4",
         authDomain: "kamishibaimsm.firebaseapp.com",
@@ -169,7 +184,7 @@
         const groupFilter = document.getElementById('filterGroupJadwal').value;
         const sel = document.getElementById('selectJadwal');
         if(!groupFilter) { sel.innerHTML = '<option value="">-- Pilih Group Dahulu --</option>'; return; }
-        sel.innerHTML = '<option value="">-- Memuat... --</option>';
+        sel.innerHTML = '<option value="">-- Memuat Data... --</option>';
         try {
             const snap = await db.collection('jadwal_audit')
                 .where('status', '==', 'Pending')
@@ -211,35 +226,35 @@
             document.getElementById(`img${idx}`).src = data.secure_url;
             document.getElementById(`img${idx}`).style.display = 'block';
             document.getElementById(`text${idx}`).style.display = 'none';
-        } catch (e) { alert("Gagal!"); }
+        } catch (e) { alert("Upload Gagal"); }
         document.getElementById(`load${idx}`).style.display = 'none';
     }
 
-    // Logic Excel Filter
-    function filterExcel(colIdx) {
+    // Logic Multi-Filter Rapi
+    function filterExcel() {
         const table = document.getElementById("historyTable");
-        const inputs = table.getElementsByClassName("filter-input");
-        const rows = table.getElementsByTagName("tr");
+        const filterInputs = table.querySelectorAll(".filter-input");
+        const rows = document.getElementById("historyBody").getElementsByTagName("tr");
 
-        for (let i = 1; i < rows.length; i++) {
-            let showRow = true;
-            // Cek semua input filter
-            for (let j = 0; j < inputs.length; j++) {
-                // Skip kolom foto (index 5) yang tidak punya filter-input di array inputs
-                // Tapi karena kita panggil berdasarkan index kolom asli, kita sesuaikan:
-                let filterValue = inputs[j].value.toLowerCase();
-                if (filterValue) {
-                    // Cari index kolom yang sesuai dengan input[j]
-                    // input 0=col 0, input 1=col 1, input 2=col 2, input 3=col 3, input 4=col 4, input 5=col 6, input 6=col 7
-                    let actualColIdx = j < 5 ? j : j + 1; 
-                    let cellValue = rows[i].getElementsByTagName("td")[actualColIdx]?.textContent.toLowerCase() || "";
-                    if (cellValue.indexOf(filterValue) === -1) {
-                        showRow = false;
-                        break;
-                    }
+        for (let i = 0; i < rows.length; i++) {
+            let rowVisible = true;
+            const cells = rows[i].getElementsByTagName("td");
+
+            // Mapping filter input ke index kolom tabel
+            // Input 0->Col 0, 1->Col 1, 2->Col 2, 3->Col 3, 4->Col 4, 5->Col 6, 6->Col 7
+            const colMapping = [0, 1, 2, 3, 4, 6, 7]; 
+
+            filterInputs.forEach((input, index) => {
+                const filterValue = input.value.toLowerCase();
+                const targetColIndex = colMapping[index];
+                const cellValue = cells[targetColIndex] ? cells[targetColIndex].textContent.toLowerCase() : "";
+
+                if (filterValue && !cellValue.includes(filterValue)) {
+                    rowVisible = false;
                 }
-            }
-            rows[i].style.display = showRow ? "" : "none";
+            });
+
+            rows[i].style.display = rowVisible ? "" : "none";
         }
     }
 
@@ -248,7 +263,7 @@
         const id = document.getElementById('selectJadwal').value;
         if(!id) return alert("Pilih jadwal!");
         const btn = document.getElementById('btnSave');
-        btn.disabled = true; btn.innerText = "Simpan...";
+        btn.disabled = true; btn.innerText = "Menyimpan...";
         
         const data = {
             tglAudit: document.getElementById('tglAudit').value,
@@ -269,8 +284,8 @@
         
         try {
             await db.collection('jadwal_audit').doc(id).update(data);
-            alert("Berhasil!"); location.reload();
-        } catch (e) { alert("Gagal!"); btn.disabled = false; }
+            alert("Hasil Audit Tersimpan!"); location.reload();
+        } catch (e) { alert("Error!"); btn.disabled = false; }
     };
 
     async function fetchAuditHistory() {
