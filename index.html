@@ -5,30 +5,61 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - CIQA System</title>
     <style>
-        *{ box-sizing:border-box; }
-        body{
-            margin:0; min-height:100vh; display:flex; justify-content:center; align-items:center;
-            font-family:'Segoe UI', sans-serif; background:linear-gradient(135deg,#0f172a,#1e293b,#334155); padding: 20px;
+        * { box-sizing: border-box; }
+        body {
+            margin: 0; min-height: 100vh; display: flex; justify-content: center; align-items: center;
+            font-family: 'Segoe UI', sans-serif; 
+            background: linear-gradient(135deg, #0f172a, #1e293b, #334155); 
+            padding: 20px;
         }
-        .login-card{
-            background:rgba(255,255,255,0.08); backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,0.1);
-            border-radius:20px; padding: 40px 25px; text-align:center; box-shadow:0 20px 40px rgba(0,0,0,0.4); color:white; width:100%; max-width:400px;
+        .login-card {
+            background: rgba(255, 255, 255, 0.08); 
+            backdrop-filter: blur(20px); 
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px; 
+            padding: 40px 25px; 
+            text-align: center; 
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4); 
+            color: white; 
+            width: 100%; 
+            max-width: 400px;
         }
-        .logo{ width:100px; margin-bottom:20px; filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.5)); animation: pulse 3s infinite; }
+        .logo { 
+            width: 100px; 
+            margin-bottom: 20px; 
+            filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.5)); 
+            animation: pulse 3s infinite ease-in-out; 
+        }
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
-        input{ width:100%; padding:12px; margin-bottom:15px; border-radius:10px; border:none; background:rgba(255,255,255,0.1); color:white; outline:none; }
-        button{ width:100%; padding:12px; border:none; border-radius:10px; background:linear-gradient(90deg,#3b82f6,#06b6d4); color:white; font-weight:600; cursor:pointer; }
-        .footer{ margin-top:20px; font-size:11px; opacity:0.6; color:white; }
+        
+        .title { font-size: 24px; font-weight: 700; letter-spacing: 2px; margin-bottom: 5px; }
+        .subtitle { font-size: 12px; opacity: 0.7; margin-bottom: 30px; }
+        
+        input { 
+            width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 10px; 
+            border: none; background: rgba(255, 255, 255, 0.1); color: white; outline: none; 
+        }
+        input::placeholder { color: rgba(255,255,255,0.5); }
+        
+        button { 
+            width: 100%; padding: 12px; border: none; border-radius: 10px; 
+            background: linear-gradient(90deg, #3b82f6, #06b6d4); 
+            color: white; font-weight: 600; cursor: pointer; transition: 0.3s;
+        }
+        button:hover { opacity: 0.9; transform: translateY(-2px); }
+        
+        .footer { margin-top: 20px; font-size: 11px; opacity: 0.6; }
     </style>
 </head>
 <body>
     <div class="login-card">
         <img class="logo" src="https://res.cloudinary.com/ddhsrvefu/image/upload/v1772248994/Gemini_Generated_Image_ilzww2ilzww2ilzw_vhl8zx.png">
-        <div style="font-size:24px; font-weight:700; margin-bottom:5px;">CIQA</div>
-        <div style="font-size:12px; opacity:0.7; margin-bottom:30px;">Login Access</div>
+        <div class="title">CIQA</div>
+        <div class="subtitle">Continuous Improvement & Quality Assurance</div>
         
         <input type="text" id="username" placeholder="Username (admin / auditor)">
-        <input type="password" id="password" placeholder="Password (bebas)">
+        <input type="password" id="password" placeholder="Password (apa saja)">
+        
         <button onclick="simpleLogin()">Login</button>
         
         <div class="footer">© 2026 CIQA System</div>
@@ -37,19 +68,31 @@
     <script>
         function simpleLogin() {
             const user = document.getElementById("username").value.toLowerCase();
-            
+            const pass = document.getElementById("password").value;
+
+            if(!user || !pass) {
+                alert("Isi username dan password dulu, Bro!");
+                return;
+            }
+
+            // Simpan role ke LocalStorage agar dashboard tau siapa yang login
             if(user === "admin") {
                 localStorage.setItem('role', 'admin');
                 localStorage.setItem('name', 'Super Admin');
-                window.location.href = "dashboard-admin.html";
+                window.location.href = "dashboard.html";
             } else if(user === "auditor") {
                 localStorage.setItem('role', 'auditor');
                 localStorage.setItem('name', 'Auditor Lapangan');
-                window.location.href = "dashboard-auditor.html";
+                window.location.href = "dashboard.html";
             } else {
-                alert("Gunakan username 'admin' atau 'auditor'");
+                alert("User tidak dikenal! Gunakan 'admin' atau 'auditor'");
             }
         }
+
+        // Supaya bisa login pakai tombol Enter
+        document.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') simpleLogin();
+        });
     </script>
 </body>
 </html>
