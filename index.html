@@ -11,11 +11,9 @@
         *{ box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
         
         html, body { 
-            height: 100%; 
             margin: 0; 
             overflow: hidden; 
             background: #0f172a;
-            /* Menggunakan dvh agar pas di layar HP yang ada bar navigasi browsernya */
             height: 100dvh; 
         }
 
@@ -39,73 +37,53 @@
             -webkit-backdrop-filter: blur(10px);
             border-top: 4px solid #3b82f6;
             border-radius: 20px;
-            padding: 30px 25px;
+            padding: 25px;
             text-align: center;
             box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
             color: white;
             border: 1px solid rgba(255,255,255,0.1);
         }
 
-        .status-dots { 
-            display: flex; 
-            justify-content: center; 
-            gap: 8px; 
-            margin-bottom: 20px; 
-        }
-        .dot { 
-            width: 10px; 
-            height: 10px; 
-            border-radius: 50%; 
-        }
+        .status-dots { display: flex; justify-content: center; gap: 8px; margin-bottom: 15px; }
+        .dot { width: 10px; height: 10px; border-radius: 50%; }
         .dot.green { background: #22c55e; box-shadow: 0 0 10px #22c55e; }
         .dot.red { background: #ef4444; box-shadow: 0 0 10px #ef4444; }
 
-        .logo { 
-            width: 80px; 
-            height: auto; 
-            margin-bottom: 15px; 
-        }
+        .logo { width: 75px; height: auto; margin-bottom: 10px; }
+        .title { font-size: 19px; font-weight: 800; letter-spacing: 1px; margin-bottom: 5px; }
+        .subtitle { font-size: 10px; opacity: 0.7; margin-bottom: 20px; text-transform: uppercase; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;}
 
-        .title { 
-            font-size: 20px; 
-            font-weight: 800; 
-            letter-spacing: 1px; 
-            margin-bottom: 5px;
-            color: #ffffff;
-        }
-        .subtitle { 
-            font-size: 11px; 
-            opacity: 0.8; 
-            margin-bottom: 25px; 
-            color: #94a3b8; 
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-        }
-
-        .input-group { text-align: left; margin-bottom: 15px; }
-        .input-group label { 
-            display: block; 
-            font-size: 12px; 
-            margin-bottom: 6px; 
-            color: #cbd5e1;
-            margin-left: 4px;
-        }
-        input {
+        .input-group { text-align: left; margin-bottom: 15px; transition: 0.3s; }
+        .input-group label { display: block; font-size: 11px; margin-bottom: 6px; color: #cbd5e1; margin-left: 4px; font-weight: 600;}
+        
+        /* Styling Select & Input */
+        select, input {
             width: 100%;
-            height: 50px; /* Lebih tinggi agar mudah di-tap di HP */
+            height: 50px;
             padding: 0 15px;
             border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
             background: rgba(15, 23, 42, 0.9);
             color: white;
             outline: none;
-            font-size: 16px; /* Font 16px mencegah iPhone auto-zoom saat fokus */
-            transition: 0.2s;
+            font-size: 16px;
+            appearance: none; /* Hilangkan arrow default */
+            -webkit-appearance: none;
         }
-        input:focus { 
-            border-color: #3b82f6; 
-            background: #0f172a;
+
+        /* Custom Arrow untuk Select */
+        .select-wrapper { position: relative; }
+        .select-wrapper::after {
+            content: "▼";
+            font-size: 10px;
+            position: absolute;
+            right: 15px;
+            top: 20px;
+            color: #3b82f6;
+            pointer-events: none;
         }
+
+        input:focus, select:focus { border-color: #3b82f6; background: #0f172a; }
 
         button {
             width: 100%;
@@ -119,19 +97,13 @@
             font-size: 15px;
             text-transform: uppercase;
             cursor: pointer;
-            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
         }
-        button:active { 
-            transform: scale(0.97); 
-            background: #2563eb;
-        }
+        button:active { transform: scale(0.97); background: #2563eb; }
 
-        .footer { 
-            margin-top: 30px; 
-            font-size: 10px; 
-            opacity: 0.5; 
-            line-height: 1.5;
-        }
+        .footer { margin-top: 25px; font-size: 9px; opacity: 0.5; line-height: 1.5; }
+        
+        /* Hidden Class untuk menghilangkan Password */
+        .hidden { display: none; }
     </style>
 </head>
 <body>
@@ -150,12 +122,17 @@
             <div class="subtitle">MSM TERINTEGRASI</div>
             
             <div class="input-group">
-                <label>USER ID</label>
-                <input type="text" id="username" placeholder="Masukkan ID" autocomplete="off">
+                <label>PILIH USER</label>
+                <div class="select-wrapper">
+                    <select id="username" onchange="togglePassword()">
+                        <option value="auditor">AUDITOR</option>
+                        <option value="admin">ADMIN</option>
+                    </select>
+                </div>
             </div>
 
-            <div class="input-group">
-                <label>PASSWORD</label>
+            <div class="input-group hidden" id="pwd-group">
+                <label>PASSWORD ADMIN</label>
                 <input type="password" id="password" placeholder="••••••••">
             </div>
 
@@ -169,32 +146,38 @@
     </div>
 
     <script>
-        const users = [
-            { user: "admin", pass: "admin123", role: "admin" },
-            { user: "auditor", pass: "audit2026", role: "auditor" }
-        ];
-
-        function loginLokal() {
-            const userInput = document.getElementById("username").value.trim();
-            const passInput = document.getElementById("password").value;
-
-            const foundUser = users.find(u => u.user.toLowerCase() === userInput.toLowerCase() && u.pass === passInput);
-
-            if (foundUser) {
-                if (foundUser.role === "admin") {
-                    window.location.href = "dashboard-admin.html";
-                } else {
-                    window.location.href = "dashboard-auditor.html";
-                }
+        // Fungsi untuk menyembunyikan/menampilkan password
+        function togglePassword() {
+            const user = document.getElementById("username").value;
+            const pwdGroup = document.getElementById("pwd-group");
+            
+            if (user === "admin") {
+                pwdGroup.classList.remove("hidden");
             } else {
-                alert("ID atau Password salah!");
+                pwdGroup.classList.add("hidden");
+                document.getElementById("password").value = ""; // Reset isi pwd jika pindah ke auditor
             }
         }
 
-        // Handle enter key
-        document.addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') loginLokal();
-        });
+        function loginLokal() {
+            const user = document.getElementById("username").value;
+            const pass = document.getElementById("password").value;
+
+            // Logika Login
+            if (user === "admin") {
+                if (pass === "admin123") {
+                    window.location.href = "dashboard-admin.html";
+                } else {
+                    alert("Password Admin Salah!");
+                }
+            } else if (user === "auditor") {
+                // Auditor langsung masuk tanpa password sesuai permintaan
+                window.location.href = "dashboard-auditor.html";
+            }
+        }
+
+        // Jalankan toggle saat halaman dimuat pertama kali
+        window.onload = togglePassword;
     </script>
 </body>
 </html>
