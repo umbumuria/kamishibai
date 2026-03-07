@@ -26,12 +26,15 @@
             padding: 20px;
         }
 
-        .login-wrapper {
+        /* Container Utama untuk membungkus Login & Menu */
+        .container {
             width: 100%;
             max-width: 350px;
+            display: flex;
+            justify-content: center;
         }
 
-        .login-card {
+        .card {
             background: rgba(30, 41, 59, 0.85);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
@@ -42,6 +45,7 @@
             box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
             color: white;
             border: 1px solid rgba(255,255,255,0.1);
+            width: 100%;
         }
 
         .status-dots { display: flex; justify-content: center; gap: 8px; margin-bottom: 15px; }
@@ -53,96 +57,58 @@
         .title { font-size: 19px; font-weight: 800; letter-spacing: 1px; margin-bottom: 5px; }
         .subtitle { font-size: 10px; opacity: 0.7; margin-bottom: 20px; text-transform: uppercase; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;}
 
-        .input-group { text-align: left; margin-bottom: 15px; transition: 0.3s; }
-        .input-group label { display: block; font-size: 11px; margin-bottom: 6px; color: #cbd5e1; margin-left: 4px; font-weight: 600;}
+        .input-group { text-align: left; margin-bottom: 15px; }
+        .input-group label { display: block; font-size: 11px; margin-bottom: 6px; color: #cbd5e1; font-weight: 600; margin-left: 4px;}
         
-        /* Styling Select & Input */
         select, input {
-            width: 100%;
-            height: 50px;
-            padding: 0 15px;
-            border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.2);
-            background: rgba(15, 23, 42, 0.9);
-            color: white;
-            outline: none;
-            font-size: 16px;
-            appearance: none; /* Hilangkan arrow default */
-            -webkit-appearance: none;
+            width: 100%; height: 50px; padding: 0 15px; border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.2); background: rgba(15, 23, 42, 0.9);
+            color: white; outline: none; font-size: 16px; -webkit-appearance: none;
         }
 
-        /* Custom Arrow untuk Select */
         .select-wrapper { position: relative; }
         .select-wrapper::after {
-            content: "▼";
-            font-size: 10px;
-            position: absolute;
-            right: 15px;
-            top: 20px;
-            color: #3b82f6;
-            pointer-events: none;
+            content: "▼"; font-size: 10px; position: absolute;
+            right: 15px; top: 20px; color: #3b82f6; pointer-events: none;
         }
 
-        input:focus, select:focus { border-color: #3b82f6; background: #0f172a; }
-
         button {
-            width: 100%;
-            height: 50px;
-            margin-top: 10px;
-            border: none;
-            border-radius: 12px;
-            background: #3b82f6;
-            color: white;
-            font-weight: 700;
-            font-size: 15px;
-            text-transform: uppercase;
-            cursor: pointer;
+            width: 100%; height: 50px; margin-top: 10px; border: none;
+            border-radius: 12px; background: #3b82f6; color: white;
+            font-weight: 700; font-size: 15px; text-transform: uppercase; cursor: pointer;
         }
         button:active { transform: scale(0.97); background: #2563eb; }
 
         .footer { margin-top: 25px; font-size: 9px; opacity: 0.5; line-height: 1.5; }
-        
-        /* Hidden Class untuk menghilangkan Password */
-        .hidden { display: none; }
+        .hidden { display: none !important; }
+
+        /* --- Style untuk Menu Utama --- */
+        .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
+        .menu-item {
+            background: rgba(15, 23, 42, 0.5);
+            padding: 20px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.1);
+            color: white; text-decoration: none; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; transition: 0.2s;
+        }
+        .menu-item:active { transform: scale(0.95); background: #3b82f6; }
+        .menu-item span { font-size: 30px; margin-bottom: 8px; }
+        .menu-item small { font-size: 11px; font-weight: bold; text-transform: uppercase; }
+        .btn-logout { margin-top: 30px; background: #ef4444; height: 40px; font-size: 11px; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-in { animation: fadeIn 0.5s ease forwards; }
     </style>
 </head>
 <body>
 
-    <div class="login-wrapper">
-        <div class="login-card">
+    <div class="container">
+        <div id="login-section" class="card">
             <div class="status-dots">
                 <div class="dot green"></div>
                 <div class="dot red"></div>
                 <div class="dot green"></div>
             </div>
-<div id="main-menu" class="menu-container">
-    <div class="status-dots">
-        <div class="dot green"></div>
-        <div class="dot red"></div>
-        <div class="dot green"></div>
-    </div>
-    <img class="logo" src="https://res.cloudinary.com/ddhsrvefu/image/upload/v1772248994/Gemini_Generated_Image_ilzww2ilzww2ilzw_vhl8zx.png">
-    <div class="title">MENU UTAMA</div>
-    <div class="subtitle">SISTEM KAMISHIBAI MSM</div>
-
-    <div class="menu-grid">
-        <a href="audit.html" class="menu-item">
-            <span>📋</span>
-            <small>Input Audit</small>
-        </a>
-        <a href="jadwal.html" id="link-jadwal" class="menu-item">
-            <span>📅</span>
-            <small>Jadwal Audit</small>
-        </a>
-        <a href="dashboard.html" class="menu-item" style="grid-column: span 2;">
-            <span>📊</span>
-            <small>Analisa Dashboard</small>
-        </a>
-    </div>
-    <button class="btn-logout" onclick="location.reload()">LOGOUT</button>
-</div>
             <img class="logo" src="https://res.cloudinary.com/ddhsrvefu/image/upload/v1772248994/Gemini_Generated_Image_ilzww2ilzww2ilzw_vhl8zx.png" alt="Logo">
-            
             <div class="title">AUDIT KAMISHIBAI</div>
             <div class="subtitle">MSM SP/SF/SUPPORTING</div>
             
@@ -162,66 +128,70 @@
             </div>
 
             <button onclick="loginLokal()">Masuk Sistem</button>
-            
-            <div class="footer">
-                SISTEM KONTROL KUALITAS MSM<br>
-               © 2025 Arifianto Hidayat. All rights reserved
+            <div class="footer">SISTEM KONTROL KUALITAS MSM<br>© 2025 Arifianto Hidayat</div>
+        </div>
+
+        <div id="main-menu" class="card hidden animate-in">
+            <div class="status-dots">
+                <div class="dot green"></div>
+                <div class="dot red"></div>
+                <div class="dot green"></div>
             </div>
+            <img class="logo" src="https://res.cloudinary.com/ddhsrvefu/image/upload/v1772248994/Gemini_Generated_Image_ilzww2ilzww2ilzw_vhl8zx.png">
+            <div class="title">MENU UTAMA</div>
+            <div class="subtitle">SISTEM KAMISHIBAI MSM</div>
+
+            <div class="menu-grid">
+                <a href="audit.html" class="menu-item">
+                    <span>📋</span>
+                    <small>Input Audit</small>
+                </a>
+                <a href="jadwal.html" id="link-jadwal" class="menu-item">
+                    <span>📅</span>
+                    <small>Jadwal Audit</small>
+                </a>
+                <a href="dashboard.html" class="menu-item" style="grid-column: span 2;">
+                    <span>📊</span>
+                    <small>Analisa Dashboard</small>
+                </a>
+            </div>
+            <button class="btn-logout" onclick="location.reload()">LOGOUT</button>
         </div>
     </div>
 
     <script>
-        // Fungsi untuk menyembunyikan/menampilkan password
         function togglePassword() {
             const user = document.getElementById("username").value;
             const pwdGroup = document.getElementById("pwd-group");
-            
             if (user === "admin") {
                 pwdGroup.classList.remove("hidden");
             } else {
                 pwdGroup.classList.add("hidden");
-                document.getElementById("password").value = ""; // Reset isi pwd jika pindah ke auditor
+                document.getElementById("password").value = "";
             }
         }
 
         function loginLokal() {
-    const user = document.getElementById("username").value;
-    const pass = document.getElementById("password").value;
+            const user = document.getElementById("username").value;
+            const pass = document.getElementById("password").value;
 
-    // Proteksi Password khusus Admin
-    if (user === "admin" && pass !== "admin123") {
-        alert("Password Admin Salah!");
-        return;
-    }
+            if (user === "admin" && pass !== "admin123") {
+                alert("Password Admin Salah!");
+                return;
+            }
 
-    // TRANSISI SPA: Sembunyikan Login, Munculkan Menu
-    document.querySelector('.login-wrapper').style.display = 'none';
-    const menuContainer = document.getElementById('main-menu');
-    menuContainer.style.display = 'block';
+            // Pindah Tampilan
+            document.getElementById('login-section').classList.add('hidden');
+            document.getElementById('main-menu').classList.remove('hidden');
 
-    // LOGIKA HAK AKSES: Sembunyikan menu Jadwal jika Auditor
-    if (user === "auditor") {
-        const jadwalBtn = document.getElementById('link-jadwal');
-        if(jadwalBtn) jadwalBtn.style.display = 'none';
-    }
-}
+            // Hak Akses
+            if (user === "auditor") {
+                const jadwalBtn = document.getElementById('link-jadwal');
+                if(jadwalBtn) jadwalBtn.style.display = 'none';
+            }
+        }
 
-        // Jalankan toggle saat halaman dimuat pertama kali
         window.onload = togglePassword;
     </script>
 </body>
 </html>
-/* --- Tambahan untuk Menu SPA --- */
-.menu-container { display: none; width: 100%; max-width: 350px; text-align: center; animation: fadeIn 0.5s; }
-.menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
-.menu-item {
-    background: rgba(30, 41, 59, 0.8);
-    padding: 20px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.1);
-    color: white; text-decoration: none; display: flex; flex-direction: column;
-    align-items: center; justify-content: center; transition: 0.2s;
-}
-.menu-item:active { transform: scale(0.95); background: #3b82f6; }
-.menu-item span { font-size: 30px; margin-bottom: 8px; }
-.menu-item small { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;}
-.btn-logout { margin-top: 30px; background: #ef4444; padding: 10px 20px; border-radius: 8px; color: white; border:none; cursor: pointer; font-size: 11px; font-weight: bold;}
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
