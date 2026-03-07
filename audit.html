@@ -247,7 +247,7 @@
             statusVerifikasi: document.getElementById('statusVerifikasi').value,
             updateCatatan: document.getElementById('updateCatatan').value,
             status: "Selesai",
-            foto: [1,2,3,4,bersama auditee].map(i => document.getElementById(`url${i}`).value).filter(v => v),
+            foto: [1,2,3,4,5].map(i => document.getElementById(`url${i}`).value).filter(v => v),
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
         
