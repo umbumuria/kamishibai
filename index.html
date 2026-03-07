@@ -12,7 +12,7 @@
     </style>
 </head>
 <body class="bg-slate-100 flex items-center justify-center min-h-screen p-4">
-    <div class="bg-white p-8 rounded-[2.5rem] shadow-xl w-full max-w-md border border-slate-100">
+    <div class="bg-white p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] shadow-xl w-full max-w-md border border-slate-100">
         <div class="flex flex-col items-center mb-8">
             <div class="bg-blue-600 p-4 rounded-2xl text-white mb-4 shadow-xl shadow-blue-100">
                 <i data-lucide="clipboard-check" class="w-8 h-8"></i>
@@ -23,10 +23,13 @@
         <form id="login-form" class="space-y-5">
             <div>
                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Role Akses</label>
-                <select id="login-role" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer">
-                    <option value="user">Auditor</option>
-                    <option value="admin">Administrator (Admin)</option>
-                </select>
+                <div class="relative">
+                    <select id="login-role" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer">
+                        <option value="user">Auditor</option>
+                        <option value="admin">Administrator (Admin)</option>
+                    </select>
+                    <i data-lucide="chevron-down" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5 pointer-events-none"></i>
+                </div>
             </div>
             <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-2xl shadow-xl shadow-blue-200 transition-all active:scale-[0.98]">Masuk Sistem</button>
         </form>
@@ -35,9 +38,8 @@
     <script>
         document.getElementById('login-form').onsubmit = (e) => {
             e.preventDefault();
-            const role = document.getElementById('login-role').value;
             localStorage.setItem('kamishibai_logged_in', 'true');
-            localStorage.setItem('kamishibai_role', role);
+            localStorage.setItem('kamishibai_role', document.getElementById('login-role').value);
             window.location.href = 'dashboard.html';
         };
         lucide.createIcons();
