@@ -12,7 +12,6 @@
         .container { max-width: 900px; margin: 0 auto; background: white; padding: 20px; border-radius: 15px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 30px; }
         .section-title { font-size: 18px; font-weight: bold; margin-bottom: 20px; border-left: 5px solid var(--primary); padding-left: 15px; color: var(--primary); }
         
-        /* Form Optimasi Mobile */
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         label { display: block; font-size: 10px; font-weight: bold; margin-bottom: 5px; color: #64748b; text-transform: uppercase; }
         
@@ -32,10 +31,9 @@
 
         .btn-submit { width: 100%; padding: 18px; background: var(--primary); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 18px; transition: 0.3s; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3); }
         
-        /* --- Responsive Table (History Only) --- */
         .filter-bar { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: white; padding: 15px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 15px; }
         .table-container { background: white; border-radius: 12px; border: 1px solid var(--border); overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 700px; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 800px; }
         th { background: #f1f5f9; padding: 12px; text-align: left; color: #64748b; border-bottom: 2px solid var(--border); }
         td { padding: 12px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
         
@@ -47,7 +45,6 @@
 
         @media (max-width: 600px) {
             .grid, .filter-bar { grid-template-columns: 1fr; }
-            .section-title { font-size: 16px; }
             .container { padding: 15px; }
         }
     </style>
@@ -76,7 +73,7 @@
             <div><label>Tanggal Audit</label><input type="date" id="tglAudit" required></div>
             <div><label>Auditor</label><input type="text" id="displayAuditor" readonly></div>
             <div><label>Dept. Auditee</label><input type="text" id="displayDept" readonly></div>
-            <div><label>Nama Personel Auditee</label><input type="text" id="namaAuditee" placeholder="Nama staf yang diaudit" required></div>
+            <div><label>Nama Personel Auditee</label><input type="text" id="namaAuditee" placeholder="Nama staf" required></div>
             <div><label>Judul IK / Materi</label><input type="text" id="judulIK" placeholder="Materi audit..." required></div>
             <div><label>Jumlah Item Cek</label><input type="number" id="jmlItem" value="10" oninput="hitungNilai()" required></div>
             <div><label>Jumlah Temuan</label><input type="number" id="jmlTemuan" value="0" oninput="hitungNilai()" required></div>
@@ -106,7 +103,7 @@
                     document.write(`
                         <div class="photo-box" onclick="document.getElementById('file${i}').click()">
                             <img id="img${i}" src="">
-                            <span id="text${i}">FOTO ${i}</span>
+                            <span id="text${i}">${i===5?'FOTO BERSAMA':`FOTO ${i}`}</span>
                             <div id="load${i}" style="display:none; font-size:10px; color:var(--primary);">Uploading...</div>
                             <input type="file" id="file${i}" accept="image/*" hidden onchange="uploadImage(this, ${i})">
                             <input type="hidden" id="url${i}">
@@ -117,22 +114,20 @@
         </div>
 
         <label>Catatan Tambahan</label>
-        <input type="text" id="updateCatatan" placeholder="...">
+        <input type="text" id="updateCatatan" placeholder="Tambahkan catatan singkat jika ada...">
         
         <button type="submit" id="btnSave" class="btn-submit">SIMPAN HASIL AUDIT</button>
     </form>
 </div>
 
-<div style="max-width: 1100px; margin: 0 auto; margin-bottom: 80px; padding:0 15px;">
+<div style="max-width: 1150px; margin: 0 auto; margin-bottom: 80px; padding:0 15px;">
     <div class="section-title">HISTORY AUDIT TERBARU</div>
     
     <div class="filter-bar">
-        <input type="text" id="fAuditor" placeholder="Cari Nama Auditor..." oninput="fetchAuditHistory()" style="margin-bottom:0">
-        <select id="fGroup" onchange="fetchAuditHistory()" style="margin-bottom:0">
+        <input type="text" id="fAuditor" placeholder="Cari Auditor..." oninput="fetchAuditHistory()">
+        <select id="fGroup" onchange="fetchAuditHistory()">
             <option value="">Semua Group</option>
-            <option value="SF">Sugar Factory (SF)</option>
-            <option value="SP">Plantation (SP)</option>
-            <option value="SUPPORTING">Supporting</option>
+            <option value="SF">SF</option><option value="SP">SP</option><option value="SUPPORTING">Supporting</option>
         </select>
     </div>
 
@@ -141,12 +136,12 @@
             <thead>
                 <tr>
                     <th>TGL AUDIT</th>
-                    <th>GROUP / UNIT</th>
+                    <th>GROUP</th>
                     <th>AUDITOR</th>
                     <th>MATERI & TEMUAN</th>
                     <th>NILAI</th>
                     <th>FOTO</th>
-                    <th>STATUS</th>
+                    <th>CATATAN</th> <th>STATUS</th>
                 </tr>
             </thead>
             <tbody id="historyBody"></tbody>
@@ -155,7 +150,6 @@
 </div>
 
 <script>
-    // Firebase Config (Keep current)
     const firebaseConfig = {
         apiKey: "AIzaSyCiW38hQ5ZfYnp3sa95OQw6IjxnfnM5dl4",
         authDomain: "kamishibaimsm.firebaseapp.com",
@@ -175,10 +169,7 @@
     async function loadJadwal() {
         const groupFilter = document.getElementById('filterGroupJadwal').value;
         const sel = document.getElementById('selectJadwal');
-        if(!groupFilter) {
-            sel.innerHTML = '<option value="">-- Pilih Group Dahulu --</option>';
-            return;
-        }
+        if(!groupFilter) { sel.innerHTML = '<option value="">-- Pilih Group Dahulu --</option>'; return; }
         sel.innerHTML = '<option value="">-- Memuat Jadwal... --</option>';
         try {
             const snap = await db.collection('jadwal_audit')
@@ -186,7 +177,6 @@
                                  .where('group', '==', groupFilter)
                                  .get();
             sel.innerHTML = '<option value="">-- Pilih Jadwal --</option>';
-            if(snap.empty) sel.innerHTML = '<option value="">Tidak ada jadwal pending</option>';
             snap.forEach(doc => {
                 cacheJadwal[doc.id] = doc.data();
                 sel.innerHTML += `<option value="${doc.id}">${doc.data().periode} | ${doc.data().auditor}</option>`;
@@ -234,7 +224,7 @@
         const btn = document.getElementById('btnSave');
         btn.disabled = true; btn.innerText = "Menyimpan...";
         
-        const data = {
+        const dataSubmit = {
             tglAudit: document.getElementById('tglAudit').value,
             namaAuditeePerson: document.getElementById('namaAuditee').value,
             judulIK: document.getElementById('judulIK').value,
@@ -245,14 +235,14 @@
             penyebab: document.getElementById('penyebab').value,
             tindakan: document.getElementById('tindakan').value,
             statusVerifikasi: document.getElementById('statusVerifikasi').value,
-            updateCatatan: document.getElementById('updateCatatan').value,
+            updateCatatan: document.getElementById('updateCatatan').value, // Simpan Catatan
             status: "Selesai",
             foto: [1,2,3,4,5].map(i => document.getElementById(`url${i}`).value).filter(v => v),
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
         
         try {
-            await db.collection('jadwal_audit').doc(id).update(data);
+            await db.collection('jadwal_audit').doc(id).update(dataSubmit);
             alert("Hasil Audit Berhasil Disimpan!"); 
             location.reload();
         } catch (e) { alert("Gagal menyimpan!"); btn.disabled = false; }
@@ -265,27 +255,23 @@
         try {
             const snap = await db.collection('jadwal_audit')
                 .where('status', '==', 'Selesai')
-                .orderBy('updatedAt', 'desc')
-                .limit(20)
-                .get();
+                .orderBy('updatedAt', 'desc').limit(20).get();
             body.innerHTML = '';
             snap.forEach(doc => {
                 const d = doc.data();
                 if(d.auditor.toLowerCase().includes(fAud) && (fGrp === "" || d.group === fGrp)) {
                     let fotoHtml = '';
-                    if(d.foto && d.foto.length > 0) {
-                        d.foto.forEach(url => {
-                            fotoHtml += `<img src="${url}" class="thumb-img" onclick="window.open('${url}')">`;
-                        });
-                    }
+                    if(d.foto) d.foto.forEach(url => { fotoHtml += `<img src="${url}" class="thumb-img" onclick="window.open('${url}')">`; });
+                    
                     body.innerHTML += `
                         <tr>
                             <td>${d.tglAudit}</td>
                             <td><b>${d.group}</b><br>${d.auditee}</td>
                             <td>${d.auditor}</td>
-                            <td><small>IK: ${d.judulIK || '-'}</small><br><i style="color:#475569">${d.uraian || 'Tidak ada temuan'}</i></td>
+                            <td><small>IK: ${d.judulIK || '-'}</small><br><i style="color:#64748b">${d.uraian || '-'}</i></td>
                             <td style="font-weight:bold">${d.nilaiPencapaian}</td>
                             <td><div style="display:flex">${fotoHtml || '-'}</div></td>
+                            <td style="color:#2563eb; font-size:10px;">${d.updateCatatan || '-'}</td>
                             <td>
                                 <span class="badge badge-selesai">SUBMITTED</span><br>
                                 <span class="badge ${d.statusVerifikasi==='CLOSED'?'badge-closed':'badge-open'}">${d.statusVerifikasi}</span>
@@ -296,7 +282,6 @@
             });
         } catch (e) { console.error(e); }
     }
-
     fetchAuditHistory();
 </script>
 </body>
