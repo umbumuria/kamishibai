@@ -145,19 +145,22 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/your_cloud_name/image/upload";
+    // UPDATE DATA CLOUDINARY ANDA DISINI
+    const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/ddhsrvefu/image/upload";
     const CLOUDINARY_PRESET = "kamishiba_foto";
 
     let cacheJadwal = {};
 
     async function loadJadwal() {
-        const snap = await db.collection('jadwal_audit').where('status', '==', 'Pending').get();
-        const sel = document.getElementById('selectJadwal');
-        sel.innerHTML = '<option value="">-- Pilih Jadwal --</option>';
-        snap.forEach(doc => {
-            cacheJadwal[doc.id] = doc.data();
-            sel.innerHTML += `<option value="${doc.id}">${doc.data().periode} | ${doc.data().auditor}</option>`;
-        });
+        try {
+            const snap = await db.collection('jadwal_audit').where('status', '==', 'Pending').get();
+            const sel = document.getElementById('selectJadwal');
+            sel.innerHTML = '<option value="">-- Pilih Jadwal --</option>';
+            snap.forEach(doc => {
+                cacheJadwal[doc.id] = doc.data();
+                sel.innerHTML += `<option value="${doc.id}">${doc.data().periode} | ${doc.data().auditor}</option>`;
+            });
+        } catch (e) { console.error("Gagal muat jadwal:", e); }
     }
 
     function fillJadwalData(id) {
@@ -182,106 +185,25 @@
         const fd = new FormData();
         fd.append('file', file);
         fd.append('upload_preset', CLOUDINARY_PRESET);
-        const res = await fetch(CLOUDINARY_URL, { method: 'POST', body: fd });
-        const data = await res.json();
-        document.getElementById(`url${idx}`).value = data.secure_url;
-        document.getElementById(`img${idx}`).src = data.secure_url;
-        document.getElementById(`img${idx}`).style.display = 'block';
-        document.getElementById(`text${idx}`).style.display = 'none';
+        try {
+            const res = await fetch(CLOUDINARY_URL, { method: 'POST', body: fd });
+            const data = await res.json();
+            document.getElementById(`url${idx}`).value = data.secure_url;
+            document.getElementById(`img${idx}`).src = data.secure_url;
+            document.getElementById(`img${idx}`).style.display = 'block';
+            document.getElementById(`text${idx}`).style.display = 'none';
+        } catch (e) { alert("Upload gagal, cek koneksi/preset!"); }
         document.getElementById(`load${idx}`).style.display = 'none';
     }
 
     document.getElementById('auditForm').onsubmit = async (e) => {
         e.preventDefault();
         const id = document.getElementById('selectJadwal').value;
+        const btn = document.getElementById('btnSave');
+        btn.disabled = true; btn.innerText = "Menyimpan...";
+        
         const data = {
             tglAudit: document.getElementById('tglAudit').value,
             namaAuditeePerson: document.getElementById('namaAuditee').value,
             judulIK: document.getElementById('judulIK').value,
-            jmlItem: document.getElementById('jmlItem').value,
-            jmlTemuan: document.getElementById('jmlTemuan').value,
-            nilaiPencapaian: document.getElementById('nilaiTemuan').value,
-            uraian: document.getElementById('uraian').value,
-            penyebab: document.getElementById('penyebab').value,
-            tindakan: document.getElementById('tindakan').value,
-            statusVerifikasi: document.getElementById('statusVerifikasi').value,
-            updateCatatan: document.getElementById('updateCatatan').value,
-            status: "Selesai",
-            foto: [1,2,3,4,5].map(i => document.getElementById(`url${i}`).value).filter(v => v),
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        };
-        await db.collection('jadwal_audit').doc(id).update(data);
-        alert("Berhasil!"); location.reload();
-    };
-
-    async function fetchAuditHistory() {
-        const fAud = document.getElementById('fAuditor').value.toLowerCase();
-        const fGrp = document.getElementById('fGroup').value;
-        const snap = await db.collection('jadwal_audit').where('status', '==', 'Selesai').orderBy('updatedAt', 'desc').get();
-        const body = document.getElementById('historyBody');
-        body.innerHTML = '';
-        snap.forEach(doc => {
-            const d = doc.data();
-            if(d.auditor.toLowerCase().includes(fAud) && (fGrp === "" || d.group === fGrp)) {
-                body.innerHTML += `
-                    <tr>
-                        <td>${d.tglAudit}</td>
-                        <td>${d.group}</td>
-                        <td>${d.auditor}</td>
-                        <td>${d.auditee}</td>
-                        <td style="font-weight:bold">${d.nilaiPencapaian}</td>
-                        <td><span class="badge ${d.statusVerifikasi === 'CLOSED' ? 'badge-closed' : 'badge-open'}">${d.statusVerifikasi}</span></td>
-                        <td style="text-align:center">
-                            <button class="btn-edit" onclick="editAudit('${doc.id}')">EDIT</button>
-                            <button class="btn-delete" onclick="deleteAudit('${doc.id}')">HAPUS</button>
-                        </td>
-                    </tr>
-                `;
-            }
-        });
-    }
-
-    async function deleteAudit(id) {
-        if(confirm("Hapus hasil audit ini? (Status akan kembali ke Pending)")) {
-            await db.collection('jadwal_audit').doc(id).update({ status: "Pending", tglAudit: null });
-            location.reload();
-        }
-    }
-
-    async function editAudit(id) {
-        const doc = await db.collection('jadwal_audit').doc(id).get();
-        const d = doc.data();
-        // Kembalikan ke cache agar dropdown bisa mengenali
-        cacheJadwal[id] = d;
-        const sel = document.getElementById('selectJadwal');
-        sel.innerHTML += `<option value="${id}" selected>${d.periode} | ${d.auditor} (EDITING)</option>`;
-        
-        // Fill form
-        document.getElementById('tglAudit').value = d.tglAudit;
-        document.getElementById('namaAuditee').value = d.namaAuditeePerson;
-        document.getElementById('judulIK').value = d.judulIK;
-        document.getElementById('jmlItem').value = d.jmlItem;
-        document.getElementById('jmlTemuan').value = d.jmlTemuan;
-        document.getElementById('statusVerifikasi').value = d.statusVerifikasi;
-        document.getElementById('uraian').value = d.uraian;
-        document.getElementById('penyebab').value = d.penyebab;
-        document.getElementById('tindakan').value = d.tindakan;
-        document.getElementById('updateCatatan').value = d.updateCatatan;
-        
-        // Fill Photos
-        if(d.foto) d.foto.forEach((url, i) => {
-            const idx = i + 1;
-            document.getElementById(`url${idx}`).value = url;
-            const img = document.getElementById(`img${idx}`);
-            img.src = url; img.style.display = 'block';
-            document.getElementById(`text${idx}`).style.display = 'none';
-        });
-
-        fillJadwalData(id);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    loadJadwal(); fetchAuditHistory();
-</script>
-</body>
-</html>
+            jmlItem: document.getElementById('jmlItem').value
