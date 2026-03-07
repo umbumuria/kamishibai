@@ -7,27 +7,36 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <style>
-        :root { --primary: #2563eb; --bg: #f8fafc; --border: #e2e8f0; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #1e293b; padding: 20px; }
-        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 15px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-        .section-title { font-size: 20px; font-weight: bold; margin-bottom: 20px; border-left: 5px solid var(--primary); padding-left: 15px; color: var(--primary); }
+        :root { --primary: #2563eb; --bg: #f8fafc; --border: #e2e8f0; --text: #1e293b; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; background: white; padding: 30px; border-radius: 15px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 30px; }
+        .section-title { font-size: 20px; font-weight: bold; margin-bottom: 20px; border-left: 5px solid var(--primary); padding-left: 15px; color: var(--primary); display: flex; justify-content: space-between; }
         
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .full { grid-column: span 2; }
-        
-        label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 5px; color: #64748b; text-transform: uppercase; }
-        input, select, textarea { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; box-sizing: border-box; }
+        label { display: block; font-size: 11px; font-weight: bold; margin-bottom: 5px; color: #64748b; text-transform: uppercase; }
+        input, select, textarea { width: 100%; padding: 10px; margin-bottom: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; box-sizing: border-box; outline: none; }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary); }
         input:read-only { background: #f1f5f9; color: #64748b; }
 
         .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-bottom: 20px; }
-        .photo-box { border: 2px dashed var(--border); border-radius: 10px; padding: 10px; text-align: center; cursor: pointer; position: relative; min-height: 100px; display: flex; align-items: center; justify-content: center; flex-direction: column; }
-        .photo-box img { width: 100%; border-radius: 5px; display: none; margin-bottom: 5px; }
+        .photo-box { border: 2px dashed var(--border); border-radius: 10px; padding: 10px; text-align: center; cursor: pointer; min-height: 100px; display: flex; align-items: center; justify-content: center; flex-direction: column; overflow: hidden; }
+        .photo-box img { width: 100%; border-radius: 5px; display: none; margin-bottom: 5px; object-fit: cover; }
         .photo-box span { font-size: 10px; color: #64748b; }
         .loading-spin { font-size: 10px; color: var(--primary); display: none; }
 
         .btn-submit { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 16px; transition: 0.3s; }
-        .btn-submit:hover { background: #1d4ed8; }
-        .btn-submit:disabled { background: #cbd5e1; }
+        
+        /* --- TABLE STYLE --- */
+        .filter-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; background: white; padding: 15px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 15px; }
+        .table-container { background: white; border-radius: 12px; border: 1px solid var(--border); overflow-x: auto; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        th { background: #f1f5f9; padding: 12px; text-align: left; color: #64748b; border-bottom: 2px solid var(--border); }
+        td { padding: 12px; border-bottom: 1px solid var(--border); }
+        .btn-edit { color: #2563eb; background: #dbeafe; border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-delete { color: #dc2626; background: #fee2e2; border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .badge { padding: 4px 8px; border-radius: 12px; font-size: 10px; font-weight: bold; }
+        .badge-closed { background: #dcfce7; color: #166534; }
+        .badge-open { background: #fee2e2; color: #991b1b; }
     </style>
 </head>
 <body>
@@ -36,48 +45,21 @@
     <div class="section-title">LAPORAN HASIL AUDIT KAMISHIBAI</div>
     
     <form id="auditForm">
-        <label>Pilih Jadwal Audit (Referensi Database)</label>
+        <label>Pilih Jadwal Audit (Pending)</label>
         <select id="selectJadwal" onchange="fillJadwalData(this.value)" required>
-            <option value="">-- Memuat Jadwal Pending... --</option>
+            <option value="">-- Memuat Jadwal... --</option>
         </select>
 
         <div class="grid">
-            <div>
-                <label>Group</label>
-                <input type="text" id="displayGroup" readonly>
-            </div>
-            <div>
-                <label>Tanggal Audit</label>
-                <input type="date" id="tglAudit" required>
-            </div>
-            <div>
-                <label>Nama Auditor</label>
-                <input type="text" id="displayAuditor" readonly>
-            </div>
-            <div>
-                <label>Dept. Auditee</label>
-                <input type="text" id="displayDept" readonly>
-            </div>
-            <div>
-                <label>Nama Personel Auditee</label>
-                <input type="text" id="namaAuditee" placeholder="Nama orang yang diaudit..." required>
-            </div>
-            <div>
-                <label>Judul IK / Materi</label>
-                <input type="text" id="judulIK" placeholder="Contoh: IK Pengoperasian Mesin..." required>
-            </div>
-            <div>
-                <label>Jumlah Item Audit</label>
-                <input type="number" id="jmlItem" value="10" oninput="hitungNilai()" required>
-            </div>
-            <div>
-                <label>Jumlah Temuan</label>
-                <input type="number" id="jmlTemuan" value="0" oninput="hitungNilai()" required>
-            </div>
-            <div>
-                <label>Nilai Pencapaian (%)</label>
-                <input type="text" id="nilaiTemuan" readonly>
-            </div>
+            <div><label>Group</label><input type="text" id="displayGroup" readonly></div>
+            <div><label>Tanggal Audit</label><input type="date" id="tglAudit" required></div>
+            <div><label>Auditor</label><input type="text" id="displayAuditor" readonly></div>
+            <div><label>Dept. Auditee</label><input type="text" id="displayDept" readonly></div>
+            <div><label>Nama Personel Auditee</label><input type="text" id="namaAuditee" placeholder="..." required></div>
+            <div><label>Judul IK / Materi</label><input type="text" id="judulIK" placeholder="..." required></div>
+            <div><label>Jumlah Item</label><input type="number" id="jmlItem" value="10" oninput="hitungNilai()" required></div>
+            <div><label>Jumlah Temuan</label><input type="number" id="jmlTemuan" value="0" oninput="hitungNilai()" required></div>
+            <div><label>Nilai (%)</label><input type="text" id="nilaiTemuan" readonly></div>
             <div>
                 <label>Status Verifikasi</label>
                 <select id="statusVerifikasi">
@@ -91,13 +73,12 @@
         <label>Uraian Ketidaksesuaian</label>
         <textarea id="uraian" rows="2" placeholder="Detail temuan..."></textarea>
 
-        <label>Penyebab & Tindakan Perbaikan</label>
         <div class="grid">
-            <textarea id="penyebab" rows="2" placeholder="Penyebab..."></textarea>
-            <textarea id="tindakan" rows="2" placeholder="Tindakan perbaikan..."></textarea>
+            <div><label>Penyebab</label><textarea id="penyebab" rows="2"></textarea></div>
+            <div><label>Tindakan Perbaikan</label><textarea id="tindakan" rows="2"></textarea></div>
         </div>
 
-        <label>Dokumentasi Foto Temuan (Maks 5 Foto)</label>
+        <label>Foto Temuan (Maks 5)</label>
         <div class="photo-grid">
             <script>
                 for(let i=1; i<=5; i++) {
@@ -114,15 +95,45 @@
             </script>
         </div>
 
-        <label>Update / Catatan Tambahan</label>
-        <input type="text" id="updateCatatan" placeholder="...">
-
+        <label>Update Catatan</label>
+        <input type="text" id="updateCatatan">
         <button type="submit" id="btnSave" class="btn-submit">SIMPAN HASIL AUDIT</button>
     </form>
 </div>
 
+<div style="max-width: 1000px; margin: 0 auto;">
+    <div class="section-title">HISTORY HASIL AUDIT</div>
+    
+    <div class="filter-bar">
+        <input type="text" id="fAuditor" placeholder="Filter Auditor..." oninput="fetchAuditHistory()">
+        <input type="text" id="fAuditee" placeholder="Filter Auditee..." oninput="fetchAuditHistory()">
+        <select id="fGroup" onchange="fetchAuditHistory()">
+            <option value="">Semua Group</option>
+            <option value="SF">SUGAR FACTORY</option>
+            <option value="SP">PLANTATION</option>
+            <option value="SUPPORTING">SUPPORTING</option>
+        </select>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>TGL AUDIT</th>
+                    <th>GROUP</th>
+                    <th>AUDITOR</th>
+                    <th>DEPT</th>
+                    <th>NILAI</th>
+                    <th>VERIFIKASI</th>
+                    <th style="text-align:center">AKSI</th>
+                </tr>
+            </thead>
+            <tbody id="historyBody"></tbody>
+        </table>
+    </div>
+</div>
+
 <script>
-    // --- KONFIGURASI ---
     const firebaseConfig = {
         apiKey: "AIzaSyCiW38hQ5ZfYnp3sa95OQw6IjxnfnM5dl4",
         authDomain: "kamishibaimsm.firebaseapp.com",
@@ -137,73 +148,53 @@
     const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/your_cloud_name/image/upload";
     const CLOUDINARY_PRESET = "your_preset_name";
 
-    let jadwalCache = {};
+    let cacheJadwal = {};
 
-    // Load Jadwal
     async function loadJadwal() {
         const snap = await db.collection('jadwal_audit').where('status', '==', 'Pending').get();
-        const select = document.getElementById('selectJadwal');
-        select.innerHTML = '<option value="">-- Pilih Jadwal --</option>';
+        const sel = document.getElementById('selectJadwal');
+        sel.innerHTML = '<option value="">-- Pilih Jadwal --</option>';
         snap.forEach(doc => {
-            jadwalCache[doc.id] = doc.data();
-            const d = doc.data();
-            select.innerHTML += `<option value="${doc.id}">${d.periode} | ${d.auditor} - ${d.auditee}</option>`;
+            cacheJadwal[doc.id] = doc.data();
+            sel.innerHTML += `<option value="${doc.id}">${doc.data().periode} | ${doc.data().auditor}</option>`;
         });
     }
 
     function fillJadwalData(id) {
         if(!id) return;
-        const d = jadwalCache[id];
-        document.getElementById('displayGroup').value = d.group;
-        document.getElementById('displayAuditor').value = d.auditor;
-        document.getElementById('displayDept').value = d.auditee;
+        const d = cacheJadwal[id];
+        document.getElementById('displayGroup').value = d.group || '';
+        document.getElementById('displayAuditor').value = d.auditor || '';
+        document.getElementById('displayDept').value = d.auditee || '';
         hitungNilai();
     }
 
     function hitungNilai() {
-        const item = parseFloat(document.getElementById('jmlItem').value) || 0;
-        const temuan = parseFloat(document.getElementById('jmlTemuan').value) || 0;
-        if(item > 0) {
-            const hasil = (1 - (temuan / item)) * 100;
-            document.getElementById('nilaiTemuan').value = hasil.toFixed(2) + "%";
-        }
+        const i = parseFloat(document.getElementById('jmlItem').value) || 0;
+        const t = parseFloat(document.getElementById('jmlTemuan').value) || 0;
+        document.getElementById('nilaiTemuan').value = i > 0 ? ((1-(t/i))*100).toFixed(2) + "%" : "0%";
     }
 
-    async function uploadImage(input, index) {
+    async function uploadImage(input, idx) {
         const file = input.files[0];
         if(!file) return;
-
-        document.getElementById(`load${index}`).style.display = 'block';
-        document.getElementById(`text${index}`).style.display = 'none';
-
+        document.getElementById(`load${idx}`).style.display = 'block';
         const fd = new FormData();
         fd.append('file', file);
         fd.append('upload_preset', CLOUDINARY_PRESET);
-
-        try {
-            const res = await fetch(CLOUDINARY_URL, { method: 'POST', body: fd });
-            const data = await res.json();
-            document.getElementById(`url${index}`).value = data.secure_url;
-            const img = document.getElementById(`img${index}`);
-            img.src = data.secure_url;
-            img.style.display = 'block';
-        } catch (e) {
-            alert("Upload Gagal");
-        } finally {
-            document.getElementById(`load${index}`).style.display = 'none';
-        }
+        const res = await fetch(CLOUDINARY_URL, { method: 'POST', body: fd });
+        const data = await res.json();
+        document.getElementById(`url${idx}`).value = data.secure_url;
+        document.getElementById(`img${idx}`).src = data.secure_url;
+        document.getElementById(`img${idx}`).style.display = 'block';
+        document.getElementById(`text${idx}`).style.display = 'none';
+        document.getElementById(`load${idx}`).style.display = 'none';
     }
 
     document.getElementById('auditForm').onsubmit = async (e) => {
         e.preventDefault();
         const id = document.getElementById('selectJadwal').value;
-        if(!id) return alert("Pilih jadwal!");
-
-        const btn = document.getElementById('btnSave');
-        btn.disabled = true;
-        btn.innerText = "Menyimpan...";
-
-        const dataAudit = {
+        const data = {
             tglAudit: document.getElementById('tglAudit').value,
             namaAuditeePerson: document.getElementById('namaAuditee').value,
             judulIK: document.getElementById('judulIK').value,
@@ -216,27 +207,81 @@
             statusVerifikasi: document.getElementById('statusVerifikasi').value,
             updateCatatan: document.getElementById('updateCatatan').value,
             status: "Selesai",
-            foto: [
-                document.getElementById('url1').value,
-                document.getElementById('url2').value,
-                document.getElementById('url3').value,
-                document.getElementById('url4').value,
-                document.getElementById('url5').value
-            ].filter(url => url !== ""),
-            auditSubmittedAt: firebase.firestore.FieldValue.serverTimestamp()
+            foto: [1,2,3,4,5].map(i => document.getElementById(`url${i}`).value).filter(v => v),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
-
-        try {
-            await db.collection('jadwal_audit').doc(id).update(dataAudit);
-            alert("Audit Berhasil Disimpan!");
-            location.reload();
-        } catch (err) {
-            alert("Gagal: " + err.message);
-            btn.disabled = false;
-        }
+        await db.collection('jadwal_audit').doc(id).update(data);
+        alert("Berhasil!"); location.reload();
     };
 
-    loadJadwal();
+    async function fetchAuditHistory() {
+        const fAud = document.getElementById('fAuditor').value.toLowerCase();
+        const fGrp = document.getElementById('fGroup').value;
+        const snap = await db.collection('jadwal_audit').where('status', '==', 'Selesai').orderBy('updatedAt', 'desc').get();
+        const body = document.getElementById('historyBody');
+        body.innerHTML = '';
+        snap.forEach(doc => {
+            const d = doc.data();
+            if(d.auditor.toLowerCase().includes(fAud) && (fGrp === "" || d.group === fGrp)) {
+                body.innerHTML += `
+                    <tr>
+                        <td>${d.tglAudit}</td>
+                        <td>${d.group}</td>
+                        <td>${d.auditor}</td>
+                        <td>${d.auditee}</td>
+                        <td style="font-weight:bold">${d.nilaiPencapaian}</td>
+                        <td><span class="badge ${d.statusVerifikasi === 'CLOSED' ? 'badge-closed' : 'badge-open'}">${d.statusVerifikasi}</span></td>
+                        <td style="text-align:center">
+                            <button class="btn-edit" onclick="editAudit('${doc.id}')">EDIT</button>
+                            <button class="btn-delete" onclick="deleteAudit('${doc.id}')">HAPUS</button>
+                        </td>
+                    </tr>
+                `;
+            }
+        });
+    }
+
+    async function deleteAudit(id) {
+        if(confirm("Hapus hasil audit ini? (Status akan kembali ke Pending)")) {
+            await db.collection('jadwal_audit').doc(id).update({ status: "Pending", tglAudit: null });
+            location.reload();
+        }
+    }
+
+    async function editAudit(id) {
+        const doc = await db.collection('jadwal_audit').doc(id).get();
+        const d = doc.data();
+        // Kembalikan ke cache agar dropdown bisa mengenali
+        cacheJadwal[id] = d;
+        const sel = document.getElementById('selectJadwal');
+        sel.innerHTML += `<option value="${id}" selected>${d.periode} | ${d.auditor} (EDITING)</option>`;
+        
+        // Fill form
+        document.getElementById('tglAudit').value = d.tglAudit;
+        document.getElementById('namaAuditee').value = d.namaAuditeePerson;
+        document.getElementById('judulIK').value = d.judulIK;
+        document.getElementById('jmlItem').value = d.jmlItem;
+        document.getElementById('jmlTemuan').value = d.jmlTemuan;
+        document.getElementById('statusVerifikasi').value = d.statusVerifikasi;
+        document.getElementById('uraian').value = d.uraian;
+        document.getElementById('penyebab').value = d.penyebab;
+        document.getElementById('tindakan').value = d.tindakan;
+        document.getElementById('updateCatatan').value = d.updateCatatan;
+        
+        // Fill Photos
+        if(d.foto) d.foto.forEach((url, i) => {
+            const idx = i + 1;
+            document.getElementById(`url${idx}`).value = url;
+            const img = document.getElementById(`img${idx}`);
+            img.src = url; img.style.display = 'block';
+            document.getElementById(`text${idx}`).style.display = 'none';
+        });
+
+        fillJadwalData(id);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    loadJadwal(); fetchAuditHistory();
 </script>
 </body>
 </html>
