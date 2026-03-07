@@ -136,20 +136,13 @@
 
     <script>
         // Fungsi untuk buka-tutup menu mobile
-        function toggleMenu() {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('overlay');
-            
-            if (sidebar.classList.contains('hidden-mobile')) {
-                sidebar.classList.remove('hidden-mobile');
-                sidebar.classList.add('show-mobile');
-                overlay.classList.remove('hidden');
-            } else {
-                sidebar.classList.add('hidden-mobile');
-                sidebar.classList.remove('show-mobile');
-                overlay.classList.add('hidden');
-            }
-        }
+        ffunction toggleMenu() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+    sidebar.classList.toggle('sidebar-closed');
+    sidebar.classList.toggle('sidebar-open');
+    overlay.classList.toggle('hidden');
+}
 
         // Cek Role Admin
         const role = localStorage.getItem('kamishibai_role');
