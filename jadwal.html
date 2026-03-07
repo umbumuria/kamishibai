@@ -58,16 +58,23 @@
 
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+
+        .editing-row { animation: highlight 1.5s infinite; }
+        @keyframes highlight {
+            0% { background: #fff; }
+            50% { background: #fef08a; }
+            100% { background: #fff; }
+        }
     </style>
 </head>
 <body>
 
     <div class="section-title">
-        INPUT JADWAL BARU
-        <div style="font-size: 10px; font-weight: normal; color: #64748b;">*Copy cell dari Excel & Paste di sini</div>
+        FORM INPUT / EDIT JADWAL
+        <div style="font-size: 10px; font-weight: normal; color: #64748b;">*Data yang diedit akan muncul di sini</div>
     </div>
     
-    <button class="btn-action btn-add" onclick="addRow()">+ Tambah Baris</button>
+    <button class="btn-action btn-add" onclick="addRow()">+ Tambah Baris Kosong</button>
 
     <div class="excel-container">
         <table id="inputTable">
@@ -77,15 +84,15 @@
                     <th>NAMA AUDITOR</th>
                     <th>DEPT. AUDITEE</th>
                     <th width="180">GROUP</th>
-                    <th width="60">HAPUS</th>
+                    <th width="60" style="text-align:center">HAPUS</th>
                 </tr>
             </thead>
             <tbody id="inputBody"></tbody>
         </table>
     </div>
-    <button class="btn-action" style="width: 100%; margin-bottom: 40px;" onclick="saveBulkData()">SIMPAN KE DATABASE</button>
+    <button class="btn-action" style="width: 100%; margin-bottom: 40px;" onclick="saveBulkData()">SIMPAN SEMUA PERUBAHAN</button>
 
-    <div class="section-title">HISTORY & MANAJEMEN JADWAL</div>
+    <div class="section-title">DATABASE JADWAL AUDIT</div>
     
     <div class="filter-bar">
         <input type="text" id="filterAuditor" placeholder="Cari Auditor..." oninput="fetchHistory()">
@@ -98,7 +105,7 @@
         </select>
     </div>
 
-    <div class="excel-container" style="max-height: 500px;">
+    <div class="excel-container" style="max-height: 400px;">
         <table class="history-table">
             <thead>
                 <tr>
@@ -126,6 +133,7 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
+    // Fungsi Tambah Baris ke Tabel Input
     function addRow(data = ['', '', '', 'SF']) {
         const tr = document.createElement('tr');
         tr.innerHTML = `
@@ -141,9 +149,11 @@
             </td>
             <td style="text-align:center"><button onclick="this.parentElement.parentElement.remove()" style="background:none; border:none; color:#dc2626; cursor:pointer; font-weight:bold;">✕</button></td>
         `;
-        document.getElementById('inputBody').appendChild(tr);
+        document.getElementById('inputBody').prepend(tr);
+        return tr;
     }
 
+    // Paste dari Excel
     document.addEventListener('paste', function(e) {
         if (e.target.classList.contains('cell-input')) {
             const data = e.clipboardData.getData('text');
@@ -158,11 +168,14 @@
         }
     });
 
+    // Simpan Data (Bulk)
     async function saveBulkData() {
         const rows = document.querySelectorAll('#inputBody tr');
         if (rows.length === 0) return;
 
         const batch = db.batch();
+        let valid = false;
+
         rows.forEach(row => {
             const inputs = row.querySelectorAll('.cell-input');
             const p = inputs[0].value, a = inputs[1].value, ad = inputs[2].value, g = inputs[3].value;
@@ -174,14 +187,24 @@
                     periode: p, auditor: a, auditee: ad, group: g, kodeUnik: k,
                     status: "Pending", createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
+                valid = true;
             }
         });
 
-        await batch.commit();
-        alert("Data Tersimpan!");
-        document.getElementById('inputBody').innerHTML = ''; addRow(); fetchHistory();
+        if(!valid) return alert("Mohon lengkapi data!");
+
+        try {
+            await batch.commit();
+            alert("Data Berhasil Disimpan!");
+            document.getElementById('inputBody').innerHTML = ''; 
+            addRow(); 
+            fetchHistory();
+        } catch (err) {
+            alert("Error: " + err.message);
+        }
     }
 
+    // Ambil History
     async function fetchHistory() {
         const audVal = document.getElementById('filterAuditor').value.toLowerCase();
         const adtVal = document.getElementById('filterAuditee').value.toLowerCase();
@@ -201,13 +224,36 @@
                     <td>${d.auditee}</td>
                     <td>${d.group}</td>
                     <td style="text-align:center; padding:5px;">
-                        <button class="btn-edit" onclick="editData('${doc.id}')">EDIT</button>
+                        <button class="btn-edit" onclick="moveRowToEdit('${doc.id}')">EDIT</button>
                         <button class="btn-delete" onclick="deleteData('${doc.id}')">HAPUS</button>
                     </td>
                 `;
                 body.appendChild(tr);
             }
         });
+    }
+
+    // Fungsi Edit: Naikkan ke Form Input
+    async function moveRowToEdit(id) {
+        const docRef = db.collection('jadwal_audit').doc(id);
+        const doc = await docRef.get();
+        
+        if (doc.exists) {
+            const d = doc.data();
+            // 1. Tambah baris di atas dengan data yang ada
+            const newRow = addRow([d.periode, d.auditor, d.auditee, d.group]);
+            newRow.classList.add('editing-row');
+            
+            // 2. Hapus dari database (agar nanti saat simpan tidak duplikat jika kode unik berubah)
+            await docRef.delete();
+            
+            // 3. Refresh table bawah & scroll ke atas
+            fetchHistory();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            // Hilangkan highlight setelah 3 detik
+            setTimeout(() => newRow.classList.remove('editing-row'), 3000);
+        }
     }
 
     async function deleteData(id) {
@@ -217,15 +263,9 @@
         }
     }
 
-    async function editData(id) {
-        const p = prompt("Masukkan Periode Baru (YYYY-MM):");
-        if(p) {
-            await db.collection('jadwal_audit').doc(id).update({ periode: p });
-            fetchHistory();
-        }
-    }
-
-    addRow(); fetchHistory();
+    // Start
+    addRow(); 
+    fetchHistory();
 </script>
 </body>
 </html>
