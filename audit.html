@@ -29,14 +29,18 @@
         /* --- TABLE STYLE --- */
         .filter-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; background: white; padding: 15px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 15px; }
         .table-container { background: white; border-radius: 12px; border: 1px solid var(--border); overflow-x: auto; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        table { width: 100%; border-collapse: collapse; font-size: 12px; }
-        th { background: #f1f5f9; padding: 12px; text-align: left; color: #64748b; border-bottom: 2px solid var(--border); }
-        td { padding: 12px; border-bottom: 1px solid var(--border); }
-        .btn-edit { color: #2563eb; background: #dbeafe; border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        .btn-delete { color: #dc2626; background: #fee2e2; border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        .badge { padding: 4px 8px; border-radius: 12px; font-size: 10px; font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        th { background: #f1f5f9; padding: 12px; text-align: left; color: #64748b; border-bottom: 2px solid var(--border); white-space: nowrap; }
+        td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+        .btn-edit { color: #2563eb; background: #dbeafe; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; }
+        .badge { padding: 4px 8px; border-radius: 12px; font-size: 10px; font-weight: bold; display: inline-block; }
         .badge-closed { background: #dcfce7; color: #166534; }
         .badge-open { background: #fee2e2; color: #991b1b; }
+        .badge-selesai { background: #e0e7ff; color: #3730a3; }
+        
+        /* Thumbnail Style */
+        .thumb-img { width: 45px; height: 45px; object-fit: cover; border-radius: 4px; border: 1px solid var(--border); margin-right: 3px; cursor: pointer; }
+        .detail-text { max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-style: italic; color: #475569; display: block; }
     </style>
 </head>
 <body>
@@ -101,7 +105,7 @@
     </form>
 </div>
 
-<div style="max-width: 1000px; margin: 0 auto;">
+<div style="max-width: 1100px; margin: 0 auto; margin-bottom: 50px;">
     <div class="section-title">HISTORY HASIL AUDIT</div>
     
     <div class="filter-bar">
@@ -120,11 +124,12 @@
             <thead>
                 <tr>
                     <th>TGL AUDIT</th>
-                    <th>GROUP</th>
+                    <th>GROUP / DEPT</th>
                     <th>AUDITOR</th>
-                    <th>DEPT</th>
+                    <th>DETAIL TEMUAN</th>
                     <th>NILAI</th>
-                    <th>VERIFIKASI</th>
+                    <th>FOTO</th>
+                    <th>STATUS</th>
                     <th style="text-align:center">AKSI</th>
                 </tr>
             </thead>
@@ -145,7 +150,6 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // UPDATE DATA CLOUDINARY ANDA DISINI
     const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/ddhsrvefu/image/upload";
     const CLOUDINARY_PRESET = "kamishiba_foto";
 
@@ -192,13 +196,15 @@
             document.getElementById(`img${idx}`).src = data.secure_url;
             document.getElementById(`img${idx}`).style.display = 'block';
             document.getElementById(`text${idx}`).style.display = 'none';
-        } catch (e) { alert("Upload gagal, cek koneksi/preset!"); }
+        } catch (e) { alert("Upload gagal!"); }
         document.getElementById(`load${idx}`).style.display = 'none';
     }
 
     document.getElementById('auditForm').onsubmit = async (e) => {
         e.preventDefault();
         const id = document.getElementById('selectJadwal').value;
+        if(!id) { alert("Pilih jadwal dulu!"); return; }
+        
         const btn = document.getElementById('btnSave');
         btn.disabled = true; btn.innerText = "Menyimpan...";
         
@@ -221,9 +227,9 @@
         
         try {
             await db.collection('jadwal_audit').doc(id).update(data);
-            alert("Hasil Audit Berhasil Disimpan!"); 
+            alert("Berhasil!"); 
             location.reload();
-        } catch (e) { alert("Gagal Simpan: " + e.message); btn.disabled = false; btn.innerText = "SIMPAN HASIL AUDIT"; }
+        } catch (e) { alert("Error: " + e.message); btn.disabled = false; btn.innerText = "SIMPAN HASIL AUDIT"; }
     };
 
     async function fetchAuditHistory() {
@@ -232,7 +238,6 @@
         const body = document.getElementById('historyBody');
         
         try {
-            // Jika tabel kosong terus, cek Console F12. Jika ada link biru, KLIK link tsb untuk buat Index.
             const snap = await db.collection('jadwal_audit')
                 .where('status', '==', 'Selesai')
                 .orderBy('updatedAt', 'desc')
@@ -242,32 +247,39 @@
             snap.forEach(doc => {
                 const d = doc.data();
                 if(d.auditor.toLowerCase().includes(fAud) && (fGrp === "" || d.group === fGrp)) {
+                    // Render Foto Thumbnails
+                    let fotoHtml = '';
+                    if(d.foto && d.foto.length > 0) {
+                        d.foto.forEach(url => {
+                            fotoHtml += `<img src="${url}" class="thumb-img" onclick="window.open('${url}','_blank')">`;
+                        });
+                    } else { fotoHtml = '-'; }
+
                     body.innerHTML += `
                         <tr>
                             <td>${d.tglAudit}</td>
-                            <td>${d.group}</td>
+                            <td><b>${d.group}</b><br><small>${d.auditee}</small></td>
                             <td>${d.auditor}</td>
-                            <td>${d.auditee}</td>
+                            <td>
+                                <small>IK: ${d.judulIK || '-'}</small>
+                                <span class="detail-text" title="${d.uraian}">${d.uraian || 'Tidak ada temuan'}</span>
+                            </td>
                             <td style="font-weight:bold">${d.nilaiPencapaian}</td>
-                            <td><span class="badge ${d.statusVerifikasi === 'CLOSED' ? 'badge-closed' : 'badge-open'}">${d.statusVerifikasi}</span></td>
+                            <td><div style="display:flex">${fotoHtml}</div></td>
+                            <td>
+                                <span class="badge badge-selesai">SELESAI</span><br>
+                                <span class="badge ${d.statusVerifikasi === 'CLOSED' ? 'badge-closed' : 'badge-open'}">${d.statusVerifikasi}</span>
+                            </td>
                             <td style="text-align:center">
                                 <button class="btn-edit" onclick="editAudit('${doc.id}')">EDIT</button>
-                                <button class="btn-delete" onclick="deleteAudit('${doc.id}')">HAPUS</button>
                             </td>
                         </tr>
                     `;
                 }
             });
         } catch (e) { 
-            console.error("History Error:", e);
-            body.innerHTML = `<tr><td colspan="7" style="color:red; text-align:center">Gagal memuat history. Buka F12 Console untuk link aktivasi index.</td></tr>`;
-        }
-    }
-
-    async function deleteAudit(id) {
-        if(confirm("Hapus hasil audit ini? (Status akan kembali ke Pending)")) {
-            await db.collection('jadwal_audit').doc(id).update({ status: "Pending", tglAudit: null });
-            location.reload();
+            console.error(e);
+            body.innerHTML = `<tr><td colspan="8" style="text-align:center">Gagal memuat history. Cek koneksi atau Index Firestore.</td></tr>`;
         }
     }
 
@@ -289,6 +301,13 @@
         document.getElementById('tindakan').value = d.tindakan;
         document.getElementById('updateCatatan').value = d.updateCatatan;
         
+        // Reset foto box
+        for(let i=1; i<=5; i++) {
+            document.getElementById(`url${i}`).value = '';
+            document.getElementById(`img${i}`).style.display = 'none';
+            document.getElementById(`text${i}`).style.display = 'block';
+        }
+
         if(d.foto) d.foto.forEach((url, i) => {
             const idx = i + 1;
             document.getElementById(`url${idx}`).value = url;
