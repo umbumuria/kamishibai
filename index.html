@@ -61,16 +61,23 @@
             font-weight: 700; font-size: 15px; text-transform: uppercase; cursor: pointer;
         }
 
-        /* --- SIDEBAR & CONTENT (Tampilan Setelah Login) --- */
+        /* --- SIDEBAR & CONTENT --- */
         .sidebar {
             position: fixed; top: 0; left: 0; bottom: 0;
             width: var(--sidebar-width); background: #1e293b;
             border-right: 1px solid rgba(255,255,255,0.1);
-            display: flex; flex-direction: column; z-index: 900;
-            transform: translateX(-100%);
+            display: flex; flex-direction: column; z-index: 999;
+            transform: translateX(-100%); /* Default sembunyi */
         }
 
         .sidebar.active { transform: translateX(0); }
+
+        /* Overlay gelap saat menu terbuka di mobile */
+        .sidebar-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+            z-index: 998; display: none;
+        }
+        .sidebar-overlay.active { display: block; }
 
         .sidebar-header { padding: 25px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); }
         .nav-links { flex: 1; padding: 15px; }
@@ -82,7 +89,15 @@
         .nav-item:hover { background: rgba(59, 130, 246, 0.1); color: var(--primary); }
         .nav-item span { font-size: 18px; margin-right: 12px; }
 
-        .main-content { margin-left: 0; height: 100%; display: flex; flex-direction: column; }
+        .main-content { 
+            margin-left: 0; height: 100%; display: flex; flex-direction: column; 
+            transition: margin-left 0.3s ease;
+        }
+
+        /* Jika sidebar aktif di desktop, konten geser */
+        @media (min-width: 992px) {
+            .main-content.shifted { margin-left: var(--sidebar-width); }
+        }
         
         header {
             height: 60px; display: flex; align-items: center; padding: 0 20px;
@@ -91,18 +106,13 @@
 
         .menu-toggle { font-size: 24px; cursor: pointer; color: var(--primary); margin-right: 15px; }
 
-        /* Desktop Mode */
-        @media (min-width: 992px) {
-            .sidebar { transform: translateX(0); }
-            .main-content { margin-left: var(--sidebar-width); }
-            .menu-toggle { display: none; }
-        }
-
         .hidden { display: none !important; }
         .footer { margin-top: 25px; font-size: 9px; opacity: 0.5; line-height: 1.5; }
     </style>
 </head>
 <body>
+
+    <div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
 
     <div id="login-overlay">
         <div class="login-card">
@@ -145,7 +155,7 @@
         <button onclick="location.reload()" style="margin: 20px; background: #ef4444; border: none; padding: 10px; border-radius: 8px; color: white; cursor: pointer; font-size: 12px; font-weight: bold;">LOGOUT</button>
     </nav>
 
-    <div class="main-content">
+    <div class="main-content" id="content">
         <header>
             <div class="menu-toggle" onclick="toggleSidebar()">☰</div>
             <div style="font-weight: bold; font-size: 15px;">MSM Integrated System</div>
@@ -153,13 +163,25 @@
         <main style="padding: 20px; flex: 1; display: flex; align-items: center; justify-content: center; text-align: center;">
             <div style="border: 1px dashed rgba(255,255,255,0.1); padding: 40px; border-radius: 20px; max-width: 400px;">
                 <h3 style="color: var(--primary); margin-top: 0;">Berhasil Masuk</h3>
-                <p style="font-size: 14px; opacity: 0.7;">Gunakan tombol menu di pojok kiri atas (HP) atau di samping (Desktop) untuk mengakses fitur sistem.</p>
+                <p style="font-size: 14px; opacity: 0.7;">Klik tombol ☰ untuk membuka atau menutup menu navigasi.</p>
             </div>
         </main>
     </div>
 
     <script>
-        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); }
+        function toggleSidebar() { 
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('overlay');
+            const content = document.getElementById('content');
+            
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+            
+            // Khusus Desktop: Geser konten utama
+            if(window.innerWidth >= 992) {
+                content.classList.toggle('shifted');
+            }
+        }
 
         function togglePassword() {
             const user = document.getElementById("username").value;
@@ -174,6 +196,12 @@
 
             document.getElementById('login-overlay').classList.add('hidden');
             document.getElementById('user-display').innerText = "Role: " + user;
+            
+            // Jika login di desktop, otomatis buka sidebar
+            if(window.innerWidth >= 992) {
+                toggleSidebar();
+            }
+
             if (user === "auditor") { document.getElementById('link-jadwal').style.display = 'none'; }
         }
     </script>
