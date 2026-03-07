@@ -3,164 +3,231 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CIQA System - SPA</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Kamishibai MSM System</title>
+    
+    <link rel="icon" type="image/png" href="https://res.cloudinary.com/ddhsrvefu/image/upload/v1772248994/Gemini_Generated_Image_ilzww2ilzww2ilzw_vhl8zx.png">
+    
     <style>
-        :root { --sidebar-width: 260px; }
-        body { font-family: 'Segoe UI', sans-serif; background: #f1f5f9; overflow: hidden; }
-        
-        /* Sidebar Styling */
-        #sidebar { 
-            width: var(--sidebar-width); 
-            transition: transform 0.3s ease; 
-            z-index: 50;
-        }
-        .sidebar-hide { transform: translateX(-100%); }
-        
-        /* Main Content Styling */
-        #main-wrapper { 
-            transition: margin-left 0.3s ease; 
-            min-height: 100vh;
-        }
-        
-        @media (min-width: 1024px) {
-            .content-shifted { margin-left: var(--sidebar-width); }
+        *{ box-sizing:border-box; }
+        body{
+            margin:0;
+            min-height:100vh;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            font-family:'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            /* Warna Latar Belakang Nuansa Industri/Pabrik Modern */
+            background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+            padding: 20px;
         }
 
-        /* Smooth Transition for Content */
-        .fade-in { animation: fadeIn 0.3s ease-in; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        /* Garis indikator di atas kartu (Ciri khas papan Kamishibai) */
+        .login-wrapper{
+            width: 100%;
+            max-width: 400px;
+            position: relative;
+        }
+
+        .login-card{
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(15px);
+            border-top: 5px solid #3b82f6; /* Aksen Biru Audit */
+            border-left: 1px solid rgba(255,255,255,0.1);
+            border-right: 1px solid rgba(255,255,255,0.1);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 40px 30px;
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            color: white;
+        }
+
+        /* Indikator Status Kamishibai (Merah/Hijau) */
+        .status-dots {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .dot.green { background: #22c55e; box-shadow: 0 0 10px #22c55e; }
+        .dot.red { background: #ef4444; box-shadow: 0 0 10px #ef4444; }
+
+        .logo{
+            width: 85px;
+            margin-bottom: 15px;
+            filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.5));
+            transition: transform 0.3s ease;
+        }
+        .logo:hover {
+            transform: rotate(5deg) scale(1.05);
+        }
+
+        .title{ 
+            font-size: 22px; 
+            font-weight: 800; 
+            letter-spacing: 1px; 
+            margin-bottom: 5px;
+            color: #f8fafc;
+            text-transform: uppercase;
+        }
+        .subtitle{ 
+            font-size: 11px; 
+            opacity: 0.8; 
+            margin-bottom: 30px; 
+            color: #94a3b8;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 15px;
+        }
+
+        .input-group {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+        .input-group label {
+            display: block;
+            font-size: 12px;
+            margin-bottom: 5px;
+            color: #cbd5e1;
+            margin-left: 5px;
+        }
+        input{
+            width: 100%;
+            padding: 14px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(15, 23, 42, 0.6);
+            color: white;
+            outline: none;
+            transition: all 0.3s;
+        }
+        input:focus {
+            border-color: #3b82f6;
+            background: rgba(15, 23, 42, 0.9);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        button{
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            background: #3b82f6;
+            color: white;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: background 0.3s;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        button:hover {
+            background: #2563eb;
+        }
+
+        .forgot-link {
+            display: block; 
+            margin-top: 20px; 
+            color: #94a3b8; 
+            text-decoration: none; 
+            font-size: 12px;
+            transition: color 0.3s;
+        }
+        .forgot-link:hover { color: #3b82f6; }
+
+        .footer{ 
+            margin-top: 30px; 
+            font-size: 10px; 
+            opacity: 0.5; 
+            letter-spacing: 0.5px;
+        }
+
+        #loading { color: #3b82f6; font-weight: bold; }
     </style>
 </head>
 <body>
+    <div class="login-wrapper">
+        <div class="login-card">
+            <div class="status-dots">
+                <div class="dot green"></div>
+                <div class="dot red"></div>
+                <div class="dot green"></div>
+            </div>
 
-    <div id="login-screen" class="fixed inset-0 bg-slate-900 flex items-center justify-center z-[100]">
-        <div class="bg-white/10 backdrop-blur-md p-8 rounded-3xl border border-white/20 shadow-2xl w-full max-w-md text-center">
-            <h2 class="text-white text-3xl font-bold mb-2">CIQA</h2>
-            <p class="text-slate-400 mb-8">Continuous Improvement & Quality Assurance</p>
+            <img class="logo" src="https://res.cloudinary.com/ddhsrvefu/image/upload/v1772248994/Gemini_Generated_Image_ilzww2ilzww2ilzw_vhl8zx.png" alt="Logo">
             
-            <div class="space-y-4 text-left">
-                <label class="text-slate-300 text-sm ml-1">Pilih Role Access</label>
-                <select id="login-role" class="w-full p-4 rounded-xl bg-slate-800 text-white border border-slate-700 outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="auditor">Auditor</option>
-                    <option value="admin">Admin</option>
-                </select>
-                <input type="password" id="login-pass" placeholder="Password" class="w-full p-4 rounded-xl bg-slate-800 text-white border border-slate-700 outline-none">
-                <button onclick="handleLogin()" class="w-full py-4 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition shadow-lg shadow-blue-900/20">Login Sekarang</button>
+            <div class="title">AUDIT KAMISHIBAI</div>
+            <div class="subtitle">MSM TERINTEGRASI</div>
+            
+            <div class="input-group">
+                <label>User ID / Email</label>
+                <input type="email" id="email" placeholder="Masukkan email anda...">
+            </div>
+
+            <div class="input-group">
+                <label>Password</label>
+                <input type="password" id="password" placeholder="••••••••">
+            </div>
+
+            <button onclick="login()">Verifikasi Log</button>
+            
+            <a href="lupapwd.html" class="forgot-link">Masalah akses akun?</a>
+            <div id="loading" style="font-size:12px; margin-top:15px;"></div>
+            
+            <div class="footer">
+                SISTEM KONTROL KUALITAS MSM<br>
+                © 2026 Arifianto Hidayat
             </div>
         </div>
     </div>
 
-    <aside id="sidebar" class="fixed inset-y-0 left-0 bg-slate-900 text-white sidebar-hide flex flex-col">
-        <div class="p-8 text-center border-b border-slate-800">
-            <h1 class="text-xl font-bold tracking-widest text-blue-400">CIQA SYSTEM</h1>
-            <p id="display-role" class="text-[10px] text-slate-500 uppercase mt-1">Role</p>
-        </div>
-        
-        <nav class="flex-1 p-4 space-y-2">
-            <button onclick="loadContent('dashboard.html')" class="w-full flex items-center gap-3 p-3 hover:bg-slate-800 rounded-xl transition">
-                <span>🏠</span> Dashboard
-            </button>
-            <button onclick="loadContent('audit.html')" class="w-full flex items-center gap-3 p-3 hover:bg-slate-800 rounded-xl transition">
-                <span>📝</span> Audit
-            </button>
-            <div id="menu-admin-only" class="hidden pt-4 border-t border-slate-800">
-                <button onclick="loadContent('jadwal.html')" class="w-full flex items-center gap-3 p-3 hover:bg-slate-800 rounded-xl transition">
-                    <span>📅</span> Jadwal
-                </button>
-            </div>
-        </nav>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-        <div class="p-4 border-t border-slate-800">
-            <button onclick="handleLogout()" class="w-full p-3 text-red-400 hover:bg-red-400/10 rounded-xl transition flex items-center gap-3">
-                <span>🚪</span> Keluar
-            </button>
-        </div>
-    </aside>
-
-    <div id="main-wrapper" class="flex flex-col h-screen">
-        <header id="topbar" class="hidden h-16 bg-white border-b items-center px-6 sticky top-0 z-40">
-            <button onclick="toggleSidebar()" class="p-2 hover:bg-slate-100 rounded-lg text-xl">☰</button>
-            <h2 id="current-page-title" class="ml-4 font-bold text-slate-700 uppercase">Dashboard</h2>
-        </header>
-
-        <div id="content-container" class="p-6 lg:p-10 flex-1 overflow-y-auto">
-            </div>
-    </div>
-
-    <script>
-        // FUNGSI LOGIN
-        function handleLogin() {
-            const role = document.getElementById('login-role').value;
-            localStorage.setItem('role', role);
-            
-            initDashboard(role);
-        }
-
-        // INISIALISASI DASHBOARD SETELAH LOGIN
-        function initDashboard(role) {
-            document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('sidebar').classList.remove('sidebar-hide');
-            document.getElementById('topbar').classList.replace('hidden', 'flex');
-            document.getElementById('main-wrapper').classList.add('content-shifted');
-            
-            document.getElementById('display-role').innerText = role;
-
-            // Aturan Menu Admin
-            if(role === 'admin') {
-                document.getElementById('menu-admin-only').classList.remove('hidden');
-            } else {
-                document.getElementById('menu-admin-only').classList.add('hidden');
-            }
-
-            loadContent('dashboard.html'); // Halaman pertama saat login
-        }
-
-        // FUNGSI SPA (LOAD FILE LUAR)
-        async function loadContent(url) {
-            const container = document.getElementById('content-container');
-            const title = document.getElementById('current-page-title');
-            
-            title.innerText = url.replace('.html', '');
-            container.innerHTML = '<p class="text-slate-400">Memuat...</p>';
-
-            try {
-                const response = await fetch(url);
-                if (!response.ok) throw new Error();
-                const html = await response.text();
-                
-                container.innerHTML = `<div class="fade-in">${html}</div>`;
-                
-                // Tutup sidebar otomatis di mobile setelah klik menu
-                if(window.innerWidth < 1024) toggleSidebar();
-
-            } catch (err) {
-                container.innerHTML = `<div class="p-10 text-center bg-red-50 text-red-500 rounded-3xl border">File <b>${url}</b> belum tersedia.</div>`;
-            }
-        }
-
-        // TOGGLE SIDEBAR
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const wrapper = document.getElementById('main-wrapper');
-            
-            sidebar.classList.toggle('sidebar-hide');
-            if(window.innerWidth >= 1024) {
-                wrapper.classList.toggle('content-shifted');
-            }
-        }
-
-        // LOGOUT
-        function handleLogout() {
-            localStorage.clear();
-            location.reload();
-        }
-
-        // Cek Sesi saat Refresh
-        window.onload = () => {
-            const savedRole = localStorage.getItem('role');
-            if(savedRole) initDashboard(savedRole);
+        const firebaseConfig = { 
+            apiKey: "AIzaSyC1VaTDtWBkhhcpbjTb9Njw6JHHqNq9dBg", 
+            authDomain: "rtestingbro.firebaseapp.com", 
+            projectId: "rtestingbro", 
+            storageBucket: "rtestingbro.firebasestorage.app", 
+            messagingSenderId: "930800737947", 
+            appId: "1:930800737947:web:51b4b4ab68dc068b95b03e" 
         };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        window.login = async function(){
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+            const loading = document.getElementById("loading");
+
+            if(!email || !password){ alert("Input diperlukan!"); return; }
+            
+            try{
+                loading.innerText = "MENGOTENTIKASI...";
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                const userDoc = await getDoc(doc(db, "users", userCredential.user.uid));
+                
+                if(!userDoc.exists()){ 
+                    alert("Akses Ditolak: User tidak ditemukan dalam database."); 
+                    loading.innerText = "";
+                    return; 
+                }
+                
+                const role = userDoc.data().role;
+                window.location.href = role === "admin" ? "dashboard-admin.html" : "dashboard-staff.html";
+            } catch(e){ 
+                loading.innerText = ""; 
+                alert("Gagal Masuk: Periksa kembali kredensial Anda."); 
+            }
+        }
     </script>
 </body>
 </html>
