@@ -9,62 +9,62 @@
     
     <style>
         :root {
-            --primary: #3b82f6;
-            --bg-dark: #0f172a;
-            --card-bg: #1e293b;
-            --border: rgba(255,255,255,0.1);
+            --primary: #2563eb;
+            --bg-light: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --border: #e2e8f0;
         }
         body {
-            margin: 0; font-family: 'Segoe UI', sans-serif; background: transparent; color: white;
+            margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg-light); color: var(--text-main);
             padding: 20px; overflow-y: auto;
         }
         
-        .section-title { font-size: 18px; font-weight: bold; margin-bottom: 15px; border-left: 4px solid var(--primary); padding-left: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .section-title { font-size: 18px; font-weight: bold; margin-bottom: 15px; border-left: 4px solid var(--primary); padding-left: 12px; display: flex; justify-content: space-between; align-items: center; color: var(--text-main); }
 
         /* --- EXCEL STYLE TABLE --- */
         .excel-container {
             background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border);
-            overflow-x: auto; margin-bottom: 20px;
+            overflow-x: auto; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
         table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        th { background: rgba(15, 23, 42, 0.5); padding: 12px; text-align: left; border-bottom: 2px solid var(--border); color: #94a3b8; }
-        td { padding: 0; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); }
+        th { background: #f1f5f9; padding: 12px; text-align: left; border-bottom: 2px solid var(--border); color: #64748b; text-transform: uppercase; }
+        td { padding: 0; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); color: var(--text-main); }
         
         .cell-input {
-            width: 100%; border: none; background: transparent; color: white;
-            padding: 12px; outline: none; box-sizing: border-box;
+            width: 100%; border: none; background: transparent; color: var(--text-main);
+            padding: 12px; outline: none; box-sizing: border-box; font-size: 13px;
         }
-        .cell-input:focus { background: rgba(59, 130, 246, 0.1); box-shadow: inset 0 0 0 1px var(--primary); }
+        .cell-input:focus { background: #eff6ff; box-shadow: inset 0 0 0 1px var(--primary); }
         
         .btn-action {
             background: var(--primary); color: white; border: none; padding: 10px 20px;
-            border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s;
+            border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s;
         }
+        .btn-action:hover { opacity: 0.8; }
         .btn-add { background: #10b981; margin-bottom: 10px; font-size: 12px; }
 
         /* --- HISTORY SECTION --- */
         .filter-bar {
             display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 10px; margin-bottom: 15px; background: rgba(30, 41, 59, 0.5); padding: 15px; border-radius: 10px;
+            gap: 10px; margin-bottom: 15px; background: #fff; padding: 15px; border-radius: 10px; border: 1px solid var(--border);
         }
         .filter-bar input, .filter-bar select {
-            background: #0f172a; border: 1px solid var(--border); color: white; padding: 8px; border-radius: 6px; outline: none;
+            background: #fff; border: 1px solid var(--border); color: var(--text-main); padding: 8px; border-radius: 6px; outline: none;
         }
 
-        .history-table th { position: sticky; top: 0; z-index: 10; }
-        .badge { padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; }
-        .badge-pending { background: #f59e0b; color: #000; }
-        .badge-done { background: #10b981; color: #fff; }
+        .btn-edit { color: #2563eb; background: #dbeafe; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; margin-right: 5px; font-weight: 600; }
+        .btn-delete { color: #dc2626; background: #fee2e2; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-weight: 600; }
 
         ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     </style>
 </head>
 <body>
 
     <div class="section-title">
         INPUT JADWAL BARU
-        <div style="font-size: 10px; font-weight: normal; color: #94a3b8;">*Klik sel pertama lalu Paste (Ctrl+V) dari Excel</div>
+        <div style="font-size: 10px; font-weight: normal; color: #64748b;">*Copy cell dari Excel & Paste di sini</div>
     </div>
     
     <button class="btn-action btn-add" onclick="addRow()">+ Tambah Baris</button>
@@ -73,46 +73,43 @@
         <table id="inputTable">
             <thead>
                 <tr>
-                    <th width="150">PERIODE (YYYY-MM)</th>
+                    <th width="160">PERIODE</th>
                     <th>NAMA AUDITOR</th>
                     <th>DEPT. AUDITEE</th>
                     <th width="180">GROUP</th>
-                    <th width="50">AKSI</th>
+                    <th width="60">HAPUS</th>
                 </tr>
             </thead>
-            <tbody id="inputBody">
-                </tbody>
+            <tbody id="inputBody"></tbody>
         </table>
     </div>
-    <button class="btn-action" style="width: 100%; margin-bottom: 40px;" onclick="saveBulkData()">SIMPAN SEMUA DATA KE FIREBASE</button>
+    <button class="btn-action" style="width: 100%; margin-bottom: 40px;" onclick="saveBulkData()">SIMPAN KE DATABASE</button>
 
-    <div class="section-title">HISTORY JADWAL AUDIT</div>
+    <div class="section-title">HISTORY & MANAJEMEN JADWAL</div>
     
     <div class="filter-bar">
-        <input type="text" id="filterAuditor" placeholder="Filter Auditor..." oninput="fetchHistory()">
-        <input type="text" id="filterAuditee" placeholder="Filter Auditee..." oninput="fetchHistory()">
+        <input type="text" id="filterAuditor" placeholder="Cari Auditor..." oninput="fetchHistory()">
+        <input type="text" id="filterAuditee" placeholder="Cari Auditee..." oninput="fetchHistory()">
         <select id="filterGroup" onchange="fetchHistory()">
             <option value="">Semua Group</option>
-            <option value="SF">SF</option>
-            <option value="SP">SP</option>
+            <option value="SF">SUGAR FACTORY</option>
+            <option value="SP">PLANTATION</option>
             <option value="SUPPORTING">SUPPORTING</option>
         </select>
     </div>
 
-    <div class="excel-container" style="max-height: 400px;">
+    <div class="excel-container" style="max-height: 500px;">
         <table class="history-table">
             <thead>
                 <tr>
-                    <th>KODE UNIK</th>
                     <th>PERIODE</th>
                     <th>AUDITOR</th>
                     <th>AUDITEE</th>
                     <th>GROUP</th>
-                    <th>STATUS</th>
+                    <th width="150" style="text-align: center;">AKSI</th>
                 </tr>
             </thead>
-            <tbody id="historyBody">
-                </tbody>
+            <tbody id="historyBody" style="background: #fff;"></tbody>
         </table>
     </div>
 
@@ -129,14 +126,12 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // --- LOGIKA EXCEL INPUT ---
-
     function addRow(data = ['', '', '', 'SF']) {
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td><input type="month" class="cell-input" value="${data[0]}"></td>
-            <td><input type="text" class="cell-input" placeholder="..." value="${data[1]}"></td>
-            <td><input type="text" class="cell-input" placeholder="..." value="${data[2]}"></td>
+            <td><input type="text" class="cell-input" placeholder="Nama..." value="${data[1]}"></td>
+            <td><input type="text" class="cell-input" placeholder="Dept..." value="${data[2]}"></td>
             <td>
                 <select class="cell-input">
                     <option value="SF" ${data[3] === 'SF' ? 'selected' : ''}>SUGAR FACTORY</option>
@@ -144,17 +139,15 @@
                     <option value="SUPPORTING" ${data[3] === 'SUPPORTING' ? 'selected' : ''}>SUPPORTING</option>
                 </select>
             </td>
-            <td style="text-align:center"><button onclick="this.parentElement.parentElement.remove()" style="background:none; border:none; color:#ef4444; cursor:pointer;">✕</button></td>
+            <td style="text-align:center"><button onclick="this.parentElement.parentElement.remove()" style="background:none; border:none; color:#dc2626; cursor:pointer; font-weight:bold;">✕</button></td>
         `;
         document.getElementById('inputBody').appendChild(tr);
     }
 
-    // Handle Paste Event
     document.addEventListener('paste', function(e) {
-        if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') {
+        if (e.target.classList.contains('cell-input')) {
             const data = e.clipboardData.getData('text');
-            const rows = data.split('\n').filter(row => row.trim() !== '');
-            
+            const rows = data.split(/\r?\n/).filter(row => row.trim() !== '');
             if (rows.length > 1 || rows[0].split('\t').length > 1) {
                 e.preventDefault();
                 rows.forEach(row => {
@@ -167,86 +160,72 @@
 
     async function saveBulkData() {
         const rows = document.querySelectorAll('#inputBody tr');
-        if (rows.length === 0) return alert("Tambahkan data terlebih dahulu!");
+        if (rows.length === 0) return;
 
         const batch = db.batch();
-        let count = 0;
-
         rows.forEach(row => {
             const inputs = row.querySelectorAll('.cell-input');
-            const periode = inputs[0].value;
-            const auditor = inputs[1].value;
-            const auditee = inputs[2].value;
-            const group = inputs[3].value;
+            const p = inputs[0].value, a = inputs[1].value, ad = inputs[2].value, g = inputs[3].value;
 
-            if (periode && auditor && auditee) {
-                const [tahun, bulan] = periode.split('-');
-                const cleanAuditor = auditor.replace(/\s+/g, '').toUpperCase();
-                const cleanAuditee = auditee.replace(/\s+/g, '').toUpperCase();
-                const kodeUnik = `${bulan}${tahun}-${cleanAuditor}-${cleanAuditee}-${group}`;
-
-                const ref = db.collection('jadwal_audit').doc(kodeUnik);
-                batch.set(ref, {
-                    periode, auditor, auditee, group, kodeUnik,
-                    status: "Pending",
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            if (p && a && ad) {
+                const [thn, bln] = p.split('-');
+                const k = `${bln}${thn}-${a.replace(/\s+/g,'').toUpperCase()}-${ad.replace(/\s+/g,'').toUpperCase()}-${g}`;
+                batch.set(db.collection('jadwal_audit').doc(k), {
+                    periode: p, auditor: a, auditee: ad, group: g, kodeUnik: k,
+                    status: "Pending", createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
-                count++;
             }
         });
 
-        try {
-            await batch.commit();
-            alert(`Berhasil menyimpan ${count} jadwal!`);
-            document.getElementById('inputBody').innerHTML = '';
-            addRow();
-            fetchHistory();
-        } catch (err) {
-            console.error(err);
-            alert("Gagal menyimpan data.");
-        }
+        await batch.commit();
+        alert("Data Tersimpan!");
+        document.getElementById('inputBody').innerHTML = ''; addRow(); fetchHistory();
     }
 
-    // --- LOGIKA HISTORY ---
-
     async function fetchHistory() {
-        const auditorVal = document.getElementById('filterAuditor').value.toLowerCase();
-        const auditeeVal = document.getElementById('filterAuditee').value.toLowerCase();
-        const groupVal = document.getElementById('filterGroup').value;
+        const audVal = document.getElementById('filterAuditor').value.toLowerCase();
+        const adtVal = document.getElementById('filterAuditee').value.toLowerCase();
+        const grpVal = document.getElementById('filterGroup').value;
 
-        const snapshot = await db.collection('jadwal_audit')
-            .orderBy('createdAt', 'desc')
-            .limit(50)
-            .get();
+        const snap = await db.collection('jadwal_audit').orderBy('createdAt', 'desc').get();
+        const body = document.getElementById('historyBody');
+        body.innerHTML = '';
 
-        const historyBody = document.getElementById('historyBody');
-        historyBody.innerHTML = '';
-
-        snapshot.forEach(doc => {
+        snap.forEach(doc => {
             const d = doc.data();
-            
-            // Client-side filtering
-            if (d.auditor.toLowerCase().includes(auditorVal) && 
-                d.auditee.toLowerCase().includes(auditeeVal) &&
-                (groupVal === "" || d.group === groupVal)) {
-                
+            if (d.auditor.toLowerCase().includes(audVal) && d.auditee.toLowerCase().includes(adtVal) && (grpVal === "" || d.group === grpVal)) {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td style="color:var(--primary); font-family:monospace; padding:12px;">${d.kodeUnik}</td>
-                    <td>${d.periode}</td>
+                    <td style="padding:12px;">${d.periode}</td>
                     <td>${d.auditor}</td>
                     <td>${d.auditee}</td>
                     <td>${d.group}</td>
-                    <td><span class="badge ${d.status === 'Pending' ? 'badge-pending' : 'badge-done'}">${d.status}</span></td>
+                    <td style="text-align:center; padding:5px;">
+                        <button class="btn-edit" onclick="editData('${doc.id}')">EDIT</button>
+                        <button class="btn-delete" onclick="deleteData('${doc.id}')">HAPUS</button>
+                    </td>
                 `;
-                historyBody.appendChild(tr);
+                body.appendChild(tr);
             }
         });
     }
 
-    // Initial State
-    addRow();
-    fetchHistory();
+    async function deleteData(id) {
+        if(confirm("Hapus jadwal ini?")) {
+            await db.collection('jadwal_audit').doc(id).delete();
+            fetchHistory();
+        }
+    }
+
+    async function editData(id) {
+        const p = prompt("Masukkan Periode Baru (YYYY-MM):");
+        if(p) {
+            await db.collection('jadwal_audit').doc(id).update({ periode: p });
+            fetchHistory();
+        }
+    }
+
+    addRow(); fetchHistory();
 </script>
 </body>
 </html>
