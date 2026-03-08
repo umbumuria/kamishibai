@@ -25,7 +25,6 @@
         .stat-val { font-size: 22px; font-weight: 800; display: block; margin-top: 5px; }
         .stat-lbl { font-size: 9px; font-weight: bold; color: #64748b; text-transform: uppercase; }
 
-        /* PERBAIKAN: Memastikan kontainer chart memiliki lebar tetap yang aman */
         .chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 15px; margin-bottom: 25px; }
         .chart-card { background: white; padding: 15px; border-radius: 12px; border: 1px solid var(--border); height: 320px; display: flex; flex-direction: column; min-width: 0; overflow: hidden; box-sizing: border-box; }
         .chart-card h4 { font-size: 11px; margin-top: 0; margin-bottom: 15px; color: #64748b; text-transform: uppercase; text-align: center; letter-spacing: 0.5px; }
@@ -107,14 +106,14 @@
                     <th>Status</th>
                 </tr>
                 <tr class="filter-row">
-                    <th><input type="text" class="filter-input" placeholder="Cari tgl..." onkeyup="filterTabel()"></th>
-                    <th><input type="text" class="filter-input" placeholder="Cari dept..." onkeyup="filterTabel()"></th>
-                    <th><input type="text" class="filter-input" placeholder="Cari nama..." onkeyup="filterTabel()"></th>
-                    <th><input type="text" class="filter-input" placeholder="Cari temuan..." onkeyup="filterTabel()"></th>
-                    <th><input type="text" class="filter-input" placeholder="Cari tindakan..." onkeyup="filterTabel()"></th>
-                    <th><input type="text" class="filter-input" placeholder="Cari nilai..." onkeyup="filterTabel()"></th>
+                    <th><input type="text" id="filter-tgl" class="filter-input" placeholder="Cari tgl..." onkeyup="filterTabel()"></th>
+                    <th><input type="text" id="filter-dept" class="filter-input" placeholder="Cari dept..." onkeyup="filterTabel()"></th>
+                    <th><input type="text" id="filter-nama" class="filter-input" placeholder="Cari nama..." onkeyup="filterTabel()"></th>
+                    <th><input type="text" id="filter-temuan" class="filter-input" placeholder="Cari temuan..." onkeyup="filterTabel()"></th>
+                    <th><input type="text" id="filter-tindakan" class="filter-input" placeholder="Cari tindakan..." onkeyup="filterTabel()"></th>
+                    <th><input type="text" id="filter-nilai" class="filter-input" placeholder="Cari nilai..." onkeyup="filterTabel()"></th>
                     <th></th>
-                    <th><input type="text" class="filter-input" placeholder="Cari status..." onkeyup="filterTabel()"></th>
+                    <th><input type="text" id="filter-status" class="filter-input" placeholder="Cari status..." onkeyup="filterTabel()"></th>
                 </tr>
             </thead>
             <tbody id="mainBody"></tbody>
@@ -260,13 +259,12 @@
         const sortedDepts = Object.keys(deptCounts).sort((a,b) => deptCounts[b] - deptCounts[a]).slice(0, 10);
         const deptPalette = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316', '#64748b', '#84cc16'];
 
-        renderChart('chartGroup', 'pie', Object.keys(groupCounts), Object.values(groupCounts), ['#2563eb', '#10b981', '#f59e0b']);
-        renderChart('chartStatus', 'pie', Object.keys(statusCounts), Object.values(statusCounts), ['#10b981', '#ef4444', '#f59e0b']);
-        renderChart('chartDept', 'pie', sortedDepts, sortedDepts.map(l => deptCounts[l]), deptPalette);
+        renderChart('chartGroup', 'pie', Object.keys(groupCounts), Object.values(groupCounts), ['#2563eb', '#10b981', '#f59e0b'], 'filter-dept');
+        renderChart('chartStatus', 'pie', Object.keys(statusCounts), Object.values(statusCounts), ['#10b981', '#ef4444', '#f59e0b'], 'filter-status');
+        renderChart('chartDept', 'pie', sortedDepts, sortedDepts.map(l => deptCounts[l]), deptPalette, 'filter-dept');
     }
 
-    /* PERBAIKAN: Penambahan layout padding dan alignment legenda agar tidak meluber */
-    function renderChart(id, type, labels, data, colors) {
+    function renderChart(id, type, labels, data, colors, targetFilterId) {
         if(charts[id]) charts[id].destroy();
         const ctx = document.getElementById(id).getContext('2d');
         charts[id] = new Chart(ctx, {
@@ -282,6 +280,17 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                onClick: (evt, elements) => {
+                    if (elements.length > 0) {
+                        const index = elements[0].index;
+                        const label = labels[index];
+                        const filterInput = document.getElementById(targetFilterId);
+                        if (filterInput) {
+                            filterInput.value = label;
+                            filterTabel();
+                        }
+                    }
+                },
                 layout: {
                     padding: { bottom: 10, top: 5, left: 10, right: 10 }
                 },
