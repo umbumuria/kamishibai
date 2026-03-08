@@ -134,26 +134,37 @@
     }
 
     async function fetchHistory() {
-        const snap = await db.collection('jadwal_audit').orderBy('createdAt', 'desc').get();
-        const body = document.getElementById('historyBody');
-        body.innerHTML = '';
-        snap.forEach(doc => {
-            const d = doc.data();
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td style="padding:12px;">${d.periode}</td>
-                <td><b>${d.auditor}</b></td>
-                <td>${d.auditee}</td>
-                <td>${d.judulIK || '-'}</td>
-                <td><span class="badge ${d.status==='Selesai'?'badge-selesai':'badge-pending'}">${d.status.toUpperCase()}</span></td>
-                <td style="text-align:center;">
-                    <button class="btn-edit" onclick="moveRowToEdit('${doc.id}')">EDIT</button>
-                    <button class="btn-delete" onclick="deleteData('${doc.id}')">HAPUS</button>
-                </td>
-            `;
-            body.appendChild(tr);
-        });
-    }
+    // Kita ganti sorting ke 'periode' atau 'tglAudit' agar data tanpa createdAt tetap muncul
+    // Jika ingin yang terbaru di atas, gunakan 'tglAudit'
+    const snap = await db.collection('jadwal_audit')
+                           .orderBy('tglAudit', 'desc') 
+                           .get();
+                           
+    const body = document.getElementById('historyBody');
+    body.innerHTML = '';
+    
+    snap.forEach(doc => {
+        const d = doc.data();
+        const tr = document.createElement('tr');
+        
+        // Cek status untuk badge
+        const statusLower = (d.status || "").toLowerCase();
+        const badgeClass = statusLower === 'selesai' ? 'badge-selesai' : 'badge-pending';
+        
+        tr.innerHTML = `
+            <td style="padding:12px;">${d.periode}</td>
+            <td><b>${d.auditor}</b></td>
+            <td>${d.auditee}</td>
+            <td>${d.judulIK || '-'}</td>
+            <td><span class="badge ${badgeClass}">${(d.status || 'Pending').toUpperCase()}</span></td>
+            <td style="text-align:center;">
+                <button class="btn-edit" onclick="moveRowToEdit('${doc.id}')">EDIT</button>
+                <button class="btn-delete" onclick="deleteData('${doc.id}')">HAPUS</button>
+            </td>
+        `;
+        body.appendChild(tr);
+    });
+}
 
     async function moveRowToEdit(id) {
         const doc = await db.collection('jadwal_audit').doc(id).get();
