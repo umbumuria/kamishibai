@@ -27,14 +27,34 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
         h2 { color: var(--primary); margin-top: 0; font-size: 22px; text-align: center; }
-        p { font-size: 13px; opacity: 0.7; text-align: center; margin-bottom: 25px; }
+        .desc { font-size: 13px; opacity: 0.7; text-align: center; margin-bottom: 25px; }
         
+        /* Tombol Template */
+        .template-area {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .btn-template {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+            border: 1px solid #10b981;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-template:hover { background: rgba(16, 185, 129, 0.2); }
+
         .file-input { 
             border: 2px dashed rgba(255,255,255,0.2); 
             padding: 40px 20px; 
             text-align: center; 
             border-radius: 15px; 
-            margin: 20px 0; 
+            margin: 10px 0 20px 0; 
             cursor: pointer;
             background: rgba(15, 23, 42, 0.5);
             transition: 0.3s;
@@ -51,7 +71,7 @@
         
         #statusLog { 
             margin-top: 25px; background: #0f172a; color: #38bdf8; 
-            padding: 15px; border-radius: 12px; height: 280px; 
+            padding: 15px; border-radius: 12px; height: 250px; 
             overflow-y: auto; font-family: 'Courier New', monospace; font-size: 12px;
             border: 1px solid rgba(255,255,255,0.05);
             line-height: 1.6;
@@ -65,10 +85,16 @@
 
 <div class="import-card">
     <h2>Sync Data Kamishibai</h2>
-    <p>Upload file Excel Anda untuk memperbarui database audit secara massal.</p>
+    <p class="desc">Gunakan template di bawah agar format data sesuai dengan sistem.</p>
     
+    <div class="template-area">
+        <button class="btn-template" onclick="downloadTemplate()">
+            <span>📥</span> Download Template Excel (.csv)
+        </button>
+    </div>
+
     <div class="file-input" onclick="document.getElementById('excelFile').click()">
-        <span id="fileName" style="font-size: 15px;">📁 Klik atau Drag file Excel (.xlsx)</span>
+        <span id="fileName" style="font-size: 15px;">📁 Pilih File Hasil Edit</span>
         <input type="file" id="excelFile" accept=".xlsx, .xls, .csv" style="display:none" onchange="updateFileName()">
     </div>
 
@@ -78,6 +104,7 @@
 </div>
 
 <script>
+    // Konfigurasi Firebase Anda
     const firebaseConfig = {
         apiKey: "AIzaSyCiW38hQ5ZfYnp3sa95OQw6IjxnfnM5dl4",
         authDomain: "kamishibaimsm.firebaseapp.com",
@@ -88,6 +115,25 @@
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
+
+    // Fungsi Download Template
+    function downloadTemplate() {
+        const headers = [
+            "group", "periode", "auditee", "auditor", "namaAuditeePerson", 
+            "judulIK", "tglAudit", "nilaiPencapaian", "jmlItem", "jmlTemuan", 
+            "status", "statusVerifikasi", "penyebab", "tindakan", "foto", 
+            "kodeUnik", "updateCatatan"
+        ];
+        
+        const csvContent = "data:text/csv;charset=utf-8," + headers.join(",");
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "template_upload_kamishibai.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
 
     function updateFileName() {
         const input = document.getElementById('excelFile');
@@ -101,7 +147,7 @@
         const log = document.getElementById('statusLog');
         const btn = document.getElementById('btnProses');
 
-        if (!fileInput.files[0]) { alert("Silakan pilih file Excel terlebih dahulu."); return; }
+        if (!fileInput.files[0]) { alert("Silakan pilih file terlebih dahulu."); return; }
 
         btn.disabled = true;
         log.innerHTML = "<span class='info-text'>[SISTEM] Membaca data file...</span><br>";
@@ -117,18 +163,14 @@
 
             for (let i = 0; i < json.length; i++) {
                 const item = json[i];
-                
-                // Format Tanggal
                 let tglFinal = String(item.tglAudit || "").trim();
                 if (item.tglAudit instanceof Date) {
                     tglFinal = item.tglAudit.toISOString().split('T')[0];
                 }
 
-                // ID Unik
                 const kodeAuto = (item.kodeUnik || `${item.periode}-${item.auditor}-${item.auditee}-${item.group}`)
                                  .replace(/\s+/g, '').toUpperCase();
 
-                // Foto Array
                 let fotoArray = [];
                 if (item.foto) {
                     fotoArray = String(item.foto).split(',').map(url => url.trim());
