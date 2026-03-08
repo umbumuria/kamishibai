@@ -19,9 +19,9 @@
         select, input { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; outline: none; background: white; box-sizing: border-box; }
 
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px; }
-        .stat-box { padding: 15px; border-radius: 12px; border: 1px solid var(--border); text-align: center; background: #fff; cursor: pointer; transition: 0.2s; }
+        .stat-box { padding: 15px; border-radius: 12px; border: 1px solid var(--border); text-align: center; background: #fff; cursor: pointer; transition: 0.2s; position: relative; }
         .stat-box:hover { transform: translateY(-3px); border-color: var(--primary); }
-        .stat-box.active { border: 2px solid var(--primary); background: #eff6ff; }
+        .stat-box.active { border: 2px solid var(--primary); background: #eff6ff; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1); }
         .stat-val { font-size: 22px; font-weight: 800; display: block; margin-top: 5px; }
         .stat-lbl { font-size: 9px; font-weight: bold; color: #64748b; text-transform: uppercase; }
 
@@ -40,6 +40,9 @@
         .filter-input { width: 100%; padding: 8px 10px; font-size: 11px; border: 1px solid #e2e8f0; border-radius: 6px; box-sizing: border-box; outline: none; background: #fdfdfd; font-weight: normal; }
         .filter-input:focus { border-color: var(--primary); background: white; }
 
+        .btn-clear { background: var(--danger); color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 10px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
+        .btn-clear:hover { opacity: 0.9; }
+
         .thumb-img { width: 45px; height: 45px; object-fit: cover; border-radius: 6px; margin-right: 4px; border: 1px solid #ddd; cursor: pointer; }
         .badge { padding: 4px 8px; border-radius: 12px; font-size: 9px; font-weight: bold; display: inline-block; margin-top: 2px; }
         .badge-success { background: #dcfce7; color: #166534; }
@@ -57,7 +60,10 @@
 <body>
 
 <div class="container">
-    <div class="section-title" style="margin-top:0">Dashboard Analisa Performa</div>
+    <div class="section-title" style="margin-top:0">
+        Dashboard Analisa Performa
+        <button class="btn-clear" onclick="clearAllFilters()">Clear All Filters</button>
+    </div>
     
     <div class="filter-grid">
         <div><label>Group Unit</label><select id="fGroup" onchange="fetchData()"><option value="">Semua Group</option><option value="SF">SF</option><option value="SP">SP</option><option value="SUPPORTING">SUPPORTING</option></select></div>
@@ -155,10 +161,18 @@
                 return { ...d, timing };
             });
             
-            updateStats(masterData);
+            // Render awal table & dashboard
             renderTable(masterData);
-            updateCharts(masterData);
+            filterTabel(); 
         } catch (e) { console.error("Fetch Error:", e); }
+    }
+
+    function clearAllFilters() {
+        document.querySelectorAll('.filter-input').forEach(i => i.value = '');
+        currentCardFilter = 'all';
+        document.querySelectorAll('.stat-box').forEach(b => b.classList.remove('active'));
+        document.getElementById('card-all').classList.add('active');
+        filterTabel();
     }
 
     function filterByCard(type) {
@@ -169,38 +183,45 @@
     }
 
     function filterTabel() {
-        const table = document.getElementById("mainTable");
-        const filterInputs = table.querySelectorAll(".filter-input");
+        const filterInputs = {
+            tgl: document.getElementById("filter-tgl").value.toLowerCase(),
+            dept: document.getElementById("filter-dept").value.toLowerCase(),
+            nama: document.getElementById("filter-nama").value.toLowerCase(),
+            temuan: document.getElementById("filter-temuan").value.toLowerCase(),
+            tindakan: document.getElementById("filter-tindakan").value.toLowerCase(),
+            nilai: document.getElementById("filter-nilai").value.toLowerCase(),
+            status: document.getElementById("filter-status").value.toLowerCase()
+        };
+
         const rows = document.getElementById("mainBody").getElementsByTagName("tr");
         let filteredData = [];
 
-        for (let i = 0; i < rows.length; i++) {
-            let rowVisible = true;
-            const cells = rows[i].getElementsByTagName("td");
-            const colMapping = [0, 1, 2, 3, 4, 5, 7]; 
+        masterData.forEach((d, index) => {
+            let isVisible = true;
 
-            filterInputs.forEach((input, index) => {
-                const filterValue = input.value.toLowerCase();
-                const targetColIndex = colMapping[index];
-                const cellValue = cells[targetColIndex] ? cells[targetColIndex].textContent.toLowerCase() : "";
-                if (filterValue && !cellValue.includes(filterValue)) rowVisible = false;
-            });
+            // 1. Cek Filter Input Tabel
+            if (filterInputs.tgl && !(d.tglAudit || "").toLowerCase().includes(filterInputs.tgl)) isVisible = false;
+            if (filterInputs.dept && !(d.group + " " + d.auditee).toLowerCase().includes(filterInputs.dept)) isVisible = false;
+            if (filterInputs.nama && !(d.auditor + " " + d.namaAuditeePerson).toLowerCase().includes(filterInputs.nama)) isVisible = false;
+            if (filterInputs.temuan && !(d.uraian || "").toLowerCase().includes(filterInputs.temuan)) isVisible = false;
+            if (filterInputs.tindakan && !(d.tindakan || "").toLowerCase().includes(filterInputs.tindakan)) isVisible = false;
+            if (filterInputs.nilai && !(d.nilaiPencapaian || "").toLowerCase().includes(filterInputs.nilai)) isVisible = false;
+            if (filterInputs.status && !(d.statusVerifikasi || "OPEN").toLowerCase().includes(filterInputs.status)) isVisible = false;
 
-            const rowDataStatus = rows[i].getAttribute('data-status');
-            const rowDataTiming = rows[i].getAttribute('data-timing');
+            // 2. Cek Filter Card (Koneksi Card ke Tabel)
+            if (currentCardFilter === 'Selesai' && d.status !== 'Selesai') isVisible = false;
+            if (currentCardFilter === 'Pending' && d.status === 'Selesai') isVisible = false;
+            if (currentCardFilter === 'OnTime' && d.timing !== 'OnTime') isVisible = false;
+            if (currentCardFilter === 'Late' && d.timing !== 'Late') isVisible = false;
 
-            if(currentCardFilter === 'Selesai' && rowDataStatus !== 'Selesai') rowVisible = false;
-            if(currentCardFilter === 'Pending' && rowDataStatus === 'Selesai') rowVisible = false;
-            if(currentCardFilter === 'OnTime' && rowDataTiming !== 'OnTime') rowVisible = false;
-            if(currentCardFilter === 'Late' && rowDataTiming !== 'Late') rowVisible = false;
-
-            rows[i].style.display = rowVisible ? "" : "none";
+            // Update UI Baris Tabel
+            if (rows[index]) rows[index].style.display = isVisible ? "" : "none";
             
-            if(rowVisible) {
-                const originalIndex = rows[i].getAttribute('data-index');
-                filteredData.push(masterData[originalIndex]);
-            }
-        }
+            if (isVisible) filteredData.push(d);
+        });
+
+        // 3. Update Chart & Stats berdasarkan hasil filter akhir (Koneksi Tabel ke Chart/Stats)
+        updateStats(filteredData);
         updateCharts(filteredData);
     }
 
@@ -226,21 +247,21 @@
                 d.foto.forEach(url => { fotoHtml += `<img src="${url}" class="thumb-img" onclick="window.open('${url}')">`; });
             }
 
-            body.innerHTML += `
-                <tr data-status="${d.status}" data-timing="${d.timing}" data-index="${index}">
-                    <td>${d.tglAudit || '-'}</td>
-                    <td><b>${d.group}</b><br>${d.auditee}</td>
-                    <td><small>Auditor:</small> ${d.auditor}<br><small>Auditee:</small> ${d.namaAuditeePerson || '-'}</td>
-                    <td><small>IK: ${d.judulIK || '-'}</small><br><i style="color:#64748b">${d.uraian || '-'}</i></td>
-                    <td>${d.tindakan || '-'}</td>
-                    <td style="font-weight:bold">${d.nilaiPencapaian || '-'}</td>
-                    <td><div style="display:flex">${fotoHtml || '-'}</div></td>
-                    <td>
-                        <span class="badge ${d.status==='Selesai'?'badge-success':'badge-pending'}">${d.status || 'Belum'}</span><br>
-                        <span class="badge ${d.statusVerifikasi==='CLOSED'?'badge-closed':(d.statusVerifikasi==='OBSERVASI'?'badge-obs':'badge-open')}">${d.statusVerifikasi || 'OPEN'}</span>
-                    </td>
-                </tr>
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${d.tglAudit || '-'}</td>
+                <td><b>${d.group}</b><br>${d.auditee}</td>
+                <td><small>Auditor:</small> ${d.auditor}<br><small>Auditee:</small> ${d.namaAuditeePerson || '-'}</td>
+                <td><small>IK: ${d.judulIK || '-'}</small><br><i style="color:#64748b">${d.uraian || '-'}</i></td>
+                <td>${d.tindakan || '-'}</td>
+                <td style="font-weight:bold">${d.nilaiPencapaian || '-'}</td>
+                <td><div style="display:flex">${fotoHtml || '-'}</div></td>
+                <td>
+                    <span class="badge ${d.status==='Selesai'?'badge-success':'badge-pending'}">${d.status || 'Belum'}</span><br>
+                    <span class="badge ${d.statusVerifikasi==='CLOSED'?'badge-closed':(d.statusVerifikasi==='OBSERVASI'?'badge-obs':'badge-open')}">${d.statusVerifikasi || 'OPEN'}</span>
+                </td>
             `;
+            body.appendChild(row);
         });
     }
 
@@ -287,23 +308,15 @@
                         const filterInput = document.getElementById(targetFilterId);
                         if (filterInput) {
                             filterInput.value = label;
-                            filterTabel();
+                            filterTabel(); // Cascading trigger
                         }
                     }
                 },
-                layout: {
-                    padding: { bottom: 10, top: 5, left: 10, right: 10 }
-                },
+                layout: { padding: { bottom: 10, top: 5, left: 10, right: 10 } },
                 plugins: { 
                     legend: { 
                         position: 'bottom',
-                        align: 'center',
-                        labels: { 
-                            boxWidth: 10, 
-                            font: { size: 9 }, 
-                            padding: 12,
-                            usePointStyle: true
-                        } 
+                        labels: { boxWidth: 10, font: { size: 9 }, padding: 12, usePointStyle: true } 
                     }
                 }
             }
