@@ -58,7 +58,7 @@
         .sidebar-overlay.active { display: block; }
 
         .sidebar-header { padding: 25px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .nav-links { flex: 1; padding: 15px; }
+        .nav-links { flex: 1; padding: 15px; overflow-y: auto; }
         .nav-item {
             display: flex; align-items: center; padding: 14px;
             color: #cbd5e1; text-decoration: none; border-radius: 10px;
@@ -147,11 +147,14 @@
             <div onclick="loadPage('audit.html', 'Audit System', this)" id="menu-audit" class="nav-item">
                 <span>📋</span> Input Audit
             </div>
-            <div onclick="loadPage('auditedit.html', 'Edit Data Audit', this)" id="menu-edit" class="nav-item">
+            <div onclick="loadPage('auditedit.html', 'Edit Data Audit', this)" id="menu-edit" class="nav-item hidden">
                 <span>✏️</span> Edit Data Audit
             </div>
-            <div onclick="loadPage('jadwal.html', 'Audit Schedule', this)" id="menu-jadwal" class="nav-item">
+            <div onclick="loadPage('jadwal.html', 'Audit Schedule', this)" id="menu-jadwal" class="nav-item hidden">
                 <span>📅</span> Jadwal Audit
+            </div>
+            <div onclick="loadPage('upload.html', 'Import Data Excel', this)" id="menu-upload" class="nav-item hidden">
+                <span>🚀</span> Import Data Excel
             </div>
         </div>
         <button onclick="location.reload()" style="margin: 20px; background: #ef4444; border: none; padding: 10px; border-radius: 8px; color: white; cursor: pointer; font-weight: bold;">LOGOUT</button>
@@ -195,7 +198,12 @@
             document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
             if(element) element.classList.add('active');
 
-            if(window.innerWidth < 992) toggleSidebar();
+            if(window.innerWidth < 992) {
+                const sidebar = document.getElementById('sidebar');
+                const overlay = document.getElementById('overlay');
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+            }
         }
 
         function loginLokal() {
@@ -203,24 +211,27 @@
             const pass = document.getElementById("password").value;
 
             if (user === "admin" && pass !== "admin123") { 
-                alert("Password Salah!"); 
+                alert("Password Admin Salah!"); 
                 return; 
             }
 
             document.getElementById('login-overlay').classList.add('hidden');
             document.getElementById('user-display').innerText = "Role: " + user;
             
+            // Atur Visibilitas Menu
+            const mEdit = document.getElementById('menu-edit');
+            const mJadwal = document.getElementById('menu-jadwal');
+            const mUpload = document.getElementById('menu-upload');
+
             if (user === "auditor") {
-                // Sembunyikan Jadwal & Edit untuk Auditor
-                document.getElementById('menu-jadwal').classList.add('hidden');
-                document.getElementById('menu-edit').classList.add('hidden');
-                
+                mEdit.classList.add('hidden');
+                mJadwal.classList.add('hidden');
+                mUpload.classList.add('hidden');
                 loadPage('audit.html', 'Audit System', document.getElementById('menu-audit'));
             } else {
-                // Tampilkan Semua untuk Admin
-                document.getElementById('menu-jadwal').classList.remove('hidden');
-                document.getElementById('menu-edit').classList.remove('hidden');
-                
+                mEdit.classList.remove('hidden');
+                mJadwal.classList.remove('hidden');
+                mUpload.classList.remove('hidden');
                 loadPage('dashboard.html', 'Admin Dashboard', document.getElementById('menu-dashboard'));
             }
 
