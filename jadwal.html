@@ -34,7 +34,7 @@
     
     <div style="display: flex; justify-content: space-between; align-items: flex-end;">
         <button class="btn-action btn-add" onclick="addRow()">+ Tambah Baris Baru</button>
-        <div class="paste-hint">* Tips: Bisa Copy-Paste langsung dari Excel ke tabel di bawah (Ctrl+V)</div>
+        <div class="paste-hint">* Tips: Dropdown akan otomatis terisi dari database materi (Collection Documents)</div>
     </div>
 
     <div class="excel-container">
@@ -43,9 +43,9 @@
                 <tr>
                     <th width="150">PERIODE</th>
                     <th>NAMA AUDITOR</th>
-                    <th>DEPT. AUDITEE</th>
-                    <th>JUDUL IK / MATERI</th>
                     <th width="150">GROUP</th>
+                    <th>JUDUL IK / MATERI</th>
+                    <th>DEPT. AUDITEE</th>
                     <th width="50" style="text-align:center">BATAL</th>
                 </tr>
             </thead>
@@ -84,55 +84,83 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
     let tempAuditData = {};
+    let masterDocs = []; // Simpan data dokumen dari collection 'documents'
 
-    function addRow(data = ['', '', '', '', 'SF'], isEdit = false) {
+    // Ambil data dokumen sekali saja untuk dropdown
+    async function initMasterDocs() {
+        const snap = await db.collection('documents').where('status', '==', 'Aktif').get();
+        masterDocs = snap.docs.map(doc => doc.data());
+    }
+
+    function updateIKDropdown(selectGroup) {
+        const row = selectGroup.closest('tr');
+        const selectIK = row.querySelector('.select-ik');
+        const inputAuditee = row.querySelector('.input-auditee');
+        const selectedGroup = selectGroup.value;
+
+        selectIK.innerHTML = '<option value="">-- Pilih Judul IK --</option>';
+        inputAuditee.value = '';
+
+        const filtered = masterDocs.filter(d => d.group === selectedGroup);
+        // Buat list unik judul IK
+        const unikIK = [...new Set(filtered.map(item => item.judulIK))];
+        
+        unikIK.forEach(ik => {
+            const opt = document.createElement('option');
+            opt.value = ik;
+            opt.textContent = ik;
+            selectIK.appendChild(opt);
+        });
+    }
+
+    function updateAuditeeField(selectIK) {
+        const row = selectIK.closest('tr');
+        const selectGroup = row.querySelector('.select-group');
+        const inputAuditee = row.querySelector('.input-auditee');
+        
+        const doc = masterDocs.find(d => d.group === selectGroup.value && d.judulIK === selectIK.value);
+        if (doc) {
+            inputAuditee.value = doc.auditee;
+        }
+    }
+
+    function addRow(data = ['', '', '', '', ''], isEdit = false) {
         const tr = document.createElement('tr');
         if(isEdit) tr.className = 'editing-row';
+        
+        // Ambil list unik group dari masterDocs
+        const unikGroups = [...new Set(masterDocs.map(d => d.group))];
+        let groupOptions = unikGroups.map(g => `<option value="${g}" ${data[4] === g ? 'selected' : ''}>${g}</option>`).join('');
+
         tr.innerHTML = `
             <td><input type="month" class="cell-input" value="${data[0]}"></td>
             <td><input type="text" class="cell-input" placeholder="Nama Auditor..." value="${data[1]}"></td>
-            <td><input type="text" class="cell-input" placeholder="Dept Auditee..." value="${data[2]}"></td>
-            <td><input type="text" class="cell-input" placeholder="Judul IK..." value="${data[3]}"></td>
             <td>
-                <select class="cell-input">
-                    <option value="SF" ${data[4] === 'SF' ? 'selected' : ''}>SUGAR FACTORY</option>
-                    <option value="SP" ${data[4] === 'SP' ? 'selected' : ''}>PLANTATION</option>
-                    <option value="SUPPORTING" ${data[4] === 'SUPPORTING' ? 'selected' : ''}>SUPPORTING</option>
+                <select class="cell-input select-group" onchange="updateIKDropdown(this)">
+                    <option value="">-- Pilih Group --</option>
+                    ${groupOptions}
                 </select>
             </td>
+            <td>
+                <select class="cell-input select-ik" onchange="updateAuditeeField(this)">
+                    <option value="">-- Pilih Judul IK --</option>
+                </select>
+            </td>
+            <td><input type="text" class="cell-input input-auditee" placeholder="Otomatis..." value="${data[2]}" readonly></td>
             <td style="text-align:center">
                 <button onclick="this.parentElement.parentElement.remove()" style="background:none; border:none; color:#dc2626; cursor:pointer;">✕</button>
             </td>
         `;
         document.getElementById('inputBody').prepend(tr);
-    }
 
-    // Fitur Copy Paste dari Excel
-    document.addEventListener('paste', function(e) {
-        if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') {
-            const clipboardData = e.clipboardData || window.clipboardData;
-            const pastedData = clipboardData.getData('Text');
-            
-            if (pastedData.includes('\t') || pastedData.includes('\n')) {
-                e.preventDefault();
-                const rows = pastedData.split(/\r?\n/);
-                
-                rows.forEach(row => {
-                    if (row.trim() !== '') {
-                        const cols = row.split('\t');
-                        // Sesuaikan jumlah kolom Excel (Periode, Auditor, Auditee, Materi, Group)
-                        addRow([
-                            cols[0] || '', 
-                            cols[1] || '', 
-                            cols[2] || '', 
-                            cols[3] || '', 
-                            (cols[4] || 'SF').toUpperCase()
-                        ]);
-                    }
-                });
-            }
+        // Jika data edit, trigger pengisian dropdown IK
+        if(data[4]) {
+            const selGroup = tr.querySelector('.select-group');
+            updateIKDropdown(selGroup);
+            const selIK = tr.querySelector('.select-ik');
+            selIK.value = data[3];
         }
-    });
+    }
 
     async function saveBulkData() {
         const rows = document.querySelectorAll('#inputBody tr');
@@ -143,9 +171,9 @@
         const batch = db.batch();
         rows.forEach(row => {
             const inputs = row.querySelectorAll('.cell-input');
-            const p = inputs[0].value, a = inputs[1].value, ad = inputs[2].value, ik = inputs[3].value, g = inputs[4].value;
+            const p = inputs[0].value, a = inputs[1].value, g = inputs[2].value, ik = inputs[3].value, ad = inputs[4].value;
 
-            if (p && a && ad) {
+            if (p && a && ad && ik) {
                 const [thn, bln] = p.split('-');
                 const k = `${bln}${thn}-${a.replace(/\s+/g,'').toUpperCase()}-${ad.replace(/\s+/g,'').toUpperCase()}-${g}`;
                 const oldData = tempAuditData[k] || {};
@@ -164,12 +192,8 @@
     }
 
     async function fetchHistory() {
-        // Menggunakan order by 'periode' agar data muncul stabil
         try {
-            const snap = await db.collection('jadwal_audit')
-                               .orderBy('periode', 'desc') 
-                               .get();
-                               
+            const snap = await db.collection('jadwal_audit').orderBy('periode', 'desc').get();
             const body = document.getElementById('historyBody');
             body.innerHTML = '';
             
@@ -192,9 +216,7 @@
                 `;
                 body.appendChild(tr);
             });
-        } catch (e) {
-            console.error("Error fetching: ", e);
-        }
+        } catch (e) { console.error("Error fetching: ", e); }
     }
 
     async function moveRowToEdit(id) {
@@ -202,6 +224,7 @@
         if (doc.exists) {
             const d = doc.data();
             tempAuditData[d.kodeUnik] = d;
+            // Urutan addRow disesuaikan dropdown baru: [periode, auditor, auditee, judulIK, group]
             addRow([d.periode, d.auditor, d.auditee, d.judulIK, d.group], true);
             await db.collection('jadwal_audit').doc(id).delete();
             fetchHistory();
@@ -215,8 +238,11 @@
         }
     }
 
-    addRow(); 
-    fetchHistory();
+    // Jalankan inisialisasi data master sebelum menambah baris
+    initMasterDocs().then(() => {
+        addRow(); 
+        fetchHistory();
+    });
 </script>
 </body>
 </html>
