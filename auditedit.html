@@ -20,6 +20,9 @@
             border-radius: 10px; font-size: 16px; box-sizing: border-box; outline: none; 
             min-height: 48px;
         }
+        /* Style khusus untuk multiple select agar tingginya pas */
+        select[multiple] { min-height: 100px; padding: 5px; }
+        
         textarea { min-height: 80px; }
         input:focus, select:focus, textarea:focus { border-color: var(--primary); background: #f0f7ff; }
         input:read-only { background: #f1f5f9; color: #64748b; }
@@ -31,22 +34,13 @@
 
         .btn-submit { width: 100%; padding: 18px; background: var(--primary); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 18px; transition: 0.3s; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3); }
         
-        /* Table & Rapi Filter */
         .table-container { background: white; border-radius: 12px; border: 1px solid var(--border); overflow-x: auto; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 1100px; }
-        
         th { background: #f8fafc; padding: 12px 10px; text-align: left; color: #475569; border-bottom: 2px solid var(--border); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
         td { padding: 12px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
         
         .filter-row { background: #ffffff; }
-        .filter-row th { padding: 5px 10px 10px 10px; border-bottom: 1px solid var(--border); }
-        
-        .filter-input { 
-            width: 100%; padding: 8px 10px; font-size: 11px; border: 1px solid #e2e8f0; 
-            border-radius: 6px; box-sizing: border-box; font-weight: normal; outline: none;
-            transition: all 0.2s; background: #fdfdfd;
-        }
-        .filter-input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1); background: white; }
+        .filter-input { width: 100%; padding: 8px 10px; font-size: 11px; border: 1px solid #e2e8f0; border-radius: 6px; outline: none; }
 
         .thumb-img { width: 45px; height: 45px; object-fit: cover; border-radius: 6px; margin-right: 4px; border: 1px solid #ddd; cursor: pointer; }
         .badge { padding: 4px 8px; border-radius: 12px; font-size: 9px; font-weight: bold; display: inline-block; margin-top: 2px; }
@@ -58,10 +52,7 @@
         .btn-edit { background: #fef9c3; color: #854d0e; }
         .btn-delete { background: #fee2e2; color: #991b1b; }
 
-        @media (max-width: 600px) {
-            .grid { grid-template-columns: 1fr; }
-            .container { padding: 15px; }
-        }
+        @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
@@ -78,7 +69,7 @@
             <option value="SUPPORTING">SUPPORTING</option>
         </select>
 
-        <label>2. Pilih Jadwal Audit (Sesuai Periode)</label>
+        <label>2. Pilih Jadwal Audit</label>
         <select id="selectJadwal" onchange="fillJadwalData(this.value)" required>
             <option value="">-- Pilih Group Dahulu --</option>
         </select>
@@ -88,10 +79,10 @@
             <div><label>Tanggal Audit</label><input type="date" id="tglAudit" required></div>
             <div><label>Auditor</label><input type="text" id="displayAuditor" readonly></div>
             <div><label>Dept. Auditee</label><input type="text" id="displayDept" readonly></div>
-            <div><label>Nama Personel Auditee</label><input type="text" id="namaAuditee" placeholder="Nama yang mendampingi audit" required></div>
-            <div><label>Judul IK / Materi</label><input type="text" id="judulIK" placeholder="Materi audit..." readonly></div>
+            <div><label>Nama Personel Auditee</label><input type="text" id="namaAuditee" required></div>
+            <div><label>Judul IK / Materi</label><input type="text" id="judulIK" readonly></div>
             <div><label>Jumlah Item Cek</label><input type="number" id="jmlItem" value="10" oninput="hitungNilai()" required></div>
-            <div><label>Jumlah Temuan</label><input type="number" id="jmlTemuan" value="0" oninput="inputHitung()" required></div>
+            <div><label>Jumlah Temuan</label><input type="number" id="jmlTemuan" value="0" oninput="hitungNilai()" required></div>
             <div><label>Nilai Pencapaian (%)</label><input type="text" id="nilaiTemuan" readonly></div>
             <div>
                 <label>Status Akhir</label>
@@ -111,24 +102,26 @@
                 </select>
             </div>
             <div>
-                <label>Kategori Temuan</label>
-                <select id="kategoriTemuan">
+                <label>Kategori Temuan (Tahan Ctrl/Cmd untuk pilih > 1)</label>
+                <select id="kategoriTemuan" multiple>
                     <option value="Proses">Proses</option>
                     <option value="Dokumen">Dokumen</option>
                     <option value="Safety">Safety</option>
+                    <option value="Lingkungan">Lingkungan</option>
+                    <option value="5R">5R</option>
                 </select>
             </div>
         </div>
 
-        <label>Uraian Ketidaksesuaian (Temuan)</label>
-        <textarea id="uraian" rows="3" placeholder="Jika ada temuan..."></textarea>
+        <label>Uraian Ketidaksesuaian</label>
+        <textarea id="uraian" rows="3"></textarea>
 
         <div class="grid">
-            <div><label>Analisa Penyebab</label><textarea id="penyebab" rows="2" placeholder="Mengapa hal ini terjadi?"></textarea></div>
-            <div><label>Tindakan Perbaikan</label><textarea id="tindakan" rows="2" placeholder="Apa tindakan yang dilakukan?"></textarea></div>
+            <div><label>Analisa Penyebab</label><textarea id="penyebab" rows="2"></textarea></div>
+            <div><label>Tindakan Perbaikan</label><textarea id="tindakan" rows="2"></textarea></div>
         </div>
 
-        <label>Foto Bukti (Maks 5 Foto)</label>
+        <label>Foto Bukti</label>
         <div class="photo-grid">
             <script>
                 for(let i=1; i<=5; i++) {
@@ -146,7 +139,7 @@
         </div>
 
         <label>Catatan Tambahan</label>
-        <input type="text" id="updateCatatan" placeholder="Catatan singkat...">
+        <input type="text" id="updateCatatan">
         <button type="submit" id="btnSave" class="btn-submit">SIMPAN HASIL AUDIT</button>
     </form>
 </div>
@@ -162,22 +155,11 @@
                     <th>Group / Dept</th>
                     <th>Auditor / Auditee</th>
                     <th>Materi & Temuan</th>
-                    <th>Tindakan Perbaikan</th>
+                    <th>Perbaikan</th>
                     <th>Nilai</th>
                     <th>Foto</th>
                     <th>Catatan</th>
                     <th>Status</th>
-                </tr>
-                <tr class="filter-row">
-                    <th></th>
-                    <th><input type="text" class="filter-input" placeholder="Cari tgl..." onkeyup="filterExcel()"></th>
-                    <th><input type="text" class="filter-input" placeholder="Cari dept..." onkeyup="filterExcel()"></th>
-                    <th><input type="text" class="filter-input" placeholder="Cari nama..." onkeyup="filterExcel()"></th>
-                    <th><input type="text" class="filter-input" placeholder="Cari temuan..." onkeyup="filterExcel()"></th>
-                    <th><input type="text" class="filter-input" placeholder="Cari tindakan..." onkeyup="filterExcel()"></th>
-                    <th><input type="text" class="filter-input" placeholder="Cari nilai..." onkeyup="filterExcel()"></th>
-                    <th></th> <th><input type="text" class="filter-input" placeholder="Cari catatan..." onkeyup="filterExcel()"></th>
-                    <th><input type="text" class="filter-input" placeholder="Cari status..." onkeyup="filterExcel()"></th>
                 </tr>
             </thead>
             <tbody id="historyBody"></tbody>
@@ -186,7 +168,7 @@
 </div>
 
 <script>
-    // Firebase Setup
+    // Firebase Config (Tetap sama)
     const firebaseConfig = {
         apiKey: "AIzaSyCiW38hQ5ZfYnp3sa95OQw6IjxnfnM5dl4",
         authDomain: "kamishibaimsm.firebaseapp.com",
@@ -207,18 +189,14 @@
     async function loadJadwal() {
         const groupFilter = document.getElementById('filterGroupJadwal').value;
         const sel = document.getElementById('selectJadwal');
-        if(!groupFilter) { sel.innerHTML = '<option value="">-- Pilih Group --</option>'; return; }
-        sel.innerHTML = '<option value="">-- Memuat Data... --</option>';
-        try {
-            const snap = await db.collection('jadwal_audit')
-                .where('status', '==', 'Pending')
-                .where('group', '==', groupFilter).get();
-            sel.innerHTML = '<option value="">-- Pilih Jadwal --</option>';
-            snap.forEach(doc => {
-                cacheJadwal[doc.id] = doc.data();
-                sel.innerHTML += `<option value="${doc.id}">${doc.data().periode} | ${doc.data().auditor}</option>`;
-            });
-        } catch (e) { console.error(e); }
+        if(!groupFilter) return;
+        sel.innerHTML = '<option value="">-- Memuat... --</option>';
+        const snap = await db.collection('jadwal_audit').where('status', '==', 'Pending').where('group', '==', groupFilter).get();
+        sel.innerHTML = '<option value="">-- Pilih Jadwal --</option>';
+        snap.forEach(doc => {
+            cacheJadwal[doc.id] = doc.data();
+            sel.innerHTML += `<option value="${doc.id}">${doc.data().periode} | ${doc.data().auditor}</option>`;
+        });
     }
 
     function fillJadwalData(id) {
@@ -230,8 +208,6 @@
         document.getElementById('judulIK').value = d.judulIK || d.materi || '';
         hitungNilai();
     }
-    
-    function inputHitung() { hitungNilai(); }
 
     function hitungNilai() {
         const i = parseFloat(document.getElementById('jmlItem').value) || 0;
@@ -240,12 +216,9 @@
     }
 
     async function uploadImage(input, idx) {
-        const file = input.files[0];
-        if(!file) return;
+        const file = input.files[0]; if(!file) return;
         document.getElementById(`load${idx}`).style.display = 'block';
-        const fd = new FormData();
-        fd.append('file', file);
-        fd.append('upload_preset', CLOUDINARY_PRESET);
+        const fd = new FormData(); fd.append('file', file); fd.append('upload_preset', CLOUDINARY_PRESET);
         try {
             const res = await fetch(CLOUDINARY_URL, { method: 'POST', body: fd });
             const data = await res.json();
@@ -257,31 +230,15 @@
         document.getElementById(`load${idx}`).style.display = 'none';
     }
 
-    function filterExcel() {
-        const table = document.getElementById("historyTable");
-        const filterInputs = table.querySelectorAll(".filter-input");
-        const rows = document.getElementById("historyBody").getElementsByTagName("tr");
-        for (let i = 0; i < rows.length; i++) {
-            let rowVisible = true;
-            const cells = rows[i].getElementsByTagName("td");
-            const colMapping = [1, 2, 3, 4, 5, 6, 8, 9]; 
-            filterInputs.forEach((input, index) => {
-                const filterValue = input.value.toLowerCase();
-                const targetColIndex = colMapping[index];
-                const cellValue = cells[targetColIndex] ? cells[targetColIndex].textContent.toLowerCase() : "";
-                if (filterValue && !cellValue.includes(filterValue)) rowVisible = false;
-            });
-            rows[i].style.display = rowVisible ? "" : "none";
-        }
-    }
-
     document.getElementById('auditForm').onsubmit = async (e) => {
         e.preventDefault();
         const id = document.getElementById('selectJadwal').value;
         if(!id) return alert("Pilih jadwal!");
-        const btn = document.getElementById('btnSave');
-        btn.disabled = true; btn.innerText = "Menyimpan...";
         
+        // Ambil multiple values dari kategori temuan
+        const kategoriSelect = document.getElementById('kategoriTemuan');
+        const kategoriValues = Array.from(kategoriSelect.selectedOptions).map(opt => opt.value).join(', ');
+
         const data = {
             tglAudit: document.getElementById('tglAudit').value,
             namaAuditeePerson: document.getElementById('namaAuditee').value,
@@ -294,7 +251,7 @@
             tindakan: document.getElementById('tindakan').value,
             statusVerifikasi: document.getElementById('statusVerifikasi').value,
             statusTemuan: document.getElementById('statusTemuan').value,
-            kategoriTemuan: document.getElementById('kategoriTemuan').value,
+            kategoriTemuan: kategoriValues, // Disimpan sebagai string "Proses, Safety"
             updateCatatan: document.getElementById('updateCatatan').value,
             status: "Selesai",
             foto: [1,2,3,4,5].map(i => document.getElementById(`url${i}`).value).filter(v => v),
@@ -303,18 +260,15 @@
         
         try {
             await db.collection('jadwal_audit').doc(id).update(data);
-            alert("Hasil Audit Tersimpan!"); location.reload();
-        } catch (e) { alert("Error!"); btn.disabled = false; }
+            alert("Berhasil!"); location.reload();
+        } catch (e) { alert("Error!"); }
     };
 
     async function editAudit(id) {
-        const d = cacheHistory[id];
-        if(!d) return;
-
-        // Set select jadwal temporarily to include this ID
+        const d = cacheHistory[id]; if(!d) return;
         const sel = document.getElementById('selectJadwal');
-        sel.innerHTML = `<option value="${id}">${d.periode || 'Edit Mode'} | ${d.auditor}</option>`;
-        cacheJadwal[id] = d; 
+        sel.innerHTML = `<option value="${id}">${d.periode || 'Edit'} | ${d.auditor}</option>`;
+        cacheJadwal[id] = d;
 
         document.getElementById('tglAudit').value = d.tglAudit || '';
         document.getElementById('displayGroup').value = d.group || '';
@@ -326,79 +280,55 @@
         document.getElementById('jmlTemuan').value = d.jmlTemuan || 0;
         document.getElementById('statusVerifikasi').value = d.statusVerifikasi || 'OPEN';
         document.getElementById('statusTemuan').value = d.statusTemuan || 'Major';
-        document.getElementById('kategoriTemuan').value = d.kategoriTemuan || 'Proses';
         document.getElementById('uraian').value = d.uraian || '';
         document.getElementById('penyebab').value = d.penyebab || '';
         document.getElementById('tindakan').value = d.tindakan || '';
         document.getElementById('updateCatatan').value = d.updateCatatan || '';
-        
-        // Load Photos
-        if(d.foto) {
-            d.foto.forEach((url, i) => {
-                if(i < 5) {
-                    const idx = i+1;
-                    document.getElementById(`url${idx}`).value = url;
-                    document.getElementById(`img${idx}`).src = url;
-                    document.getElementById(`img${idx}`).style.display = 'block';
-                    document.getElementById(`text${idx}`).style.display = 'none';
-                }
+
+        // Reset & Set Multiple Select Kategori
+        const kategoriSelect = document.getElementById('kategoriTemuan');
+        Array.from(kategoriSelect.options).forEach(opt => opt.selected = false);
+        if(d.kategoriTemuan) {
+            const vals = d.kategoriTemuan.split(', ');
+            Array.from(kategoriSelect.options).forEach(opt => {
+                if(vals.includes(opt.value)) opt.selected = true;
             });
         }
 
         document.getElementById('btnSave').innerText = "UPDATE HASIL AUDIT";
-        hitungNilai();
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     async function deleteAudit(id) {
-        if(!confirm("Yakin ingin menghapus data audit ini? Status akan dikembalikan ke 'Pending'")) return;
-        try {
-            await db.collection('jadwal_audit').doc(id).update({
-                status: "Pending",
-                tglAudit: firebase.firestore.FieldValue.delete(),
-                namaAuditeePerson: firebase.firestore.FieldValue.delete(),
-                uraian: firebase.firestore.FieldValue.delete(),
-                foto: firebase.firestore.FieldValue.delete()
-            });
-            alert("Data dihapus!"); location.reload();
-        } catch (e) { alert("Gagal hapus!"); }
+        if(!confirm("Hapus data ini?")) return;
+        await db.collection('jadwal_audit').doc(id).update({ status: "Pending" });
+        location.reload();
     }
 
     async function fetchAuditHistory() {
+        const snap = await db.collection('jadwal_audit').where('status', '==', 'Selesai').orderBy('updatedAt', 'desc').get();
         const body = document.getElementById('historyBody');
-        try {
-            const snap = await db.collection('jadwal_audit')
-                .where('status', '==', 'Selesai')
-                .orderBy('updatedAt', 'desc').limit(50).get();
-            body.innerHTML = '';
-            snap.forEach(doc => {
-                const d = doc.data();
-                cacheHistory[doc.id] = d;
-                let fotoHtml = '';
-                if(d.foto) d.foto.forEach(url => { fotoHtml += `<img src="${url}" class="thumb-img" onclick="window.open('${url}')">`; });
-                
-                body.innerHTML += `
-                    <tr>
-                        <td>
-                            <button class="action-btn btn-edit" onclick="editAudit('${doc.id}')">EDIT</button>
-                            <button class="action-btn btn-delete" onclick="deleteAudit('${doc.id}')">HAPUS</button>
-                        </td>
-                        <td>${d.tglAudit}</td>
-                        <td><b>${d.group}</b><br>${d.auditee}</td>
-                        <td><small>Auditor:</small> ${d.auditor}<br><small>Auditee:</small> ${d.namaAuditeePerson || '-'}</td>
-                        <td><small>IK: ${d.judulIK || '-'}</small><br><i style="color:#64748b">${d.uraian || '-'}</i><br><small>Cat: ${d.statusTemuan || '-'} | ${d.kategoriTemuan || '-'}</small></td>
-                        <td>${d.tindakan || '-'}</td>
-                        <td style="font-weight:bold">${d.nilaiPencapaian}</td>
-                        <td><div style="display:flex">${fotoHtml || '-'}</div></td>
-                        <td style="color:#2563eb; font-size:10px;">${d.updateCatatan || '-'}</td>
-                        <td>
-                            <span class="badge badge-selesai">SUBMITTED</span><br>
-                            <span class="badge ${d.statusVerifikasi==='CLOSED'?'badge-closed':'badge-open'}">${d.statusVerifikasi}</span>
-                        </td>
-                    </tr>
-                `;
-            });
-        } catch (e) { console.error(e); }
+        body.innerHTML = '';
+        snap.forEach(doc => {
+            const d = doc.data(); cacheHistory[doc.id] = d;
+            let fotoHtml = (d.foto || []).map(url => `<img src="${url}" class="thumb-img" onclick="window.open('${url}')">`).join('');
+            body.innerHTML += `
+                <tr>
+                    <td>
+                        <button class="action-btn btn-edit" onclick="editAudit('${doc.id}')">EDIT</button>
+                        <button class="action-btn btn-delete" onclick="deleteAudit('${doc.id}')">HAPUS</button>
+                    </td>
+                    <td>${d.tglAudit}</td>
+                    <td><b>${d.group}</b><br>${d.auditee}</td>
+                    <td>${d.auditor}<br><small>${d.namaAuditeePerson || '-'}</small></td>
+                    <td><b>IK: ${d.judulIK}</b><br><i>${d.uraian || '-'}</i><br><small>Kategori: ${d.kategoriTemuan}</small></td>
+                    <td>${d.tindakan || '-'}</td>
+                    <td>${d.nilaiPencapaian}</td>
+                    <td>${fotoHtml}</td>
+                    <td>${d.updateCatatan || '-'}</td>
+                    <td><span class="badge ${d.statusVerifikasi==='CLOSED'?'badge-closed':'badge-open'}">${d.statusVerifikasi}</span></td>
+                </tr>`;
+        });
     }
     fetchAuditHistory();
 </script>
