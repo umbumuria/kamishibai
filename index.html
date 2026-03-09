@@ -153,6 +153,9 @@
             <div onclick="loadPage('jadwal.html', 'Audit Schedule', this)" id="menu-jadwal" class="nav-item hidden">
                 <span>📅</span> Jadwal Audit
             </div>
+            <div onclick="loadPage('materi.html', 'Import Materi Audit', this)" id="menu-materi" class="nav-item hidden">
+                <span>📁</span> Import Materi (SOP/IK)
+            </div>
             <div onclick="loadPage('upload.html', 'Import Data Excel', this)" id="menu-upload" class="nav-item hidden">
                 <span>🚀</span> Import Data Sistem Lama (xls)
             </div>
@@ -222,16 +225,19 @@
             const mEdit = document.getElementById('menu-edit');
             const mJadwal = document.getElementById('menu-jadwal');
             const mUpload = document.getElementById('menu-upload');
+            const mMateri = document.getElementById('menu-materi');
 
             if (user === "auditor") {
                 mEdit.classList.add('hidden');
                 mJadwal.classList.add('hidden');
                 mUpload.classList.add('hidden');
+                mMateri.classList.add('hidden');
                 loadPage('audit.html', 'Audit System', document.getElementById('menu-audit'));
             } else {
                 mEdit.classList.remove('hidden');
                 mJadwal.classList.remove('hidden');
                 mUpload.classList.remove('hidden');
+                mMateri.classList.remove('hidden');
                 loadPage('dashboard.html', 'Admin Dashboard', document.getElementById('menu-dashboard'));
             }
 
