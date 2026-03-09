@@ -25,16 +25,20 @@
         .btn-edit { color: #2563eb; background: #dbeafe; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; }
         .btn-delete { color: var(--danger); background: #fee2e2; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-left: 5px; }
         .editing-row { background: #fff9db !important; }
+        .paste-hint { font-size: 11px; color: #64748b; margin-bottom: 5px; font-style: italic; }
     </style>
 </head>
 <body>
 
     <div class="section-title">ADMIN: PENGATURAN JADWAL & EDIT DATA</div>
     
-    <button class="btn-action btn-add" onclick="addRow()">+ Tambah Baris Baru</button>
+    <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+        <button class="btn-action btn-add" onclick="addRow()">+ Tambah Baris Baru</button>
+        <div class="paste-hint">* Tips: Bisa Copy-Paste langsung dari Excel ke tabel di bawah (Ctrl+V)</div>
+    </div>
 
     <div class="excel-container">
-        <table>
+        <table id="inputTable">
             <thead>
                 <tr>
                     <th width="150">PERIODE</th>
@@ -103,6 +107,33 @@
         document.getElementById('inputBody').prepend(tr);
     }
 
+    // Fitur Copy Paste dari Excel
+    document.addEventListener('paste', function(e) {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') {
+            const clipboardData = e.clipboardData || window.clipboardData;
+            const pastedData = clipboardData.getData('Text');
+            
+            if (pastedData.includes('\t') || pastedData.includes('\n')) {
+                e.preventDefault();
+                const rows = pastedData.split(/\r?\n/);
+                
+                rows.forEach(row => {
+                    if (row.trim() !== '') {
+                        const cols = row.split('\t');
+                        // Sesuaikan jumlah kolom Excel (Periode, Auditor, Auditee, Materi, Group)
+                        addRow([
+                            cols[0] || '', 
+                            cols[1] || '', 
+                            cols[2] || '', 
+                            cols[3] || '', 
+                            (cols[4] || 'SF').toUpperCase()
+                        ]);
+                    }
+                });
+            }
+        }
+    });
+
     async function saveBulkData() {
         const rows = document.querySelectorAll('#inputBody tr');
         if (rows.length === 0) return;
@@ -122,9 +153,8 @@
                 batch.set(db.collection('jadwal_audit').doc(k), {
                     periode: p, auditor: a, auditee: ad, judulIK: ik, group: g, kodeUnik: k,
                     status: oldData.status || "Pending",
-                    createdAt: oldData.createdAt || firebase.firestore.FieldValue.serverTimestamp(),
-                    ...oldData
-                });
+                    createdAt: oldData.createdAt || firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
             }
         });
 
@@ -134,37 +164,38 @@
     }
 
     async function fetchHistory() {
-    // Kita ganti sorting ke 'periode' atau 'tglAudit' agar data tanpa createdAt tetap muncul
-    // Jika ingin yang terbaru di atas, gunakan 'tglAudit'
-    const snap = await db.collection('jadwal_audit')
-                           .orderBy('tglAudit', 'desc') 
-                           .get();
-                           
-    const body = document.getElementById('historyBody');
-    body.innerHTML = '';
-    
-    snap.forEach(doc => {
-        const d = doc.data();
-        const tr = document.createElement('tr');
-        
-        // Cek status untuk badge
-        const statusLower = (d.status || "").toLowerCase();
-        const badgeClass = statusLower === 'selesai' ? 'badge-selesai' : 'badge-pending';
-        
-        tr.innerHTML = `
-            <td style="padding:12px;">${d.periode}</td>
-            <td><b>${d.auditor}</b></td>
-            <td>${d.auditee}</td>
-            <td>${d.judulIK || '-'}</td>
-            <td><span class="badge ${badgeClass}">${(d.status || 'Pending').toUpperCase()}</span></td>
-            <td style="text-align:center;">
-                <button class="btn-edit" onclick="moveRowToEdit('${doc.id}')">EDIT</button>
-                <button class="btn-delete" onclick="deleteData('${doc.id}')">HAPUS</button>
-            </td>
-        `;
-        body.appendChild(tr);
-    });
-}
+        // Menggunakan order by 'periode' agar data muncul stabil
+        try {
+            const snap = await db.collection('jadwal_audit')
+                               .orderBy('periode', 'desc') 
+                               .get();
+                               
+            const body = document.getElementById('historyBody');
+            body.innerHTML = '';
+            
+            snap.forEach(doc => {
+                const d = doc.data();
+                const tr = document.createElement('tr');
+                const statusLower = (d.status || "").toLowerCase();
+                const badgeClass = statusLower === 'selesai' ? 'badge-selesai' : 'badge-pending';
+                
+                tr.innerHTML = `
+                    <td style="padding:12px;">${d.periode}</td>
+                    <td><b>${d.auditor}</b></td>
+                    <td>${d.auditee}</td>
+                    <td>${d.judulIK || '-'}</td>
+                    <td><span class="badge ${badgeClass}">${(d.status || 'Pending').toUpperCase()}</span></td>
+                    <td style="text-align:center;">
+                        <button class="btn-edit" onclick="moveRowToEdit('${doc.id}')">EDIT</button>
+                        <button class="btn-delete" onclick="deleteData('${doc.id}')">HAPUS</button>
+                    </td>
+                `;
+                body.appendChild(tr);
+            });
+        } catch (e) {
+            console.error("Error fetching: ", e);
+        }
+    }
 
     async function moveRowToEdit(id) {
         const doc = await db.collection('jadwal_audit').doc(id).get();
@@ -184,7 +215,8 @@
         }
     }
 
-    addRow(); fetchHistory();
+    addRow(); 
+    fetchHistory();
 </script>
 </body>
 </html>
