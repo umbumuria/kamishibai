@@ -98,6 +98,23 @@
                     <option value="OBSERVASI">OBSERVASI</option>
                 </select>
             </div>
+            <div>
+                <label>Status Temuan</label>
+                <select id="statusTemuan">
+                    <option value="Major">Major</option>
+                    <option value="Minor">Minor</option>
+                    <option value="Tidak ada temuan">Tidak ada temuan</option>
+                    <option value="Observasi">Observasi</option>
+                </select>
+            </div>
+            <div>
+                <label>Kategori Temuan</label>
+                <select id="kategoriTemuan">
+                    <option value="Proses">Proses</option>
+                    <option value="Dokumen">Dokumen</option>
+                    <option value="Safety">Safety</option>
+                </select>
+            </div>
         </div>
 
         <label>Uraian Ketidaksesuaian (Temuan)</label>
@@ -280,6 +297,8 @@
             penyebab: document.getElementById('penyebab').value,
             tindakan: document.getElementById('tindakan').value,
             statusVerifikasi: document.getElementById('statusVerifikasi').value,
+            statusTemuan: document.getElementById('statusTemuan').value,
+            kategoriTemuan: document.getElementById('kategoriTemuan').value,
             updateCatatan: document.getElementById('updateCatatan').value,
             status: "Selesai",
             foto: [1,2,3,4,5].map(i => document.getElementById(`url${i}`).value).filter(v => v),
@@ -309,7 +328,7 @@
                         <td>${d.tglAudit}</td>
                         <td><b>${d.group}</b><br>${d.auditee}</td>
                         <td><small>Auditor:</small> ${d.auditor}<br><small>Auditee:</small> ${d.namaAuditeePerson || '-'}</td>
-                        <td><small>IK: ${d.judulIK || '-'}</small><br><i style="color:#64748b">${d.uraian || '-'}</i></td>
+                        <td><small>IK: ${d.judulIK || '-'}</small><br><i style="color:#64748b">${d.uraian || '-'}</i><br><small>Cat: ${d.statusTemuan || '-'} | ${d.kategoriTemuan || '-'}</small></td>
                         <td>${d.tindakan || '-'}</td>
                         <td style="font-weight:bold">${d.nilaiPencapaian}</td>
                         <td><div style="display:flex">${fotoHtml || '-'}</div></td>
