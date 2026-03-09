@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Import & Sync Data Documents</title>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        :root { --primary: #3b82f6; --success: #10b981; --bg: transparent; }
+        body { 
+            font-family: -apple-system, sans-serif; 
+            background: var(--bg); 
+            color: white; 
+            padding: 20px; 
+            margin: 0;
+            display: flex;
+            justify-content: center;
+        }
+        .import-card { 
+            background: #1e293b; 
+            width: 100%;
+            max-width: 650px; 
+            padding: 30px; 
+            border-radius: 20px; 
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        h2 { color: var(--primary); margin-top: 0; font-size: 22px; text-align: center; }
+        .desc { font-size: 13px; opacity: 0.7; text-align: center; margin-bottom: 25px; }
+        
+        /* Tombol Template */
+        .template-area {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .btn-template {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+            border: 1px solid #10b981;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-template:hover { background: rgba(16, 185, 129, 0.2); }
+
+        .file-input { 
+            border: 2px dashed rgba(255,255,255,0.2); 
+            padding: 40px 20px; 
+            text-align: center; 
+            border-radius: 15px; 
+            margin: 10px 0 20px 0; 
+            cursor: pointer;
+            background: rgba(15, 23, 42, 0.5);
+            transition: 0.3s;
+        }
+        .file-input:hover { border-color: var(--primary); background: rgba(59, 130, 246, 0.05); }
+        
+        .btn-upload { 
+            background: var(--primary); color: white; border: none; 
+            padding: 16px; border-radius: 12px; font-weight: bold; 
+            cursor: pointer; width: 100%; font-size: 16px;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        }
+        .btn-upload:disabled { background: #475569; cursor: not-allowed; box-shadow: none; }
+        
+        #statusLog { 
+            margin-top: 25px; background: #0f172a; color: #38bdf8; 
+            padding: 15px; border-radius: 12px; height: 250px; 
+            overflow-y: auto; font-family: 'Courier New', monospace; font-size: 12px;
+            border: 1px solid rgba(255,255,255,0.05);
+            line-height: 1.6;
+        }
+        .success-text { color: #4ade80; font-weight: bold; }
+        .error-text { color: #f87171; }
+        .info-text { color: #eab308; }
+    </style>
+</head>
+<body>
+
+<div class="import-card">
+    <h2>Sync Data Materi Audit</h2>
+    <p class="desc">Import dokumen (SOP/IK/FORM) ke dalam database sistem.</p>
+    
+    <div class="template-area">
+        <button class="btn-template" onclick="downloadTemplate()">
+            <span>📥</span> Download Template Materi (.xlsx)
+        </button>
+    </div>
+
+    <div class="file-input" onclick="document.getElementById('excelFile').click()">
+        <span id="fileName" style="font-size: 15px;">📁 Pilih File Excel Materi</span>
+        <input type="file" id="excelFile" accept=".xlsx, .xls, .csv" style="display:none" onchange="updateFileName()">
+    </div>
+
+    <button class="btn-upload" id="btnProses" onclick="prosesFile()">Mulai Sinkronisasi Materi</button>
+
+    <div id="statusLog">Menunggu file untuk diproses...</div>
+</div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyCiW38hQ5ZfYnp3sa95OQw6IjxnfnM5dl4",
+        authDomain: "kamishibaimsm.firebaseapp.com",
+        projectId: "kamishibaimsm",
+        storageBucket: "kamishibaimsm.firebasestorage.app",
+        messagingSenderId: "184420389379",
+        appId: "1:184420389379:web:51bbb78ce5fa8e8d227436"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    function downloadTemplate() {
+        const headers = [
+            ["group", "auditee", "jenis dokumen", "judulIK", "nomor dokumen", "rev ke", "tanggal revisi", "status dokumen", "status"]
+        ];
+        
+        const ws = XLSX.utils.aoa_to_sheet(headers);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Documents");
+        XLSX.writeFile(wb, "template_materi_audit.xlsx");
+    }
+
+    function updateFileName() {
+        const input = document.getElementById('excelFile');
+        if(input.files[0]) {
+            document.getElementById('fileName').innerHTML = `<b style="color:#3b82f6">Terpilih:</b> ${input.files[0].name}`;
+        }
+    }
+
+    async function prosesFile() {
+        const fileInput = document.getElementById('excelFile');
+        const log = document.getElementById('statusLog');
+        const btn = document.getElementById('btnProses');
+
+        if (!fileInput.files[0]) { alert("Silakan pilih file terlebih dahulu."); return; }
+
+        btn.disabled = true;
+        log.innerHTML = "<span class='info-text'>[SISTEM] Membaca file materi...</span><br>";
+
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+            const sheet = workbook.Sheets[workbook.SheetNames[0]];
+            const json = XLSX.utils.sheet_to_json(sheet);
+
+            log.innerHTML += `<span class='info-text'>[SISTEM] Ditemukan ${json.length} dokumen. Memproses ke collection 'documents'...</span><br>---<br>`;
+
+            for (let i = 0; i < json.length; i++) {
+                const item = json[i];
+                
+                // Formating Tanggal Revisi
+                let tglRevFinal = String(item['tanggal revisi'] || "").trim();
+                if (item['tanggal revisi'] instanceof Date) {
+                    tglRevFinal = item['tanggal revisi'].toISOString().split('T')[0];
+                }
+
+                // Membuat ID Dokumen berdasarkan nomor dokumen agar tidak duplikat
+                const docId = String(item['nomor dokumen'] || `DOC-${Date.now()}-${i}`).replace(/[/\\?%*:|"<>]/g, '-').trim();
+
+                try {
+                    await db.collection('documents').doc(docId).set({
+                        group: String(item.group || "").trim(),
+                        auditee: String(item.auditee || "").trim(),
+                        jenis_dokumen: String(item['jenis dokumen'] || "").trim(),
+                        judulIK: String(item.judulIK || "").trim(),
+                        nomor_dokumen: String(item['nomor dokumen'] || "").trim(),
+                        rev_ke: String(item['rev ke'] || "00").trim(),
+                        tanggal_revisi: tglRevFinal,
+                        status_dokumen: String(item['status dokumen'] || "").trim(),
+                        status: String(item.status || "Aktif").trim(),
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    }, { merge: true });
+
+                    log.innerHTML += `<span class="success-text">[OK] ${item.judulIK || docId} BERHASIL</span><br>`;
+                } catch (err) {
+                    log.innerHTML += `<span class="error-text">[ERROR] ${docId}: ${err.message}</span><br>`;
+                }
+                log.scrollTop = log.scrollHeight;
+            }
+            log.innerHTML += "<br>--- PROSES IMPORT SELESAI ---";
+            btn.disabled = false;
+        };
+        reader.readAsArrayBuffer(fileInput.files[0]);
+    }
+</script>
+</body>
+</html>
