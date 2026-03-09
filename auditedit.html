@@ -20,7 +20,6 @@
             border-radius: 10px; font-size: 16px; box-sizing: border-box; outline: none; 
             min-height: 48px;
         }
-        /* Style khusus untuk multiple select agar tingginya pas */
         select[multiple] { min-height: 100px; padding: 5px; }
         
         textarea { min-height: 80px; }
@@ -28,8 +27,8 @@
         input:read-only { background: #f1f5f9; color: #64748b; }
 
         .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; margin-bottom: 20px; }
-        .photo-box { border: 2px dashed var(--border); border-radius: 10px; padding: 5px; text-align: center; cursor: pointer; min-height: 100px; display: flex; align-items: center; justify-content: center; flex-direction: column; overflow: hidden; background: #fafafa; }
-        .photo-box img { width: 100%; border-radius: 5px; display: none; margin-bottom: 5px; object-fit: cover; }
+        .photo-box { border: 2px dashed var(--border); border-radius: 10px; padding: 5px; text-align: center; cursor: pointer; min-height: 100px; display: flex; align-items: center; justify-content: center; flex-direction: column; overflow: hidden; background: #fafafa; position: relative; }
+        .photo-box img { width: 100%; height: 100%; border-radius: 5px; display: none; object-fit: cover; }
         .photo-box span { font-size: 10px; color: #64748b; font-weight: bold; }
 
         .btn-submit { width: 100%; padding: 18px; background: var(--primary); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 18px; transition: 0.3s; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3); }
@@ -39,12 +38,8 @@
         th { background: #f8fafc; padding: 12px 10px; text-align: left; color: #475569; border-bottom: 2px solid var(--border); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
         td { padding: 12px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
         
-        .filter-row { background: #ffffff; }
-        .filter-input { width: 100%; padding: 8px 10px; font-size: 11px; border: 1px solid #e2e8f0; border-radius: 6px; outline: none; }
-
         .thumb-img { width: 45px; height: 45px; object-fit: cover; border-radius: 6px; margin-right: 4px; border: 1px solid #ddd; cursor: pointer; }
         .badge { padding: 4px 8px; border-radius: 12px; font-size: 9px; font-weight: bold; display: inline-block; margin-top: 2px; }
-        .badge-selesai { background: #e0e7ff; color: #3730a3; }
         .badge-closed { background: #dcfce7; color: #166534; }
         .badge-open { background: #fee2e2; color: #991b1b; }
 
@@ -102,7 +97,7 @@
                 </select>
             </div>
             <div>
-                <label>Kategori Temuan (Tahan Ctrl/Cmd untuk pilih > 1)</label>
+                <label>Kategori Temuan</label>
                 <select id="kategoriTemuan" multiple>
                     <option value="Proses">Proses</option>
                     <option value="Dokumen">Dokumen</option>
@@ -168,7 +163,6 @@
 </div>
 
 <script>
-    // Firebase Config (Tetap sama)
     const firebaseConfig = {
         apiKey: "AIzaSyCiW38hQ5ZfYnp3sa95OQw6IjxnfnM5dl4",
         authDomain: "kamishibaimsm.firebaseapp.com",
@@ -235,7 +229,6 @@
         const id = document.getElementById('selectJadwal').value;
         if(!id) return alert("Pilih jadwal!");
         
-        // Ambil multiple values dari kategori temuan
         const kategoriSelect = document.getElementById('kategoriTemuan');
         const kategoriValues = Array.from(kategoriSelect.selectedOptions).map(opt => opt.value).join(', ');
 
@@ -251,7 +244,7 @@
             tindakan: document.getElementById('tindakan').value,
             statusVerifikasi: document.getElementById('statusVerifikasi').value,
             statusTemuan: document.getElementById('statusTemuan').value,
-            kategoriTemuan: kategoriValues, // Disimpan sebagai string "Proses, Safety"
+            kategoriTemuan: kategoriValues,
             updateCatatan: document.getElementById('updateCatatan').value,
             status: "Selesai",
             foto: [1,2,3,4,5].map(i => document.getElementById(`url${i}`).value).filter(v => v),
@@ -284,8 +277,27 @@
         document.getElementById('penyebab').value = d.penyebab || '';
         document.getElementById('tindakan').value = d.tindakan || '';
         document.getElementById('updateCatatan').value = d.updateCatatan || '';
+        hitungNilai();
 
-        // Reset & Set Multiple Select Kategori
+        // RESET FOTO & TAMPILKAN FOTO LAMA
+        for(let i=1; i<=5; i++){
+            document.getElementById(`url${i}`).value = '';
+            document.getElementById(`img${i}`).style.display = 'none';
+            document.getElementById(`text${i}`).style.display = 'block';
+        }
+
+        if(d.foto && d.foto.length > 0) {
+            d.foto.forEach((url, index) => {
+                const i = index + 1;
+                if(i <= 5) {
+                    document.getElementById(`url${i}`).value = url;
+                    document.getElementById(`img${i}`).src = url;
+                    document.getElementById(`img${i}`).style.display = 'block';
+                    document.getElementById(`text${i}`).style.display = 'none';
+                }
+            });
+        }
+
         const kategoriSelect = document.getElementById('kategoriTemuan');
         Array.from(kategoriSelect.options).forEach(opt => opt.selected = false);
         if(d.kategoriTemuan) {
