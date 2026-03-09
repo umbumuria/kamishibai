@@ -11,17 +11,17 @@
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding: 15px; margin: 0; }
         .container { max-width: 900px; margin: 0 auto; background: white; padding: 20px; border-radius: 15px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 30px; }
         .section-title { font-size: 18px; font-weight: bold; margin-bottom: 20px; border-left: 5px solid var(--primary); padding-left: 15px; color: var(--primary); }
-        
+
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         label { display: block; font-size: 10px; font-weight: bold; margin-bottom: 5px; color: #64748b; text-transform: uppercase; }
-        
+
         input, select, textarea { 
             width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid var(--border); 
             border-radius: 10px; font-size: 16px; box-sizing: border-box; outline: none; 
             min-height: 48px;
         }
         select[multiple] { min-height: 100px; padding: 5px; }
-        
+
         textarea { min-height: 80px; }
         input:focus, select:focus, textarea:focus { border-color: var(--primary); background: #f0f7ff; }
         input:read-only { background: #f1f5f9; color: #64748b; }
@@ -32,12 +32,12 @@
         .photo-box span { font-size: 10px; color: #64748b; font-weight: bold; }
 
         .btn-submit { width: 100%; padding: 18px; background: var(--primary); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 18px; transition: 0.3s; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3); }
-        
+
         .table-container { background: white; border-radius: 12px; border: 1px solid var(--border); overflow-x: auto; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 1100px; }
         th { background: #f8fafc; padding: 12px 10px; text-align: left; color: #475569; border-bottom: 2px solid var(--border); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
         td { padding: 12px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
-        
+
         .filter-row { background: #ffffff; }
         .filter-input { width: 100%; padding: 8px 10px; font-size: 11px; border: 1px solid #e2e8f0; border-radius: 6px; outline: none; }
 
@@ -54,14 +54,11 @@
 
 <div class="container">
     <div class="section-title">FORM INPUT AUDIT KAMISHIBAI</div>
-    
+
     <form id="auditForm">
         <label>1. Pilih Group Unit</label>
         <select id="filterGroupJadwal" onchange="loadJadwal()">
-            <option value="">-- Pilih Group --</option>
-            <option value="SF">SUGAR FACTORY</option>
-            <option value="SP">SUGAR PLANTATION</option>
-            <option value="SUPPORTING">SUPPORTING</option>
+            <option value="">-- Memuat Group... --</option>
         </select>
 
         <label>2. Pilih Jadwal Audit</label>
@@ -178,10 +175,34 @@
 
     let cacheJadwal = {};
 
+    // FUNGSI BARU: Ambil Group dari koleksi documents
+    async function loadGroupsFromMateri() {
+        const groupSelect = document.getElementById('filterGroupJadwal');
+        try {
+            const snap = await db.collection('documents').get();
+            const groups = new Set();
+            snap.forEach(doc => {
+                if(doc.data().group) groups.add(doc.data().group);
+            });
+            
+            groupSelect.innerHTML = '<option value="">-- Pilih Group --</option>';
+            groups.forEach(g => {
+                groupSelect.innerHTML += `<option value="${g}">${g}</option>`;
+            });
+        } catch (e) {
+            console.error("Error loading groups:", e);
+            groupSelect.innerHTML = '<option value="">Gagal memuat group</option>';
+        }
+    }
+    loadGroupsFromMateri();
+
     async function loadJadwal() {
         const groupFilter = document.getElementById('filterGroupJadwal').value;
         const sel = document.getElementById('selectJadwal');
-        if(!groupFilter) return;
+        if(!groupFilter) {
+            sel.innerHTML = '<option value="">-- Pilih Group Dahulu --</option>';
+            return;
+        }
         sel.innerHTML = '<option value="">-- Memuat... --</option>';
         const snap = await db.collection('jadwal_audit').where('status', '==', 'Pending').where('group', '==', groupFilter).get();
         sel.innerHTML = '<option value="">-- Pilih Jadwal --</option>';
@@ -226,7 +247,7 @@
         e.preventDefault();
         const id = document.getElementById('selectJadwal').value;
         if(!id) return alert("Pilih jadwal!");
-        
+
         const kategoriSelect = document.getElementById('kategoriTemuan');
         const kategoriValues = Array.from(kategoriSelect.selectedOptions).map(opt => opt.value).join(', ');
 
@@ -248,7 +269,7 @@
             foto: [1,2,3,4,5].map(i => document.getElementById(`url${i}`).value).filter(v => v),
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
-        
+
         try {
             await db.collection('jadwal_audit').doc(id).update(data);
             alert("Berhasil!"); location.reload();
