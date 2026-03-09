@@ -33,8 +33,8 @@
     <div class="section-title">ADMIN: PENGATURAN JADWAL & EDIT DATA</div>
     
     <div style="display: flex; justify-content: space-between; align-items: flex-end;">
-        <button class="btn-action btn-add" onclick="addRow()">+ Tambah Baris Baru</button>
-        <div class="paste-hint">* Tips: Dropdown akan otomatis terisi dari database materi (Collection Documents)</div>
+        <button class="btn-action btn-add" id="btnAddRow" onclick="addRow()" disabled>Memuat Data...</button>
+        <div class="paste-hint">* Dropdown otomatis terisi dari database materi</div>
     </div>
 
     <div class="excel-container">
@@ -43,7 +43,7 @@
                 <tr>
                     <th width="150">PERIODE</th>
                     <th>NAMA AUDITOR</th>
-                    <th width="150">GROUP</th>
+                    <th width="180">GROUP</th>
                     <th>JUDUL IK / MATERI</th>
                     <th>DEPT. AUDITEE</th>
                     <th width="50" style="text-align:center">BATAL</th>
@@ -84,14 +84,26 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
     let tempAuditData = {};
-    let masterDocs = []; // Simpan data dokumen dari collection 'documents'
+    let masterDocs = []; 
 
-    // Ambil data dokumen sekali saja untuk dropdown
+    // 1. Ambil data master dari collection 'documents'
     async function initMasterDocs() {
-        const snap = await db.collection('documents').where('status', '==', 'Aktif').get();
-        masterDocs = snap.docs.map(doc => doc.data());
+        try {
+            const snap = await db.collection('documents').get();
+            masterDocs = snap.docs.map(doc => doc.data());
+            
+            // Aktifkan tombol tambah baris setelah data siap
+            const btn = document.getElementById('btnAddRow');
+            btn.disabled = false;
+            btn.innerText = "+ Tambah Baris Baru";
+            
+            console.log("Master data loaded:", masterDocs.length, "items");
+        } catch (e) {
+            console.error("Gagal memuat data master:", e);
+        }
     }
 
+    // 2. Fungsi Cascading: Update Dropdown IK saat Group berubah
     function updateIKDropdown(selectGroup) {
         const row = selectGroup.closest('tr');
         const selectIK = row.querySelector('.select-ik');
@@ -102,7 +114,6 @@
         inputAuditee.value = '';
 
         const filtered = masterDocs.filter(d => d.group === selectedGroup);
-        // Buat list unik judul IK
         const unikIK = [...new Set(filtered.map(item => item.judulIK))];
         
         unikIK.forEach(ik => {
@@ -113,6 +124,7 @@
         });
     }
 
+    // 3. Fungsi Cascading: Update Field Auditee saat Judul IK berubah
     function updateAuditeeField(selectIK) {
         const row = selectIK.closest('tr');
         const selectGroup = row.querySelector('.select-group');
@@ -128,8 +140,7 @@
         const tr = document.createElement('tr');
         if(isEdit) tr.className = 'editing-row';
         
-        // Ambil list unik group dari masterDocs
-        const unikGroups = [...new Set(masterDocs.map(d => d.group))];
+        const unikGroups = [...new Set(masterDocs.map(d => d.group))].filter(g => g);
         let groupOptions = unikGroups.map(g => `<option value="${g}" ${data[4] === g ? 'selected' : ''}>${g}</option>`).join('');
 
         tr.innerHTML = `
@@ -153,7 +164,7 @@
         `;
         document.getElementById('inputBody').prepend(tr);
 
-        // Jika data edit, trigger pengisian dropdown IK
+        // Jika mode edit atau data awal tersedia, isi dropdown IK secara manual
         if(data[4]) {
             const selGroup = tr.querySelector('.select-group');
             updateIKDropdown(selGroup);
@@ -170,8 +181,11 @@
 
         const batch = db.batch();
         rows.forEach(row => {
-            const inputs = row.querySelectorAll('.cell-input');
-            const p = inputs[0].value, a = inputs[1].value, g = inputs[2].value, ik = inputs[3].value, ad = inputs[4].value;
+            const p = row.querySelector('input[type="month"]').value;
+            const a = row.querySelector('input[placeholder="Nama Auditor..."]').value;
+            const g = row.querySelector('.select-group').value;
+            const ik = row.querySelector('.select-ik').value;
+            const ad = row.querySelector('.input-auditee').value;
 
             if (p && a && ad && ik) {
                 const [thn, bln] = p.split('-');
@@ -224,7 +238,7 @@
         if (doc.exists) {
             const d = doc.data();
             tempAuditData[d.kodeUnik] = d;
-            // Urutan addRow disesuaikan dropdown baru: [periode, auditor, auditee, judulIK, group]
+            // Data order: periode, auditor, auditee, judulIK, group
             addRow([d.periode, d.auditor, d.auditee, d.judulIK, d.group], true);
             await db.collection('jadwal_audit').doc(id).delete();
             fetchHistory();
@@ -238,7 +252,7 @@
         }
     }
 
-    // Jalankan inisialisasi data master sebelum menambah baris
+    // Inisialisasi: Ambil data master, baru jalankan sisa fungsi
     initMasterDocs().then(() => {
         addRow(); 
         fetchHistory();
