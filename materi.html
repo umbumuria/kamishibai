@@ -30,7 +30,7 @@
         }
         h2 { color: var(--primary); margin-top: 0; font-size: 22px; text-align: center; }
         .desc { font-size: 13px; opacity: 0.7; text-align: center; margin-bottom: 25px; }
-        
+
         .template-area { text-align: center; margin-bottom: 20px; }
         .btn-template {
             background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid #10b981;
@@ -45,14 +45,14 @@
             cursor: pointer; background: rgba(15, 23, 42, 0.5); transition: 0.3s;
         }
         .file-input:hover { border-color: var(--primary); background: rgba(59, 130, 246, 0.05); }
-        
+
         .btn-upload { 
             background: var(--primary); color: white; border: none; padding: 16px; 
             border-radius: 12px; font-weight: bold; cursor: pointer; width: 100%; font-size: 16px;
             box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
         }
         .btn-upload:disabled { background: #475569; cursor: not-allowed; box-shadow: none; }
-        
+
         #statusLog { 
             margin-top: 25px; background: #0f172a; color: #38bdf8; 
             padding: 15px; border-radius: 12px; height: 150px; 
@@ -69,7 +69,7 @@
         th { background: rgba(15, 23, 42, 0.8); padding: 12px; color: var(--primary); font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.1); }
         td { padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); color: #cbd5e1; }
         tr:hover { background: rgba(255,255,255,0.02); }
-        
+
         .btn-delete {
             background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid var(--danger);
             padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 10px;
@@ -79,6 +79,16 @@
         .success-text { color: #4ade80; font-weight: bold; }
         .error-text { color: #f87171; }
         .info-text { color: #eab308; }
+
+        /* Filter Style */
+        .search-box {
+            padding: 10px 15px; background: rgba(15, 23, 42, 0.5); border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .search-box input {
+            width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2);
+            padding: 8px 12px; border-radius: 8px; color: white; font-size: 13px; outline: none; box-sizing: border-box;
+        }
+        .search-box input:focus { border-color: var(--primary); }
     </style>
 </head>
 <body>
@@ -86,7 +96,7 @@
 <div class="import-card">
     <h2>Sync Data Materi Audit</h2>
     <p class="desc">Import dokumen (SOP/IK/FORM) ke dalam database sistem.</p>
-    
+
     <div class="template-area">
         <button class="btn-template" onclick="downloadTemplate()">
             <span>📥</span> Download Template Materi (.xlsx)
@@ -108,8 +118,13 @@
         <span>List Dokumen Terdaftar</span>
         <span id="docCount" style="color: var(--primary);">0 Dokumen</span>
     </div>
+    
+    <div class="search-box">
+        <input type="text" id="filterInput" placeholder="Cari Group, Auditee, atau Judul IK..." onkeyup="filterTable()">
+    </div>
+
     <div style="overflow-x: auto;">
-        <table>
+        <table id="docTable">
             <thead>
                 <tr>
                     <th>Group</th>
@@ -166,7 +181,32 @@
             `;
             tbody.appendChild(tr);
         });
+        // Re-apply filter after data updates if filter input is not empty
+        filterTable();
     });
+
+    function filterTable() {
+        const input = document.getElementById('filterInput');
+        const filter = input.value.toLowerCase();
+        const table = document.getElementById('docTable');
+        const tr = table.getElementsByTagName('tr');
+
+        for (let i = 1; i < tr.length; i++) {
+            let found = false;
+            const td = tr[i].getElementsByTagName('td');
+            // Cek Group (index 0), Auditee (index 1), dan Judul IK (index 2)
+            for (let j = 0; j < 3; j++) {
+                if (td[j]) {
+                    const txtValue = td[j].textContent || td[j].innerText;
+                    if (txtValue.toLowerCase().indexOf(filter) > -1) {
+                        found = true;
+                        break;
+                    }
+                }
+            }
+            tr[i].style.display = found ? "" : "none";
+        }
+    }
 
     async function deleteDoc(id) {
         if (confirm('Hapus dokumen ini?')) {
