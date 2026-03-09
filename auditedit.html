@@ -33,7 +33,7 @@
         
         /* Table & Rapi Filter */
         .table-container { background: white; border-radius: 12px; border: 1px solid var(--border); overflow-x: auto; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 1200px; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 1100px; }
         
         th { background: #f8fafc; padding: 12px 10px; text-align: left; color: #475569; border-bottom: 2px solid var(--border); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
         td { padding: 12px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
@@ -47,16 +47,16 @@
             transition: all 0.2s; background: #fdfdfd;
         }
         .filter-input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1); background: white; }
-        
-        .btn-action { padding: 5px 10px; border-radius: 6px; border: none; cursor: pointer; font-size: 10px; font-weight: bold; margin-bottom: 4px; display: block; width: 100%; text-align: center; }
-        .btn-edit { background: #dcfce7; color: #166534; }
-        .btn-delete { background: #fee2e2; color: #991b1b; }
 
         .thumb-img { width: 45px; height: 45px; object-fit: cover; border-radius: 6px; margin-right: 4px; border: 1px solid #ddd; cursor: pointer; }
         .badge { padding: 4px 8px; border-radius: 12px; font-size: 9px; font-weight: bold; display: inline-block; margin-top: 2px; }
         .badge-selesai { background: #e0e7ff; color: #3730a3; }
         .badge-closed { background: #dcfce7; color: #166534; }
         .badge-open { background: #fee2e2; color: #991b1b; }
+
+        .action-btn { padding: 5px 10px; border-radius: 6px; border: none; font-size: 10px; cursor: pointer; font-weight: bold; margin-bottom: 5px; width: 100%; display: block; }
+        .btn-edit { background: #fef9c3; color: #854d0e; }
+        .btn-delete { background: #fee2e2; color: #991b1b; }
 
         @media (max-width: 600px) {
             .grid { grid-template-columns: 1fr; }
@@ -88,10 +88,10 @@
             <div><label>Tanggal Audit</label><input type="date" id="tglAudit" required></div>
             <div><label>Auditor</label><input type="text" id="displayAuditor" readonly></div>
             <div><label>Dept. Auditee</label><input type="text" id="displayDept" readonly></div>
-            <div><label>Nama Personel Auditee</label><input type="text" id="namaAuditee" placeholder="Nama staf" required></div>
+            <div><label>Nama Personel Auditee</label><input type="text" id="namaAuditee" placeholder="Nama yang mendampingi audit" required></div>
             <div><label>Judul IK / Materi</label><input type="text" id="judulIK" placeholder="Materi audit..." readonly></div>
             <div><label>Jumlah Item Cek</label><input type="number" id="jmlItem" value="10" oninput="hitungNilai()" required></div>
-            <div><label>Jumlah Temuan</label><input type="number" id="jmlTemuan" value="0" oninput="hitungNilai()" required></div>
+            <div><label>Jumlah Temuan</label><input type="number" id="jmlTemuan" value="0" oninput="inputHitung()" required></div>
             <div><label>Nilai Pencapaian (%)</label><input type="text" id="nilaiTemuan" readonly></div>
             <div>
                 <label>Status Akhir</label>
@@ -101,14 +101,31 @@
                     <option value="OBSERVASI">OBSERVASI</option>
                 </select>
             </div>
+            <div>
+                <label>Status Temuan</label>
+                <select id="statusTemuan">
+                    <option value="Major">Major</option>
+                    <option value="Minor">Minor</option>
+                    <option value="Tidak ada temuan">Tidak ada temuan</option>
+                    <option value="Observasi">Observasi</option>
+                </select>
+            </div>
+            <div>
+                <label>Kategori Temuan</label>
+                <select id="kategoriTemuan">
+                    <option value="Proses">Proses</option>
+                    <option value="Dokumen">Dokumen</option>
+                    <option value="Safety">Safety</option>
+                </select>
+            </div>
         </div>
 
         <label>Uraian Ketidaksesuaian (Temuan)</label>
         <textarea id="uraian" rows="3" placeholder="Jika ada temuan..."></textarea>
 
         <div class="grid">
-            <div><label>Analisa Penyebab</label><textarea id="penyebab" rows="2"></textarea></div>
-            <div><label>Tindakan Perbaikan</label><textarea id="tindakan" rows="2"></textarea></div>
+            <div><label>Analisa Penyebab</label><textarea id="penyebab" rows="2" placeholder="Mengapa hal ini terjadi?"></textarea></div>
+            <div><label>Tindakan Perbaikan</label><textarea id="tindakan" rows="2" placeholder="Apa tindakan yang dilakukan?"></textarea></div>
         </div>
 
         <label>Foto Bukti (Maks 5 Foto)</label>
@@ -134,13 +151,13 @@
     </form>
 </div>
 
-<div style="max-width: 1350px; margin: 0 auto; margin-bottom: 80px; padding:0 15px;">
+<div style="max-width: 1300px; margin: 0 auto; margin-bottom: 80px; padding:0 15px;">
     <div class="section-title">HISTORY AUDIT LOG</div>
-    
     <div class="table-container">
         <table id="historyTable">
             <thead>
                 <tr>
+                    <th>Aksi</th>
                     <th>Tgl Audit</th>
                     <th>Group / Dept</th>
                     <th>Auditor / Auditee</th>
@@ -150,19 +167,17 @@
                     <th>Foto</th>
                     <th>Catatan</th>
                     <th>Status</th>
-                    <th>Aksi</th>
                 </tr>
                 <tr class="filter-row">
-                    <th><input type="text" class="filter-input" placeholder="Tgl..." onkeyup="filterExcel()"></th>
-                    <th><input type="text" class="filter-input" placeholder="Dept..." onkeyup="filterExcel()"></th>
-                    <th><input type="text" class="filter-input" placeholder="Nama..." onkeyup="filterExcel()"></th>
-                    <th><input type="text" class="filter-input" placeholder="Temuan..." onkeyup="filterExcel()"></th>
-                    <th><input type="text" class="filter-input" placeholder="Tindakan..." onkeyup="filterExcel()"></th>
-                    <th><input type="text" class="filter-input" placeholder="Nilai..." onkeyup="filterExcel()"></th>
-                    <th></th> 
-                    <th><input type="text" class="filter-input" placeholder="Catatan..." onkeyup="filterExcel()"></th>
-                    <th><input type="text" class="filter-input" placeholder="Status..." onkeyup="filterExcel()"></th>
                     <th></th>
+                    <th><input type="text" class="filter-input" placeholder="Cari tgl..." onkeyup="filterExcel()"></th>
+                    <th><input type="text" class="filter-input" placeholder="Cari dept..." onkeyup="filterExcel()"></th>
+                    <th><input type="text" class="filter-input" placeholder="Cari nama..." onkeyup="filterExcel()"></th>
+                    <th><input type="text" class="filter-input" placeholder="Cari temuan..." onkeyup="filterExcel()"></th>
+                    <th><input type="text" class="filter-input" placeholder="Cari tindakan..." onkeyup="filterExcel()"></th>
+                    <th><input type="text" class="filter-input" placeholder="Cari nilai..." onkeyup="filterExcel()"></th>
+                    <th></th> <th><input type="text" class="filter-input" placeholder="Cari catatan..." onkeyup="filterExcel()"></th>
+                    <th><input type="text" class="filter-input" placeholder="Cari status..." onkeyup="filterExcel()"></th>
                 </tr>
             </thead>
             <tbody id="historyBody"></tbody>
@@ -192,7 +207,7 @@
     async function loadJadwal() {
         const groupFilter = document.getElementById('filterGroupJadwal').value;
         const sel = document.getElementById('selectJadwal');
-        if(!groupFilter) { sel.innerHTML = '<option value="">-- Pilih Group Dahulu --</option>'; return; }
+        if(!groupFilter) { sel.innerHTML = '<option value="">-- Pilih Group --</option>'; return; }
         sel.innerHTML = '<option value="">-- Memuat Data... --</option>';
         try {
             const snap = await db.collection('jadwal_audit')
@@ -208,35 +223,15 @@
 
     function fillJadwalData(id) {
         if(!id) return;
-        const d = cacheJadwal[id] || cacheHistory[id];
+        const d = cacheJadwal[id];
         document.getElementById('displayGroup').value = d.group || '';
         document.getElementById('displayAuditor').value = d.auditor || '';
         document.getElementById('displayDept').value = d.auditee || '';
         document.getElementById('judulIK').value = d.judulIK || d.materi || '';
-        
-        // Reset/Fill other fields if editing
-        if(d.status === "Selesai") {
-            document.getElementById('tglAudit').value = d.tglAudit;
-            document.getElementById('namaAuditee').value = d.namaAuditeePerson;
-            document.getElementById('jmlItem').value = d.jmlItem;
-            document.getElementById('jmlTemuan').value = d.jmlTemuan;
-            document.getElementById('uraian').value = d.uraian || '';
-            document.getElementById('penyebab').value = d.penyebab || '';
-            document.getElementById('tindakan').value = d.tindakan || '';
-            document.getElementById('statusVerifikasi').value = d.statusVerifikasi || 'OPEN';
-            document.getElementById('updateCatatan').value = d.updateCatatan || '';
-            // Images
-            for(let i=1; i<=5; i++) {
-                const url = d.foto && d.foto[i-1] ? d.foto[i-1] : '';
-                document.getElementById(`url${i}`).value = url;
-                const img = document.getElementById(`img${i}`);
-                const txt = document.getElementById(`text${i}`);
-                if(url) { img.src = url; img.style.display = 'block'; txt.style.display = 'none'; }
-                else { img.style.display = 'none'; txt.style.display = 'block'; }
-            }
-        }
         hitungNilai();
     }
+    
+    function inputHitung() { hitungNilai(); }
 
     function hitungNilai() {
         const i = parseFloat(document.getElementById('jmlItem').value) || 0;
@@ -269,7 +264,7 @@
         for (let i = 0; i < rows.length; i++) {
             let rowVisible = true;
             const cells = rows[i].getElementsByTagName("td");
-            const colMapping = [0, 1, 2, 3, 4, 5, 7, 8]; 
+            const colMapping = [1, 2, 3, 4, 5, 6, 8, 9]; 
             filterInputs.forEach((input, index) => {
                 const filterValue = input.value.toLowerCase();
                 const targetColIndex = colMapping[index];
@@ -298,6 +293,8 @@
             penyebab: document.getElementById('penyebab').value,
             tindakan: document.getElementById('tindakan').value,
             statusVerifikasi: document.getElementById('statusVerifikasi').value,
+            statusTemuan: document.getElementById('statusTemuan').value,
+            kategoriTemuan: document.getElementById('kategoriTemuan').value,
             updateCatatan: document.getElementById('updateCatatan').value,
             status: "Selesai",
             foto: [1,2,3,4,5].map(i => document.getElementById(`url${i}`).value).filter(v => v),
@@ -306,9 +303,66 @@
         
         try {
             await db.collection('jadwal_audit').doc(id).update(data);
-            alert("Berhasil!"); location.reload();
+            alert("Hasil Audit Tersimpan!"); location.reload();
         } catch (e) { alert("Error!"); btn.disabled = false; }
     };
+
+    async function editAudit(id) {
+        const d = cacheHistory[id];
+        if(!d) return;
+
+        // Set select jadwal temporarily to include this ID
+        const sel = document.getElementById('selectJadwal');
+        sel.innerHTML = `<option value="${id}">${d.periode || 'Edit Mode'} | ${d.auditor}</option>`;
+        cacheJadwal[id] = d; 
+
+        document.getElementById('tglAudit').value = d.tglAudit || '';
+        document.getElementById('displayGroup').value = d.group || '';
+        document.getElementById('displayAuditor').value = d.auditor || '';
+        document.getElementById('displayDept').value = d.auditee || '';
+        document.getElementById('namaAuditee').value = d.namaAuditeePerson || '';
+        document.getElementById('judulIK').value = d.judulIK || '';
+        document.getElementById('jmlItem').value = d.jmlItem || 10;
+        document.getElementById('jmlTemuan').value = d.jmlTemuan || 0;
+        document.getElementById('statusVerifikasi').value = d.statusVerifikasi || 'OPEN';
+        document.getElementById('statusTemuan').value = d.statusTemuan || 'Major';
+        document.getElementById('kategoriTemuan').value = d.kategoriTemuan || 'Proses';
+        document.getElementById('uraian').value = d.uraian || '';
+        document.getElementById('penyebab').value = d.penyebab || '';
+        document.getElementById('tindakan').value = d.tindakan || '';
+        document.getElementById('updateCatatan').value = d.updateCatatan || '';
+        
+        // Load Photos
+        if(d.foto) {
+            d.foto.forEach((url, i) => {
+                if(i < 5) {
+                    const idx = i+1;
+                    document.getElementById(`url${idx}`).value = url;
+                    document.getElementById(`img${idx}`).src = url;
+                    document.getElementById(`img${idx}`).style.display = 'block';
+                    document.getElementById(`text${idx}`).style.display = 'none';
+                }
+            });
+        }
+
+        document.getElementById('btnSave').innerText = "UPDATE HASIL AUDIT";
+        hitungNilai();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    async function deleteAudit(id) {
+        if(!confirm("Yakin ingin menghapus data audit ini? Status akan dikembalikan ke 'Pending'")) return;
+        try {
+            await db.collection('jadwal_audit').doc(id).update({
+                status: "Pending",
+                tglAudit: firebase.firestore.FieldValue.delete(),
+                namaAuditeePerson: firebase.firestore.FieldValue.delete(),
+                uraian: firebase.firestore.FieldValue.delete(),
+                foto: firebase.firestore.FieldValue.delete()
+            });
+            alert("Data dihapus!"); location.reload();
+        } catch (e) { alert("Gagal hapus!"); }
+    }
 
     async function fetchAuditHistory() {
         const body = document.getElementById('historyBody');
@@ -325,10 +379,14 @@
                 
                 body.innerHTML += `
                     <tr>
+                        <td>
+                            <button class="action-btn btn-edit" onclick="editAudit('${doc.id}')">EDIT</button>
+                            <button class="action-btn btn-delete" onclick="deleteAudit('${doc.id}')">HAPUS</button>
+                        </td>
                         <td>${d.tglAudit}</td>
                         <td><b>${d.group}</b><br>${d.auditee}</td>
                         <td><small>Auditor:</small> ${d.auditor}<br><small>Auditee:</small> ${d.namaAuditeePerson || '-'}</td>
-                        <td><small>IK: ${d.judulIK || '-'}</small><br><i style="color:#64748b">${d.uraian || '-'}</i></td>
+                        <td><small>IK: ${d.judulIK || '-'}</small><br><i style="color:#64748b">${d.uraian || '-'}</i><br><small>Cat: ${d.statusTemuan || '-'} | ${d.kategoriTemuan || '-'}</small></td>
                         <td>${d.tindakan || '-'}</td>
                         <td style="font-weight:bold">${d.nilaiPencapaian}</td>
                         <td><div style="display:flex">${fotoHtml || '-'}</div></td>
@@ -337,43 +395,11 @@
                             <span class="badge badge-selesai">SUBMITTED</span><br>
                             <span class="badge ${d.statusVerifikasi==='CLOSED'?'badge-closed':'badge-open'}">${d.statusVerifikasi}</span>
                         </td>
-                        <td>
-                            <button class="btn-action btn-edit" onclick="editAudit('${doc.id}')">EDIT</button>
-                            <button class="btn-action btn-delete" onclick="deleteAudit('${doc.id}')">DELETE</button>
-                        </td>
                     </tr>
                 `;
             });
         } catch (e) { console.error(e); }
     }
-
-    function editAudit(id) {
-        const sel = document.getElementById('selectJadwal');
-        const d = cacheHistory[id];
-        sel.innerHTML = `<option value="${id}">${d.periode} | ${d.auditor} (RE-EDIT)</option>`;
-        sel.value = id;
-        fillJadwalData(id);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    async function deleteAudit(id) {
-        if(!confirm("Hapus hasil audit ini? Status akan kembali menjadi PENDING.")) return;
-        try {
-            await db.collection('jadwal_audit').doc(id).update({
-                status: "Pending",
-                tglAudit: "",
-                namaAuditeePerson: "",
-                jmlTemuan: 0,
-                nilaiPencapaian: "",
-                uraian: "",
-                penyebab: "",
-                tindakan: "",
-                foto: []
-            });
-            alert("Data dihapus!"); location.reload();
-        } catch (e) { alert("Gagal hapus!"); }
-    }
-
     fetchAuditHistory();
 </script>
 </body>
