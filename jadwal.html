@@ -39,7 +39,7 @@
 
     <div style="display: flex; justify-content: space-between; align-items: flex-end;">
         <button class="btn-action btn-add" id="btnAddRow" onclick="addRow()" disabled>Memuat Data...</button>
-        <div class="paste-hint">* Dropdown otomatis terisi dari database materi</div>
+        <div class="paste-hint">* Anda dapat memilih dari daftar atau mengetik teks baru langsung</div>
     </div>
 
     <div class="excel-container">
@@ -111,34 +111,46 @@
 
     function updateIKDropdown(selectGroup) {
         const row = selectGroup.closest('tr');
-        const selectIK = row.querySelector('.select-ik');
+        const datalistIK = row.querySelector('.datalist-ik');
+        const inputIK = row.querySelector('.input-ik');
         const inputAuditee = row.querySelector('.input-auditee');
         const selectedGroup = selectGroup.value;
-        selectIK.innerHTML = '<option value="">-- Pilih Judul IK --</option>';
+        
+        datalistIK.innerHTML = '';
+        inputIK.value = '';
         inputAuditee.value = '';
+        
         const filtered = masterDocs.filter(d => d.group === selectedGroup);
         const unikIK = [...new Set(filtered.map(item => item.judulIK))];
         unikIK.forEach(ik => {
             const opt = document.createElement('option');
             opt.value = ik;
-            opt.textContent = ik;
-            selectIK.appendChild(opt);
+            datalistIK.appendChild(opt);
         });
     }
 
-    function updateAuditeeField(selectIK) {
-        const row = selectIK.closest('tr');
+    function updateAuditeeField(inputIK) {
+        const row = inputIK.closest('tr');
         const selectGroup = row.querySelector('.select-group');
         const inputAuditee = row.querySelector('.input-auditee');
-        const doc = masterDocs.find(d => d.group === selectGroup.value && d.judulIK === selectIK.value);
-        if (doc) { inputAuditee.value = doc.auditee; }
+        const doc = masterDocs.find(d => d.group === selectGroup.value && d.judulIK === inputIK.value);
+        if (doc) { 
+            inputAuditee.value = doc.auditee; 
+            inputAuditee.readOnly = true;
+        } else {
+            inputAuditee.readOnly = false;
+            inputAuditee.placeholder = "Ketik Auditee...";
+        }
     }
 
     function addRow(data = ['', '', '', '', ''], isEdit = false) {
         const tr = document.createElement('tr');
         if(isEdit) tr.className = 'editing-row';
         const unikGroups = [...new Set(masterDocs.map(d => d.group))].filter(g => g);
+        const rowId = 'dl-' + Math.random().toString(36).substr(2, 9);
+        
         let groupOptions = unikGroups.map(g => `<option value="${g}" ${data[4] === g ? 'selected' : ''}>${g}</option>`).join('');
+        
         tr.innerHTML = `
             <td><input type="month" class="cell-input" value="${data[0]}"></td>
             <td><input type="text" class="cell-input" placeholder="Nama Auditor..." value="${data[1]}"></td>
@@ -149,21 +161,20 @@
                 </select>
             </td>
             <td>
-                <select class="cell-input select-ik" onchange="updateAuditeeField(this)">
-                    <option value="">-- Pilih Judul IK --</option>
-                </select>
+                <input type="text" class="cell-input input-ik" list="${rowId}" oninput="updateAuditeeField(this)" placeholder="Ketik atau pilih IK..." value="${data[3]}">
+                <datalist id="${rowId}" class="datalist-ik"></datalist>
             </td>
-            <td><input type="text" class="cell-input input-auditee" placeholder="Otomatis..." value="${data[2]}" readonly></td>
+            <td><input type="text" class="cell-input input-auditee" placeholder="Otomatis..." value="${data[2]}" ${data[2] ? 'readonly' : ''}></td>
             <td style="text-align:center">
                 <button onclick="this.parentElement.parentElement.remove()" style="background:none; border:none; color:#dc2626; cursor:pointer;">✕</button>
             </td>
         `;
         document.getElementById('inputBody').prepend(tr);
+        
         if(data[4]) {
             const selGroup = tr.querySelector('.select-group');
             updateIKDropdown(selGroup);
-            const selIK = tr.querySelector('.select-ik');
-            selIK.value = data[3];
+            tr.querySelector('.input-ik').value = data[3];
         }
     }
 
@@ -177,14 +188,15 @@
             const p = row.querySelector('input[type="month"]').value;
             const a = row.querySelector('input[placeholder="Nama Auditor..."]').value;
             const g = row.querySelector('.select-group').value;
-            const ik = row.querySelector('.select-ik').value;
+            const ik = row.querySelector('.input-ik').value;
             const ad = row.querySelector('.input-auditee').value;
+            
             if (p && a && ad && ik) {
                 const [thn, bln] = p.split('-');
-                const k = `${bln}${thn}-${a.replace(/\s+/g,'').toUpperCase()}-${ad.replace(/\s+/g,'').toUpperCase()}-${g}`;
+                const k = `${bln}${thn}-${a.replace(/\s+/g,'').toUpperCase()}-${ad.replace(/\s+/g,'').toUpperCase()}-${g || 'NA'}`;
                 const oldData = tempAuditData[k] || {};
                 batch.set(db.collection('jadwal_audit').doc(k), {
-                    periode: p, auditor: a, auditee: ad, judulIK: ik, group: g, kodeUnik: k,
+                    periode: p, auditor: a, auditee: ad, judulIK: ik, group: g || "CUSTOM", kodeUnik: k,
                     status: oldData.status || "Pending",
                     createdAt: oldData.createdAt || firebase.firestore.FieldValue.serverTimestamp()
                 }, { merge: true });
