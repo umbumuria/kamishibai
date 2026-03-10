@@ -222,18 +222,21 @@
             document.getElementById('user-display').innerText = "Role: " + user;
             
             // Atur Visibilitas Menu
+            const mAudit = document.getElementById('menu-audit');
             const mEdit = document.getElementById('menu-edit');
             const mJadwal = document.getElementById('menu-jadwal');
             const mUpload = document.getElementById('menu-upload');
             const mMateri = document.getElementById('menu-materi');
 
             if (user === "auditor") {
+                mAudit.classList.remove('hidden');
                 mEdit.classList.add('hidden');
                 mJadwal.classList.add('hidden');
                 mUpload.classList.add('hidden');
                 mMateri.classList.add('hidden');
                 loadPage('audit.html', 'Audit System', document.getElementById('menu-audit'));
             } else {
+                mAudit.classList.add('hidden');
                 mEdit.classList.remove('hidden');
                 mJadwal.classList.remove('hidden');
                 mUpload.classList.remove('hidden');
