@@ -1,44 +1,281 @@
-function addRow(data = ['', '', '', '', ''], isEdit = false) {
-    const tr = document.createElement('tr');
-    if(isEdit) tr.className = 'editing-row';
-    
-    const unikGroups = [...new Set(masterDocs.map(d => d.group))].filter(g => g);
-    // Kita buat ID unik untuk datalist auditor dan datalist IK
-    const rowIdIK = 'dl-ik-' + Math.random().toString(36).substr(2, 9);
-    const rowIdAuditor = 'dl-aud-' + Math.random().toString(36).substr(2, 9);
-    
-    // Contoh daftar auditor (Anda bisa mengambil ini dari database juga jika ada)
-    const daftarAuditor = ["Andi", "Budi", "Siti", "Dewi"]; 
-    let auditorOptions = daftarAuditor.map(a => `<option value="${a}">`).join('');
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin: Pengaturan Jadwal - Kamishibai</title>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <style>
+        :root { --primary: #2563eb; --bg-light: #f8fafc; --card-bg: #ffffff; --text-main: #1e293b; --border: #e2e8f0; --danger: #dc2626; }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg-light); color: var(--text-main); padding: 20px; }
+        .section-title { font-size: 18px; font-weight: bold; margin-bottom: 15px; border-left: 4px solid var(--primary); padding-left: 12px; display: flex; justify-content: space-between; align-items: center; color: var(--text-main); }
+        .excel-container { background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border); overflow-x: auto; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { background: #f1f5f9; padding: 12px; text-align: left; border-bottom: 2px solid var(--border); color: #64748b; }
+        td { padding: 0; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); }
+        .cell-input { width: 100%; border: none; background: transparent; color: var(--text-main); padding: 12px; outline: none; box-sizing: border-box; font-size: 13px; }
+        .cell-input:focus { background: #eff6ff; box-shadow: inset 0 0 0 1px var(--primary); }
+        .btn-action { background: var(--primary); color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-action:disabled { background: #cbd5e1; cursor: not-allowed; }
+        .btn-add { background: #10b981; margin-bottom: 10px; font-size: 12px; padding: 8px 15px; }
+        .badge { padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: bold; }
+        .badge-pending { background: #fef9c3; color: #854d0e; }
+        .badge-selesai { background: #dcfce7; color: #166534; }
+        .btn-edit { color: #2563eb; background: #dbeafe; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .btn-delete { color: var(--danger); background: #fee2e2; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-left: 5px; }
+        .editing-row { background: #fff9db !important; }
+        .paste-hint { font-size: 11px; color: #64748b; margin-bottom: 5px; font-style: italic; }
+        
+        /* Style Tambahan untuk Filter */
+        .filter-container { margin-bottom: 15px; display: flex; gap: 10px; align-items: center; }
+        .filter-input { padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; width: 300px; outline: none; }
+        .filter-input:focus { border-color: var(--primary); }
+    </style>
+</head>
+<body>
 
-    let groupOptions = unikGroups.map(g => `<option value="${g}" ${data[4] === g ? 'selected' : ''}>${g}</option>`).join('');
+    <div class="section-title">ADMIN: PENGATURAN JADWAL & EDIT DATA</div>
+
+    <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+        <button class="btn-action btn-add" id="btnAddRow" onclick="addRow()" disabled>Memuat Data...</button>
+        <div class="paste-hint">* Anda dapat memilih dari daftar atau mengetik teks baru langsung</div>
+    </div>
+
+    <div class="excel-container">
+        <table id="inputTable">
+            <thead>
+                <tr>
+                    <th width="150">PERIODE</th>
+                    <th>NAMA AUDITOR</th>
+                    <th width="180">GROUP</th>
+                    <th>JUDUL IK / MATERI</th>
+                    <th>DEPT. AUDITEE</th>
+                    <th width="50" style="text-align:center">BATAL</th>
+                </tr>
+            </thead>
+            <tbody id="inputBody"></tbody>
+        </table>
+    </div>
+    <button id="btnSaveAll" class="btn-action" style="width: 100%; margin-bottom: 40px;" onclick="saveBulkData()">SIMPAN SEMUA JADWAL</button>
+
+    <div class="section-title">DATABASE MASTER JADWAL & HASIL</div>
     
-    tr.innerHTML = `
-        <td><input type="month" class="cell-input" value="${data[0]}"></td>
-        <td>
-            <input type="text" class="cell-input" list="${rowIdAuditor}" placeholder="Ketik/Pilih Auditor..." value="${data[1]}">
-            <datalist id="${rowIdAuditor}">${auditorOptions}</datalist>
-        </td>
-        <td>
-            <select class="cell-input select-group" onchange="updateIKDropdown(this)">
-                <option value="">-- Pilih Group --</option>
-                ${groupOptions}
-            </select>
-        </td>
-        <td>
-            <input type="text" class="cell-input input-ik" list="${rowIdIK}" oninput="updateAuditeeField(this)" placeholder="Ketik atau pilih IK..." value="${data[3]}">
-            <datalist id="${rowIdIK}" class="datalist-ik"></datalist>
-        </td>
-        <td><input type="text" class="cell-input input-auditee" placeholder="Otomatis..." value="${data[2]}" ${data[2] ? 'readonly' : ''}></td>
-        <td style="text-align:center">
-            <button onclick="this.parentElement.parentElement.remove()" style="background:none; border:none; color:#dc2626; cursor:pointer;">✕</button>
-        </td>
-    `;
-    document.getElementById('inputBody').prepend(tr);
-    
-    if(data[4]) {
-        const selGroup = tr.querySelector('.select-group');
-        updateIKDropdown(selGroup);
-        tr.querySelector('.input-ik').value = data[3];
+    <div class="filter-container">
+        <input type="text" id="tableFilter" class="filter-input" placeholder="Cari Auditor, Group, atau Materi..." onkeyup="filterHistoryTable()">
+    </div>
+
+    <div class="excel-container">
+        <table id="historyTable">
+            <thead>
+                <tr>
+                    <th style="padding-left:15px">PERIODE</th>
+                    <th>AUDITOR</th>
+                    <th>GROUP</th>
+                    <th>AUDITEE</th>
+                    <th>JUDUL IK/ MATERI</th>
+                    <th>STATUS</th>
+                    <th width="150" style="text-align: center;">AKSI</th>
+                </tr>
+            </thead>
+            <tbody id="historyBody"></tbody>
+        </table>
+    </div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyCiW38hQ5ZfYnp3sa95OQw6IjxnfnM5dl4",
+        authDomain: "kamishibaimsm.firebaseapp.com",
+        projectId: "kamishibaimsm",
+        storageBucket: "kamishibaimsm.firebasestorage.app",
+        messagingSenderId: "184420389379",
+        appId: "1:184420389379:web:51bbb78ce5fa8e8d227436"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    let tempAuditData = {};
+    let masterDocs = []; 
+
+    async function initMasterDocs() {
+        try {
+            const snap = await db.collection('documents').get();
+            masterDocs = snap.docs.map(doc => doc.data());
+            const btn = document.getElementById('btnAddRow');
+            btn.disabled = false;
+            btn.innerText = "+ Tambah Baris Baru";
+        } catch (e) {
+            console.error("Gagal memuat data master:", e);
+        }
     }
-}
+
+    function updateIKDropdown(selectGroup) {
+        const row = selectGroup.closest('tr');
+        const datalistIK = row.querySelector('.datalist-ik');
+        const inputIK = row.querySelector('.input-ik');
+        const inputAuditee = row.querySelector('.input-auditee');
+        const selectedGroup = selectGroup.value;
+        
+        datalistIK.innerHTML = '';
+        inputIK.value = '';
+        inputAuditee.value = '';
+        
+        const filtered = masterDocs.filter(d => d.group === selectedGroup);
+        const unikIK = [...new Set(filtered.map(item => item.judulIK))];
+        unikIK.forEach(ik => {
+            const opt = document.createElement('option');
+            opt.value = ik;
+            datalistIK.appendChild(opt);
+        });
+    }
+
+    function updateAuditeeField(inputIK) {
+        const row = inputIK.closest('tr');
+        const selectGroup = row.querySelector('.select-group');
+        const inputAuditee = row.querySelector('.input-auditee');
+        const doc = masterDocs.find(d => d.group === selectGroup.value && d.judulIK === inputIK.value);
+        if (doc) { 
+            inputAuditee.value = doc.auditee; 
+            inputAuditee.readOnly = true;
+        } else {
+            inputAuditee.readOnly = false;
+            inputAuditee.placeholder = "Ketik Auditee...";
+        }
+    }
+
+    function addRow(data = ['', '', '', '', ''], isEdit = false) {
+        const tr = document.createElement('tr');
+        if(isEdit) tr.className = 'editing-row';
+        const unikGroups = [...new Set(masterDocs.map(d => d.group))].filter(g => g);
+        
+        // Buat ID unik untuk Datalist Auditor dan IK
+        const rowId = 'dl-' + Math.random().toString(36).substr(2, 9);
+        const audId = 'aud-' + Math.random().toString(36).substr(2, 9);
+        
+        // Contoh daftar auditor, bisa disesuaikan
+        const daftarAuditor = ["Andi", "Budi", "Siti", "Dewi"]; 
+        let auditorOptions = daftarAuditor.map(a => `<option value="${a}">`).join('');
+        
+        let groupOptions = unikGroups.map(g => `<option value="${g}" ${data[4] === g ? 'selected' : ''}>${g}</option>`).join('');
+        
+        tr.innerHTML = `
+            <td><input type="month" class="cell-input" value="${data[0]}"></td>
+            <td>
+                <input type="text" class="cell-input input-auditor" list="${audId}" placeholder="Ketik atau pilih Auditor..." value="${data[1]}">
+                <datalist id="${audId}">${auditorOptions}</datalist>
+            </td>
+            <td>
+                <select class="cell-input select-group" onchange="updateIKDropdown(this)">
+                    <option value="">-- Pilih Group --</option>
+                    ${groupOptions}
+                </select>
+            </td>
+            <td>
+                <input type="text" class="cell-input input-ik" list="${rowId}" oninput="updateAuditeeField(this)" placeholder="Ketik atau pilih IK..." value="${data[3]}">
+                <datalist id="${rowId}" class="datalist-ik"></datalist>
+            </td>
+            <td><input type="text" class="cell-input input-auditee" placeholder="Otomatis..." value="${data[2]}" ${data[2] ? 'readonly' : ''}></td>
+            <td style="text-align:center">
+                <button onclick="this.parentElement.parentElement.remove()" style="background:none; border:none; color:#dc2626; cursor:pointer;">✕</button>
+            </td>
+        `;
+        document.getElementById('inputBody').prepend(tr);
+        
+        if(data[4]) {
+            const selGroup = tr.querySelector('.select-group');
+            updateIKDropdown(selGroup);
+            tr.querySelector('.input-ik').value = data[3];
+        }
+    }
+
+    async function saveBulkData() {
+        const rows = document.querySelectorAll('#inputBody tr');
+        if (rows.length === 0) return;
+        const btn = document.getElementById('btnSaveAll');
+        btn.disabled = true; btn.innerText = "Menyimpan...";
+        const batch = db.batch();
+        rows.forEach(row => {
+            const p = row.querySelector('input[type="month"]').value;
+            // Mengambil value dari class input-auditor yang baru
+            const a = row.querySelector('.input-auditor').value;
+            const g = row.querySelector('.select-group').value;
+            const ik = row.querySelector('.input-ik').value;
+            const ad = row.querySelector('.input-auditee').value;
+            
+            if (p && a && ad && ik) {
+                const [thn, bln] = p.split('-');
+                const k = `${bln}${thn}-${a.replace(/\s+/g,'').toUpperCase()}-${ad.replace(/\s+/g,'').toUpperCase()}-${g || 'NA'}`;
+                const oldData = tempAuditData[k] || {};
+                batch.set(db.collection('jadwal_audit').doc(k), {
+                    periode: p, auditor: a, auditee: ad, judulIK: ik, group: g || "CUSTOM", kodeUnik: k,
+                    status: oldData.status || "Pending",
+                    createdAt: oldData.createdAt || firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+            }
+        });
+        await batch.commit();
+        alert("Jadwal Berhasil Disimpan!");
+        location.reload();
+    }
+
+    function filterHistoryTable() {
+        const filter = document.getElementById('tableFilter').value.toUpperCase();
+        const rows = document.querySelectorAll('#historyBody tr');
+        rows.forEach(row => {
+            const text = row.innerText.toUpperCase();
+            row.style.display = text.includes(filter) ? "" : "none";
+        });
+    }
+
+    async function fetchHistory() {
+        try {
+            const snap = await db.collection('jadwal_audit').orderBy('periode', 'desc').get();
+            const body = document.getElementById('historyBody');
+            body.innerHTML = '';
+            snap.forEach(doc => {
+                const d = doc.data();
+                const tr = document.createElement('tr');
+                const statusLower = (d.status || "").toLowerCase();
+                const badgeClass = statusLower === 'selesai' ? 'badge-selesai' : 'badge-pending';
+                tr.innerHTML = `
+                    <td style="padding:12px;">${d.periode}</td>
+                    <td><b>${d.auditor}</b></td>
+                    <td>${d.group || '-'}</td>
+                    <td>${d.auditee}</td>
+                    <td>${d.judulIK || '-'}</td>
+                    <td><span class="badge ${badgeClass}">${(d.status || 'Pending').toUpperCase()}</span></td>
+                    <td style="text-align:center;">
+                        <button class="btn-edit" onclick="moveRowToEdit('${doc.id}')">EDIT</button>
+                        <button class="btn-delete" onclick="deleteData('${doc.id}')">HAPUS</button>
+                    </td>
+                `;
+                body.appendChild(tr);
+            });
+        } catch (e) { console.error("Error fetching: ", e); }
+    }
+
+    async function moveRowToEdit(id) {
+        const doc = await db.collection('jadwal_audit').doc(id).get();
+        if (doc.exists) {
+            const d = doc.data();
+            tempAuditData[d.kodeUnik] = d;
+            addRow([d.periode, d.auditor, d.auditee, d.judulIK, d.group], true);
+            await db.collection('jadwal_audit').doc(id).delete();
+            fetchHistory();
+        }
+    }
+
+    async function deleteData(id) {
+        if(confirm("Hapus jadwal ini?")) {
+            await db.collection('jadwal_audit').doc(id).delete();
+            fetchHistory();
+        }
+    }
+
+    initMasterDocs().then(() => {
+        addRow(); 
+        fetchHistory();
+    });
+</script>
+</body>
+</html>
