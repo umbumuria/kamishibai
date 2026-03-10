@@ -148,11 +148,9 @@
         if(isEdit) tr.className = 'editing-row';
         const unikGroups = [...new Set(masterDocs.map(d => d.group))].filter(g => g);
         
-        // Buat ID unik untuk Datalist Auditor dan IK
         const rowId = 'dl-' + Math.random().toString(36).substr(2, 9);
         const audId = 'aud-' + Math.random().toString(36).substr(2, 9);
         
-        // Contoh daftar auditor, bisa disesuaikan
         const daftarAuditor = ["Andi", "Budi", "Siti", "Dewi"]; 
         let auditorOptions = daftarAuditor.map(a => `<option value="${a}">`).join('');
         
@@ -196,7 +194,6 @@
         const batch = db.batch();
         rows.forEach(row => {
             const p = row.querySelector('input[type="month"]').value;
-            // Mengambil value dari class input-auditor yang baru
             const a = row.querySelector('.input-auditor').value;
             const g = row.querySelector('.select-group').value;
             const ik = row.querySelector('.input-ik').value;
@@ -266,9 +263,13 @@
     }
 
     async function deleteData(id) {
-        if(confirm("Hapus jadwal ini?")) {
-            await db.collection('jadwal_audit').doc(id).delete();
+        if(!confirm("Hapus permanen data ini dari database?")) return;
+        try {
+            await db.collection('jadwal_audit').doc(id).delete(); 
+            alert("Data berhasil dihapus permanen");
             fetchHistory();
+        } catch (e) {
+            alert("Gagal menghapus data: " + e.message);
         }
     }
 
