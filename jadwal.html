@@ -27,7 +27,6 @@
         .editing-row { background: #fff9db !important; }
         .paste-hint { font-size: 11px; color: #64748b; margin-bottom: 5px; font-style: italic; }
         
-        /* Style Tambahan untuk Filter */
         .filter-container { margin-bottom: 15px; display: flex; gap: 10px; align-items: center; }
         .filter-input { padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; width: 300px; outline: none; }
         .filter-input:focus { border-color: var(--primary); }
@@ -96,6 +95,15 @@
     const db = firebase.firestore();
     let tempAuditData = {};
     let masterDocs = []; 
+    let isSaving = false;
+
+    window.addEventListener('beforeunload', function (e) {
+        const rowCount = document.querySelectorAll('#inputBody tr').length;
+        if (rowCount > 0 && !isSaving) {
+            e.preventDefault();
+            e.returnValue = 'Data yang sedang diedit belum disimpan. Tetap keluar?';
+        }
+    });
 
     async function initMasterDocs() {
         try {
@@ -114,7 +122,6 @@
         const pastedData = clipboardData.getData('Text');
         const rows = pastedData.split(/\r\n|\n|\r/);
         
-        // Cek jika paste mengandung multiple baris atau kolom
         if (rows.length > 0 && rows[0].includes('\t')) {
             event.preventDefault();
             const startRow = event.target.closest('tr');
@@ -140,7 +147,6 @@
                 columns.forEach((colData, index) => {
                     if (inputs[index]) {
                         inputs[index].value = colData.trim();
-                        // Trigger change event untuk group/IK logic
                         if (index === 2) updateIKDropdown(inputs[index]);
                         if (index === 3) updateAuditeeField(inputs[index]);
                     }
@@ -154,8 +160,6 @@
     function updateIKDropdown(selectGroup) {
         const row = selectGroup.closest('tr');
         const datalistIK = row.querySelector('.datalist-ik');
-        const inputIK = row.querySelector('.input-ik');
-        const inputAuditee = row.querySelector('.input-auditee');
         const selectedGroup = selectGroup.value;
         
         datalistIK.innerHTML = '';
@@ -192,7 +196,6 @@
         
         const daftarAuditor = ["Andi", "Budi", "Siti", "Dewi"]; 
         let auditorOptions = daftarAuditor.map(a => `<option value="${a}">`).join('');
-        
         let groupOptions = unikGroups.map(g => `<option value="${g}" ${data[4] === g ? 'selected' : ''}>${g}</option>`).join('');
         
         tr.innerHTML = `
@@ -250,6 +253,7 @@
             }
         });
         await batch.commit();
+        isSaving = true;
         alert("Jadwal Berhasil Disimpan!");
         location.reload();
     }
@@ -271,8 +275,7 @@
             snap.forEach(doc => {
                 const d = doc.data();
                 const tr = document.createElement('tr');
-                const statusLower = (d.status || "").toLowerCase();
-                const badgeClass = statusLower === 'selesai' ? 'badge-selesai' : 'badge-pending';
+                const badgeClass = (d.status || "").toLowerCase() === 'selesai' ? 'badge-selesai' : 'badge-pending';
                 tr.innerHTML = `
                     <td style="padding:12px;">${d.periode}</td>
                     <td><b>${d.auditor}</b></td>
@@ -287,17 +290,19 @@
                 `;
                 body.appendChild(tr);
             });
-        } catch (e) { console.error("Error fetching: ", e); }
+        } catch (e) { console.error(e); }
     }
 
+    // PERBAIKAN: Fungsi EDIT tidak lagi menghapus data dari DB
     async function moveRowToEdit(id) {
         const doc = await db.collection('jadwal_audit').doc(id).get();
         if (doc.exists) {
             const d = doc.data();
             tempAuditData[d.kodeUnik] = d;
+            // Pindahkan ke atas untuk diedit
             addRow([d.periode, d.auditor, d.auditee, d.judulIK, d.group], true);
-            await db.collection('jadwal_audit').doc(id).delete();
-            fetchHistory();
+            // Memberikan feedback visual bahwa data sedang diedit
+            alert("Data terpilih dipindahkan ke tabel input atas. Silakan simpan untuk memperbarui.");
         }
     }
 
@@ -307,9 +312,7 @@
             await db.collection('jadwal_audit').doc(id).delete(); 
             alert("Data berhasil dihapus permanen");
             fetchHistory();
-        } catch (e) {
-            alert("Gagal menghapus data: " + e.message);
-        }
+        } catch (e) { alert(e.message); }
     }
 
     initMasterDocs().then(() => {
