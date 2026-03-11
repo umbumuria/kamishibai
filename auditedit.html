@@ -160,7 +160,7 @@
                     <th>Group / Dept</th>
                     <th>Auditor / Auditee</th>
                     <th>Materi & Temuan</th>
-                    <th>Analisa & Perbaikan</th>
+                    <th>Perbaikan</th>
                     <th>Nilai</th>
                     <th>Foto</th>
                     <th>Catatan</th>
@@ -377,22 +377,10 @@
                     </td>
                     <td>${d.tglAudit}</td>
                     <td><b>${d.group}</b><br>${d.auditee}</td>
-                    <td>${d.auditor}<br><small>Auditee: ${d.namaAuditeePerson || '-'}</small></td>
-                    <td>
-                        <b>IK: ${d.judulIK}</b><br>
-                        <small>Status: ${d.statusTemuan || '-'}</small><br>
-                        <i>Ketidaksesuaian: ${d.uraian || '-'}</i><br>
-                        <small>Kategori: ${d.kategoriTemuan || '-'}</small>
-                    </td>
-                    <td>
-                        <b>Analisa:</b> ${d.penyebab || '-'}<br>
-                        <b>Tindakan:</b> ${d.tindakan || '-'}
-                    </td>
-                    <td>
-                        Item: ${d.jmlItem}<br>
-                        Temuan: ${d.jmlTemuan}<br>
-                        <b>${d.nilaiPencapaian}</b>
-                    </td>
+                    <td>${d.auditor}<br><small>${d.namaAuditeePerson || '-'}</small></td>
+                    <td><b>IK: ${d.judulIK}</b><br><i>${d.uraian || '-'}</i><br><small>Kategori: ${d.kategoriTemuan}</small></td>
+                    <td>${d.tindakan || '-'}</td>
+                    <td>${d.nilaiPencapaian}</td>
                     <td>${fotoHtml}</td>
                     <td>${d.updateCatatan || '-'}</td>
                     <td><span class="badge ${d.statusVerifikasi==='CLOSED'?'badge-closed':'badge-open'}">${d.statusVerifikasi}</span></td>
