@@ -30,6 +30,13 @@
         .photo-box { border: 2px dashed var(--border); border-radius: 10px; padding: 5px; text-align: center; cursor: pointer; min-height: 100px; display: flex; align-items: center; justify-content: center; flex-direction: column; overflow: hidden; background: #fafafa; position: relative; }
         .photo-box img { width: 100%; height: 100%; border-radius: 5px; display: none; object-fit: cover; }
         .photo-box span { font-size: 10px; color: #64748b; font-weight: bold; }
+        
+        /* Style untuk tombol hapus foto */
+        .remove-photo { 
+            position: absolute; top: 2px; right: 2px; background: rgba(239, 68, 68, 0.8); 
+            color: white; border: none; border-radius: 50%; width: 20px; height: 20px; 
+            font-size: 12px; cursor: pointer; display: none; z-index: 10;
+        }
 
         .btn-submit { width: 100%; padding: 18px; background: var(--primary); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 18px; transition: 0.3s; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3); }
 
@@ -121,7 +128,8 @@
             <script>
                 for(let i=1; i<=5; i++) {
                     document.write(`
-                        <div class="photo-box" onclick="document.getElementById('file${i}').click()">
+                        <div class="photo-box" id="box${i}" onclick="triggerUpload(${i})">
+                            <button type="button" class="remove-photo" id="remove${i}" onclick="removePhoto(event, ${i})">×</button>
                             <img id="img${i}" src="">
                             <span id="text${i}">${i===5?'FOTO BERSAMA':`FOTO ${i}`}</span>
                             <div id="load${i}" style="display:none; font-size:10px; color:var(--primary);">Uploading...</div>
@@ -242,6 +250,22 @@
         document.getElementById('nilaiTemuan').value = i > 0 ? ((1-(t/i))*100).toFixed(2) + "%" : "0%";
     }
 
+    // Fungsi trigger input file
+    function triggerUpload(idx) {
+        document.getElementById(`file${idx}`).click();
+    }
+
+    // Fungsi hapus foto terpilih
+    function removePhoto(event, idx) {
+        event.stopPropagation();
+        document.getElementById(`url${idx}`).value = '';
+        document.getElementById(`img${idx}`).src = '';
+        document.getElementById(`img${idx}`).style.display = 'none';
+        document.getElementById(`text${idx}`).style.display = 'block';
+        document.getElementById(`remove${idx}`).style.display = 'none';
+        document.getElementById(`file${idx}`).value = '';
+    }
+
     async function uploadImage(input, idx) {
         const file = input.files[0]; if(!file) return;
         document.getElementById(`load${idx}`).style.display = 'block';
@@ -253,6 +277,7 @@
             document.getElementById(`img${idx}`).src = data.secure_url;
             document.getElementById(`img${idx}`).style.display = 'block';
             document.getElementById(`text${idx}`).style.display = 'none';
+            document.getElementById(`remove${idx}`).style.display = 'block';
         } catch (e) { alert("Upload Gagal"); }
         document.getElementById(`load${idx}`).style.display = 'none';
     }
@@ -329,6 +354,7 @@
             document.getElementById(`url${i}`).value = '';
             document.getElementById(`img${i}`).style.display = 'none';
             document.getElementById(`text${i}`).style.display = 'block';
+            document.getElementById(`remove${i}`).style.display = 'none';
         }
 
         if(d.foto && d.foto.length > 0) {
@@ -339,6 +365,7 @@
                     document.getElementById(`img${i}`).src = url;
                     document.getElementById(`img${i}`).style.display = 'block';
                     document.getElementById(`text${i}`).style.display = 'none';
+                    document.getElementById(`remove${i}`).style.display = 'block';
                 }
             });
         }
@@ -357,9 +384,34 @@
     }
 
     async function deleteAudit(id) {
-        if(!confirm("Hapus data ini?")) return;
-        await db.collection('jadwal_audit').doc(id).update({ status: "Pending" });
-        location.reload();
+        if(!confirm("Hapus data input audit ini? (Data jadwal akan tetap ada)")) return;
+        
+        // Objek yang hanya berisi field hasil input audit untuk dikosongkan
+        const resetData = {
+            tglAudit: "",
+            namaAuditeePerson: "",
+            jmlItem: 10,
+            jmlTemuan: 0,
+            nilaiPencapaian: "",
+            uraian: "",
+            penyebab: "",
+            tindakan: "",
+            statusVerifikasi: "OPEN",
+            statusTemuan: "Major",
+            kategoriTemuan: "",
+            updateCatatan: "",
+            foto: [],
+            status: "Pending", // Kembalikan ke Pending agar bisa diinput ulang
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        try {
+            await db.collection('jadwal_audit').doc(id).update(resetData);
+            alert("Data audit berhasil dihapus.");
+            location.reload();
+        } catch (e) {
+            alert("Gagal menghapus data.");
+        }
     }
 
     async function fetchAuditHistory() {
