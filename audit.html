@@ -30,6 +30,13 @@
         .photo-box { border: 2px dashed var(--border); border-radius: 10px; padding: 5px; text-align: center; cursor: pointer; min-height: 100px; display: flex; align-items: center; justify-content: center; flex-direction: column; overflow: hidden; background: #fafafa; position: relative; }
         .photo-box img { width: 100%; height: 100%; border-radius: 5px; display: none; object-fit: cover; }
         .photo-box span { font-size: 10px; color: #64748b; font-weight: bold; }
+        
+        /* Style Tambahan untuk Tombol Hapus Foto */
+        .btn-remove {
+            position: absolute; top: 5px; right: 5px; background: var(--danger); color: white;
+            border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 12px;
+            cursor: pointer; display: none; z-index: 10; align-items: center; justify-content: center;
+        }
 
         .btn-submit { width: 100%; padding: 18px; background: var(--primary); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 18px; transition: 0.3s; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3); }
 
@@ -117,10 +124,13 @@
             <script>
                 for(let i=1; i<=5; i++) {
                     document.write(`
-                        <div class="photo-box" onclick="document.getElementById('file${i}').click()">
-                            <img id="img${i}" src="">
-                            <span id="text${i}">${i===5?'FOTO BERSAMA':`FOTO ${i}`}</span>
-                            <div id="load${i}" style="display:none; font-size:10px; color:var(--primary);">Uploading...</div>
+                        <div class="photo-box" id="box${i}">
+                            <button type="button" class="btn-remove" id="btnDel${i}" onclick="removeImage(event, ${i})">✕</button>
+                            <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; flex-direction:column;" onclick="document.getElementById('file${i}').click()">
+                                <img id="img${i}" src="">
+                                <span id="text${i}">${i===5?'FOTO BERSAMA':`FOTO ${i}`}</span>
+                                <div id="load${i}" style="display:none; font-size:10px; color:var(--primary);">Uploading...</div>
+                            </div>
                             <input type="file" id="file${i}" accept="image/*" hidden onchange="uploadImage(this, ${i})">
                             <input type="hidden" id="url${i}">
                         </div>
@@ -248,8 +258,21 @@
             document.getElementById(`img${idx}`).src = data.secure_url;
             document.getElementById(`img${idx}`).style.display = 'block';
             document.getElementById(`text${idx}`).style.display = 'none';
+            document.getElementById(`btnDel${idx}`).style.display = 'flex'; // Munculkan tombol hapus
         } catch (e) { alert("Upload Gagal"); }
         document.getElementById(`load${idx}`).style.display = 'none';
+    }
+
+    function removeImage(event, idx) {
+        event.stopPropagation(); // Mencegah trigger click pada box pilih file
+        if(confirm("Batalkan foto ini?")) {
+            document.getElementById(`file${idx}`).value = "";
+            document.getElementById(`url${idx}`).value = "";
+            document.getElementById(`img${idx}`).src = "";
+            document.getElementById(`img${idx}`).style.display = 'none';
+            document.getElementById(`text${idx}`).style.display = 'block';
+            document.getElementById(`btnDel${idx}`).style.display = 'none';
+        }
     }
 
     document.getElementById('auditForm').onsubmit = async (e) => {
