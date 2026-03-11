@@ -39,11 +39,11 @@
 
     <div style="display: flex; justify-content: space-between; align-items: flex-end;">
         <button class="btn-action btn-add" id="btnAddRow" onclick="addRow()" disabled>Memuat Data...</button>
-        <div class="paste-hint">* Anda dapat memilih dari daftar atau mengetik teks baru langsung</div>
+        <div class="paste-hint">* Klik pada cell Periode lalu Paste (Ctrl+V) dari Excel untuk input cepat</div>
     </div>
 
     <div class="excel-container">
-        <table id="inputTable">
+        <table id="inputTable" onpaste="handlePaste(event)">
             <thead>
                 <tr>
                     <th width="150">PERIODE</th>
@@ -109,6 +109,48 @@
         }
     }
 
+    function handlePaste(event) {
+        const clipboardData = event.clipboardData || window.clipboardData;
+        const pastedData = clipboardData.getData('Text');
+        const rows = pastedData.split(/\r\n|\n|\r/);
+        
+        // Cek jika paste mengandung multiple baris atau kolom
+        if (rows.length > 0 && rows[0].includes('\t')) {
+            event.preventDefault();
+            const startRow = event.target.closest('tr');
+            let currentRow = startRow;
+
+            rows.forEach((rowData) => {
+                if (rowData.trim() === "") return;
+                const columns = rowData.split('\t');
+                
+                if (!currentRow) {
+                    addRow();
+                    currentRow = document.getElementById('inputBody').firstElementChild;
+                }
+
+                const inputs = [
+                    currentRow.querySelector('input[type="month"]'),
+                    currentRow.querySelector('.input-auditor'),
+                    currentRow.querySelector('.select-group'),
+                    currentRow.querySelector('.input-ik'),
+                    currentRow.querySelector('.input-auditee')
+                ];
+
+                columns.forEach((colData, index) => {
+                    if (inputs[index]) {
+                        inputs[index].value = colData.trim();
+                        // Trigger change event untuk group/IK logic
+                        if (index === 2) updateIKDropdown(inputs[index]);
+                        if (index === 3) updateAuditeeField(inputs[index]);
+                    }
+                });
+
+                currentRow = currentRow.nextElementSibling;
+            });
+        }
+    }
+
     function updateIKDropdown(selectGroup) {
         const row = selectGroup.closest('tr');
         const datalistIK = row.querySelector('.datalist-ik');
@@ -117,9 +159,6 @@
         const selectedGroup = selectGroup.value;
         
         datalistIK.innerHTML = '';
-        inputIK.value = '';
-        inputAuditee.value = '';
-        
         const filtered = masterDocs.filter(d => d.group === selectedGroup);
         const unikIK = [...new Set(filtered.map(item => item.judulIK))];
         unikIK.forEach(ik => {
