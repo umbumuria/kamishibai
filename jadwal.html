@@ -27,8 +27,8 @@
         .editing-row { background: #fff9db !important; }
         .paste-hint { font-size: 11px; color: #64748b; margin-bottom: 5px; font-style: italic; }
         
-        .filter-container { margin-bottom: 15px; display: flex; gap: 10px; align-items: center; }
-        .filter-input { padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; width: 300px; outline: none; }
+        .filter-container { margin-bottom: 15px; display: flex; gap: 10px; align-items: center; background: white; padding: 15px; border-radius: 10px; border: 1px solid var(--border); }
+        .filter-input { padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; outline: none; }
         .filter-input:focus { border-color: var(--primary); }
     </style>
 </head>
@@ -61,7 +61,10 @@
     <div class="section-title">DATABASE MASTER JADWAL & HASIL</div>
     
     <div class="filter-container">
-        <input type="text" id="tableFilter" class="filter-input" placeholder="Cari Auditor, Group, atau Materi..." onkeyup="filterHistoryTable()">
+        <label style="font-size: 13px; font-weight: bold;">Filter Periode:</label>
+        <input type="month" id="filterMonth" class="filter-input" onchange="fetchHistory()">
+        <input type="text" id="tableFilter" class="filter-input" style="flex-grow: 1;" placeholder="Cari Auditor, Group, atau Materi di tabel ini..." onkeyup="filterHistoryTable()">
+        <button class="btn-action" style="padding: 8px 15px; font-size: 12px;" onclick="fetchHistory()">Refresh Data</button>
     </div>
 
     <div class="excel-container">
@@ -97,6 +100,10 @@
     let masterDocs = []; 
     let isSaving = false;
 
+    // Set Default Filter ke Bulan Sekarang untuk hemat kuota
+    const now = new Date();
+    document.getElementById('filterMonth').value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
     window.addEventListener('beforeunload', function (e) {
         const rowCount = document.querySelectorAll('#inputBody tr').length;
         if (rowCount > 0 && !isSaving) {
@@ -107,6 +114,7 @@
 
     async function initMasterDocs() {
         try {
+            // Master docs biasanya tidak terlalu banyak, masih aman ditarik semua sekali jalan
             const snap = await db.collection('documents').get();
             masterDocs = snap.docs.map(doc => doc.data());
             const btn = document.getElementById('btnAddRow');
@@ -267,11 +275,32 @@
         });
     }
 
+    // OPTIMASI UTAMA: Menarik data dengan Filter Periode & Limit
     async function fetchHistory() {
+        const body = document.getElementById('historyBody');
+        const filterVal = document.getElementById('filterMonth').value;
+        
+        body.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px;">Memuat data...</td></tr>';
+        
         try {
-            const snap = await db.collection('jadwal_audit').orderBy('periode', 'desc').get();
-            const body = document.getElementById('historyBody');
+            let query = db.collection('jadwal_audit');
+            
+            // Jika filter bulan diisi, lakukan query spesifik (Hemat Read)
+            if(filterVal) {
+                query = query.where('periode', '==', filterVal);
+            } else {
+                // Jika tidak difilter, batasi hanya 50 data terbaru agar kuota tidak jebol
+                query = query.orderBy('periode', 'desc').limit(50);
+            }
+
+            const snap = await query.get();
             body.innerHTML = '';
+            
+            if(snap.empty) {
+                body.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px;">Tidak ada data untuk periode ini.</td></tr>';
+                return;
+            }
+
             snap.forEach(doc => {
                 const d = doc.data();
                 const tr = document.createElement('tr');
@@ -290,19 +319,19 @@
                 `;
                 body.appendChild(tr);
             });
-        } catch (e) { console.error(e); }
+        } catch (e) { 
+            console.error(e);
+            body.innerHTML = `<tr><td colspan="7" style="color:red; text-align:center;">Error: ${e.message}</td></tr>`;
+        }
     }
 
-    // PERBAIKAN: Fungsi EDIT tidak lagi menghapus data dari DB
     async function moveRowToEdit(id) {
         const doc = await db.collection('jadwal_audit').doc(id).get();
         if (doc.exists) {
             const d = doc.data();
             tempAuditData[d.kodeUnik] = d;
-            // Pindahkan ke atas untuk diedit
             addRow([d.periode, d.auditor, d.auditee, d.judulIK, d.group], true);
-            // Memberikan feedback visual bahwa data sedang diedit
-            alert("Data terpilih dipindahkan ke tabel input atas. Silakan simpan untuk memperbarui.");
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     }
 
@@ -310,7 +339,7 @@
         if(!confirm("Hapus permanen data ini dari database?")) return;
         try {
             await db.collection('jadwal_audit').doc(id).delete(); 
-            alert("Data berhasil dihapus permanen");
+            alert("Data berhasil dihapus");
             fetchHistory();
         } catch (e) { alert(e.message); }
     }
