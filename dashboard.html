@@ -31,7 +31,7 @@
         .chart-container { flex-grow: 1; position: relative; width: 100%; height: 100%; min-height: 0; }
 
         .table-container { background: white; border-radius: 12px; border: 1px solid var(--border); overflow-x: auto; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 1200px; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 1300px; }
         th { background: #f8fafc; padding: 12px 10px; text-align: left; color: #475569; border-bottom: 2px solid var(--border); font-size: 10px; text-transform: uppercase; }
         td { padding: 12px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
 
@@ -106,6 +106,7 @@
                     <th>Group / Dept</th>
                     <th>Auditor / Auditee</th>
                     <th>Materi & Temuan</th>
+                    <th>Penyebab</th>
                     <th>Tindakan Perbaikan</th>
                     <th>Nilai</th>
                     <th>Foto</th>
@@ -116,6 +117,7 @@
                     <th><input type="text" id="filter-dept" class="filter-input" placeholder="Cari dept..." onkeyup="filterTabel()"></th>
                     <th><input type="text" id="filter-nama" class="filter-input" placeholder="Cari nama..." onkeyup="filterTabel()"></th>
                     <th><input type="text" id="filter-temuan" class="filter-input" placeholder="Cari temuan..." onkeyup="filterTabel()"></th>
+                    <th><input type="text" id="filter-penyebab" class="filter-input" placeholder="Cari penyebab..." onkeyup="filterTabel()"></th>
                     <th><input type="text" id="filter-tindakan" class="filter-input" placeholder="Cari tindakan..." onkeyup="filterTabel()"></th>
                     <th><input type="text" id="filter-nilai" class="filter-input" placeholder="Cari nilai..." onkeyup="filterTabel()"></th>
                     <th></th>
@@ -143,7 +145,6 @@
     let currentCardFilter = 'all';
     let charts = {};
 
-    // Inisialisasi input bulan ke bulan saat ini
     const now = new Date();
     const currentMonth = now.toISOString().substring(0, 7);
     document.getElementById('fMonth').value = currentMonth;
@@ -192,6 +193,7 @@
             dept: document.getElementById("filter-dept").value.toLowerCase(),
             nama: document.getElementById("filter-nama").value.toLowerCase(),
             temuan: document.getElementById("filter-temuan").value.toLowerCase(),
+            penyebab: document.getElementById("filter-penyebab").value.toLowerCase(),
             tindakan: document.getElementById("filter-tindakan").value.toLowerCase(),
             nilai: document.getElementById("filter-nilai").value.toLowerCase(),
             status: document.getElementById("filter-status").value.toLowerCase()
@@ -207,6 +209,7 @@
             if (filterInputs.dept && !(d.group + " " + d.auditee).toLowerCase().includes(filterInputs.dept)) isVisible = false;
             if (filterInputs.nama && !(d.auditor + " " + d.namaAuditeePerson).toLowerCase().includes(filterInputs.nama)) isVisible = false;
             if (filterInputs.temuan && !(d.uraian || "").toLowerCase().includes(filterInputs.temuan)) isVisible = false;
+            if (filterInputs.penyebab && !(d.penyebab || "").toLowerCase().includes(filterInputs.penyebab)) isVisible = false;
             if (filterInputs.tindakan && !(d.tindakan || "").toLowerCase().includes(filterInputs.tindakan)) isVisible = false;
             if (filterInputs.nilai && !(d.nilaiPencapaian || "").toLowerCase().includes(filterInputs.nilai)) isVisible = false;
             if (filterInputs.status && !(d.statusVerifikasi || "OPEN").toLowerCase().includes(filterInputs.status)) isVisible = false;
@@ -253,6 +256,7 @@
                 <td><b>${d.group}</b><br>${d.auditee}</td>
                 <td><small>Auditor:</small> ${d.auditor}<br><small>Auditee:</small> ${d.namaAuditeePerson || '-'}</td>
                 <td><small>IK: ${d.judulIK || '-'}</small><br><i style="color:#64748b">${d.uraian || '-'}</i></td>
+                <td>${d.penyebab || '-'}</td>
                 <td>${d.tindakan || '-'}</td>
                 <td style="font-weight:bold">${d.nilaiPencapaian || '-'}</td>
                 <td><div style="display:flex">${fotoHtml || '-'}</div></td>
