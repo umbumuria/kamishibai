@@ -40,7 +40,7 @@
         .btn-submit { width: 100%; padding: 18px; background: var(--primary); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 18px; transition: 0.3s; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3); }
 
         .table-container { background: white; border-radius: 12px; border: 1px solid var(--border); overflow-x: auto; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 1000px; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 1100px; }
         th { background: #f8fafc; padding: 12px 10px; text-align: left; color: #475569; border-bottom: 2px solid var(--border); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
         td { padding: 12px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
 
@@ -167,6 +167,7 @@
                     <th>Group / Dept</th>
                     <th>Auditor / Auditee</th>
                     <th>Materi & Temuan</th>
+                    <th>Penyebab</th>
                     <th>Perbaikan</th>
                     <th>Nilai</th>
                     <th>Foto</th>
@@ -197,7 +198,6 @@
     let cacheJadwal = {};
     let cacheHistory = {};
 
-    // Inisialisasi Filter Bulan dan Tahun
     function initFilters() {
         const monthSelect = document.getElementById('filterMonth');
         const yearSelect = document.getElementById('filterYear');
@@ -352,12 +352,11 @@
     async function fetchAuditHistory() {
         const month = parseInt(document.getElementById('filterMonth').value);
         const year = parseInt(document.getElementById('filterYear').value);
-        
         const startOfMonth = new Date(year, month, 1);
         const endOfMonth = new Date(year, month + 1, 0, 23, 59, 59);
 
         const body = document.getElementById('historyBody');
-        body.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:20px;">Memuat data...</td></tr>';
+        body.innerHTML = '<tr><td colspan="10" style="text-align:center; padding:20px;">Memuat data...</td></tr>';
 
         try {
             const snap = await db.collection('jadwal_audit')
@@ -368,9 +367,8 @@
                 .get();
 
             body.innerHTML = '';
-            
             if(snap.empty) {
-                body.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:20px; color:#64748b;">Tidak ada data untuk periode ini.</td></tr>';
+                body.innerHTML = '<tr><td colspan="10" style="text-align:center; padding:20px; color:#64748b;">Tidak ada data untuk periode ini.</td></tr>';
                 return;
             }
 
@@ -383,6 +381,7 @@
                         <td><b>${d.group}</b><br>${d.auditee}</td>
                         <td>${d.auditor}<br><small>${d.namaAuditeePerson || '-'}</small></td>
                         <td><b>IK: ${d.judulIK}</b><br><i>${d.uraian || '-'}</i><br><small>Kategori: ${d.kategoriTemuan}</small></td>
+                        <td>${d.penyebab || '-'}</td>
                         <td>${d.tindakan || '-'}</td>
                         <td>${d.nilaiPencapaian}</td>
                         <td>${fotoHtml}</td>
@@ -392,7 +391,7 @@
             });
         } catch (e) {
             console.error(e);
-            body.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:20px; color:red;">Gagal memuat data.</td></tr>';
+            body.innerHTML = '<tr><td colspan="10" style="text-align:center; padding:20px; color:red;">Gagal memuat data.</td></tr>';
         }
     }
     fetchAuditHistory();
