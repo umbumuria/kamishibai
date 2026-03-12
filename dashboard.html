@@ -66,7 +66,15 @@
     </div>
     
     <div class="filter-grid">
-        <div><label>Group Unit</label><select id="fGroup" onchange="fetchData()"><option value="">Semua Group</option><option value="SF">SF</option><option value="SP">SP</option><option value="SUPPORTING">SUPPORTING</option></select></div>
+        <div>
+            <label>Group Unit</label>
+            <select id="fGroup" onchange="fetchData()">
+                <option value="">Semua Group</option>
+                <option value="SUGAR FACTORY">SUGAR FACTORY</option>
+                <option value="SUGAR PLANTATION">SUGAR PLANTATION</option>
+                <option value="SUPPORTING">SUPPORTING</option>
+            </select>
+        </div>
         <div><label>Bulan Jadwal</label><input type="month" id="fMonth" onchange="fetchData()"></div>
     </div>
 
@@ -270,7 +278,8 @@
     }
 
     function updateCharts(data) {
-        const groupCounts = { SF: 0, SP: 0, SUPPORTING: 0 };
+        // Updated Group Keys
+        const groupCounts = { "SUGAR FACTORY": 0, "SUGAR PLANTATION": 0, "SUPPORTING": 0 };
         const statusCounts = { CLOSED: 0, OPEN: 0, OBSERVASI: 0 };
         const deptCounts = {};
 
