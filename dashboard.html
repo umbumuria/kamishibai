@@ -143,6 +143,11 @@
     let currentCardFilter = 'all';
     let charts = {};
 
+    // Inisialisasi input bulan ke bulan saat ini
+    const now = new Date();
+    const currentMonth = now.toISOString().substring(0, 7);
+    document.getElementById('fMonth').value = currentMonth;
+
     async function fetchData() {
         const g = document.getElementById('fGroup').value;
         const m = document.getElementById('fMonth').value;
@@ -161,7 +166,6 @@
                 return { ...d, timing };
             });
             
-            // Render awal table & dashboard
             renderTable(masterData);
             filterTabel(); 
         } catch (e) { console.error("Fetch Error:", e); }
@@ -199,7 +203,6 @@
         masterData.forEach((d, index) => {
             let isVisible = true;
 
-            // 1. Cek Filter Input Tabel
             if (filterInputs.tgl && !(d.tglAudit || "").toLowerCase().includes(filterInputs.tgl)) isVisible = false;
             if (filterInputs.dept && !(d.group + " " + d.auditee).toLowerCase().includes(filterInputs.dept)) isVisible = false;
             if (filterInputs.nama && !(d.auditor + " " + d.namaAuditeePerson).toLowerCase().includes(filterInputs.nama)) isVisible = false;
@@ -208,19 +211,16 @@
             if (filterInputs.nilai && !(d.nilaiPencapaian || "").toLowerCase().includes(filterInputs.nilai)) isVisible = false;
             if (filterInputs.status && !(d.statusVerifikasi || "OPEN").toLowerCase().includes(filterInputs.status)) isVisible = false;
 
-            // 2. Cek Filter Card (Koneksi Card ke Tabel)
             if (currentCardFilter === 'Selesai' && d.status !== 'Selesai') isVisible = false;
             if (currentCardFilter === 'Pending' && d.status === 'Selesai') isVisible = false;
             if (currentCardFilter === 'OnTime' && d.timing !== 'OnTime') isVisible = false;
             if (currentCardFilter === 'Late' && d.timing !== 'Late') isVisible = false;
 
-            // Update UI Baris Tabel
             if (rows[index]) rows[index].style.display = isVisible ? "" : "none";
             
             if (isVisible) filteredData.push(d);
         });
 
-        // 3. Update Chart & Stats berdasarkan hasil filter akhir (Koneksi Tabel ke Chart/Stats)
         updateStats(filteredData);
         updateCharts(filteredData);
     }
@@ -308,7 +308,7 @@
                         const filterInput = document.getElementById(targetFilterId);
                         if (filterInput) {
                             filterInput.value = label;
-                            filterTabel(); // Cascading trigger
+                            filterTabel();
                         }
                     }
                 },
