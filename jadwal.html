@@ -37,7 +37,7 @@
     <div class="section-title">ADMIN: PENGATURAN JADWAL & EDIT DATA</div>
 
     <div style="display: flex; justify-content: space-between; align-items: flex-end;">
-        <button class="btn-action btn-add" id="btnAddRow" onclick="addRow()" disabled>Memuat Data...</button>
+        <button class="btn-action btn-add" id="btnAddRow" onclick="addRow()">+ Tambah Baris Baru</button>
         <div class="paste-hint">* Klik pada cell Periode lalu Paste (Ctrl+V) dari Excel untuk input cepat</div>
     </div>
 
@@ -97,7 +97,6 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
     let tempAuditData = {};
-    let masterDocs = []; 
     let isSaving = false;
 
     const now = new Date();
@@ -110,41 +109,6 @@
             e.returnValue = 'Data yang sedang diedit belum disimpan. Tetap keluar?';
         }
     });
-
-    async function initMasterDocs() {
-        try {
-            // OPTIMASI: Gunakan Caching LocalStorage untuk menghemat 600 Read/load
-            const cachedData = localStorage.getItem('masterDocsCache');
-            const cacheTime = localStorage.getItem('masterDocsTime');
-            const oneDay = 24 * 60 * 60 * 1000;
-
-            if (cachedData && cacheTime && (Date.now() - cacheTime < oneDay)) {
-                masterDocs = JSON.parse(cachedData);
-                console.log("Menggunakan data master dari cache (Hemat Kuota)");
-                aktifkanTombolAdd();
-            } else {
-                const snap = await db.collection('documents').get();
-                masterDocs = snap.docs.map(doc => doc.data());
-                
-                // Simpan ke cache
-                localStorage.setItem('masterDocsCache', JSON.stringify(masterDocs));
-                localStorage.setItem('masterDocsTime', Date.now());
-                
-                console.log("Menarik data master dari Firebase (600 Read digunakan)");
-                aktifkanTombolAdd();
-            }
-        } catch (e) {
-            console.error("Gagal memuat data master:", e);
-        }
-    }
-
-    function aktifkanTombolAdd() {
-        const btn = document.getElementById('btnAddRow');
-        if (btn) {
-            btn.disabled = false;
-            btn.innerText = "+ Tambah Baris Baru";
-        }
-    }
 
     function handlePaste(event) {
         const clipboardData = event.clipboardData || window.clipboardData;
@@ -176,8 +140,6 @@
                 columns.forEach((colData, index) => {
                     if (inputs[index]) {
                         inputs[index].value = colData.trim();
-                        if (index === 2) updateIKDropdown(inputs[index]);
-                        if (index === 3) updateAuditeeField(inputs[index]);
                     }
                 });
 
@@ -186,75 +148,28 @@
         }
     }
 
-    function updateIKDropdown(selectGroup) {
-        const row = selectGroup.closest('tr');
-        const datalistIK = row.querySelector('.datalist-ik');
-        const selectedGroup = selectGroup.value;
-        
-        datalistIK.innerHTML = '';
-        const filtered = masterDocs.filter(d => d.group === selectedGroup);
-        const unikIK = [...new Set(filtered.map(item => item.judulIK))];
-        unikIK.forEach(ik => {
-            const opt = document.createElement('option');
-            opt.value = ik;
-            datalistIK.appendChild(opt);
-        });
-    }
-
-    function updateAuditeeField(inputIK) {
-        const row = inputIK.closest('tr');
-        const selectGroup = row.querySelector('.select-group');
-        const inputAuditee = row.querySelector('.input-auditee');
-        const doc = masterDocs.find(d => d.group === selectGroup.value && d.judulIK === inputIK.value);
-        if (doc) { 
-            inputAuditee.value = doc.auditee; 
-            inputAuditee.readOnly = true;
-        } else {
-            inputAuditee.readOnly = false;
-            inputAuditee.placeholder = "Ketik Auditee...";
-        }
-    }
-
     function addRow(data = ['', '', '', '', ''], isEdit = false) {
         const tr = document.createElement('tr');
         if(isEdit) tr.className = 'editing-row';
-        const unikGroups = [...new Set(masterDocs.map(d => d.group))].filter(g => g);
-        
-        const rowId = 'dl-' + Math.random().toString(36).substr(2, 9);
-        const audId = 'aud-' + Math.random().toString(36).substr(2, 9);
-        
-        const daftarAuditor = ["Andi", "Budi", "Siti", "Dewi"]; 
-        let auditorOptions = daftarAuditor.map(a => `<option value="${a}">`).join('');
-        let groupOptions = unikGroups.map(g => `<option value="${g}" ${data[4] === g ? 'selected' : ''}>${g}</option>`).join('');
         
         tr.innerHTML = `
             <td><input type="month" class="cell-input" value="${data[0]}"></td>
+            <td><input type="text" class="cell-input input-auditor" placeholder="Nama Auditor..." value="${data[1]}"></td>
             <td>
-                <input type="text" class="cell-input input-auditor" list="${audId}" placeholder="Ketik atau pilih Auditor..." value="${data[1]}">
-                <datalist id="${audId}">${auditorOptions}</datalist>
-            </td>
-            <td>
-                <select class="cell-input select-group" onchange="updateIKDropdown(this)">
+                <select class="cell-input select-group">
                     <option value="">-- Pilih Group --</option>
-                    ${groupOptions}
+                    <option value="SUGAR PLANTATION" ${data[4] === 'SUGAR PLANTATION' ? 'selected' : ''}>SUGAR PLANTATION</option>
+                    <option value="SUPPORTING" ${data[4] === 'SUPPORTING' ? 'selected' : ''}>SUPPORTING</option>
+                    <option value="SUGAR FACTORY" ${data[4] === 'SUGAR FACTORY' ? 'selected' : ''}>SUGAR FACTORY</option>
                 </select>
             </td>
-            <td>
-                <input type="text" class="cell-input input-ik" list="${rowId}" oninput="updateAuditeeField(this)" placeholder="Ketik atau pilih IK..." value="${data[3]}">
-                <datalist id="${rowId}" class="datalist-ik"></datalist>
-            </td>
-            <td><input type="text" class="cell-input input-auditee" placeholder="Otomatis..." value="${data[2]}" ${data[2] ? 'readonly' : ''}></td>
+            <td><input type="text" class="cell-input input-ik" placeholder="Judul IK / Materi..." value="${data[3]}"></td>
+            <td><input type="text" class="cell-input input-auditee" placeholder="Dept Auditee..." value="${data[2]}"></td>
             <td style="text-align:center">
                 <button onclick="this.parentElement.parentElement.remove()" style="background:none; border:none; color:#dc2626; cursor:pointer;">✕</button>
             </td>
         `;
         document.getElementById('inputBody').prepend(tr);
-        
-        if(data[4]) {
-            const selGroup = tr.querySelector('.select-group');
-            updateIKDropdown(selGroup);
-            tr.querySelector('.input-ik').value = data[3];
-        }
     }
 
     async function saveBulkData() {
@@ -299,7 +214,6 @@
     async function fetchHistory() {
         const body = document.getElementById('historyBody');
         const filterVal = document.getElementById('filterMonth').value;
-        
         body.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px;">Memuat data...</td></tr>';
         
         try {
@@ -361,10 +275,9 @@
         } catch (e) { alert(e.message); }
     }
 
-    initMasterDocs().then(() => {
-        addRow(); 
-        fetchHistory();
-    });
+    // Jalankan langsung tanpa load masterDocs
+    addRow(); 
+    fetchHistory();
 </script>
 </body>
 </html>
