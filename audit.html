@@ -49,11 +49,10 @@
         .badge-closed { background: #dcfce7; color: #166534; }
         .badge-open { background: #fee2e2; color: #991b1b; }
 
-        .filter-box { margin-bottom: 15px; display: flex; gap: 10px; align-items: center; }
-        .filter-box input, .filter-box select { margin-bottom: 0; padding: 8px 12px; font-size: 13px; min-height: 40px; }
-        .filter-info { font-size: 11px; color: #64748b; font-weight: bold; background: #f1f5f9; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); white-space: nowrap; }
+        .filter-box { margin-bottom: 15px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .filter-box input, .filter-box select { margin-bottom: 0; padding: 8px 12px; font-size: 13px; min-height: 40px; width: auto; }
 
-        @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } .filter-box { flex-direction: column; align-items: stretch; } }
+        @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } .filter-box { flex-direction: column; align-items: stretch; } .filter-box select, .filter-box input { width: 100%; } }
     </style>
 </head>
 <body>
@@ -155,7 +154,9 @@
             <option value="OPEN">OPEN</option>
             <option value="CLOSED">CLOSED</option>
         </select>
-        <div class="filter-info" id="currentMonthInfo">Bulan: -</div>
+        
+        <select id="filterMonth" onchange="fetchAuditHistory()"></select>
+        <select id="filterYear" onchange="fetchAuditHistory()"></select>
     </div>
 
     <div class="table-container">
@@ -195,6 +196,32 @@
 
     let cacheJadwal = {};
     let cacheHistory = {};
+
+    // Inisialisasi Filter Bulan dan Tahun
+    function initFilters() {
+        const monthSelect = document.getElementById('filterMonth');
+        const yearSelect = document.getElementById('filterYear');
+        const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+        
+        const now = new Date();
+        
+        monthNames.forEach((m, i) => {
+            let opt = document.createElement('option');
+            opt.value = i;
+            opt.text = m;
+            if(i === now.getMonth()) opt.selected = true;
+            monthSelect.appendChild(opt);
+        });
+
+        const currentYear = now.getFullYear();
+        for(let y = currentYear; y >= currentYear - 2; y--) {
+            let opt = document.createElement('option');
+            opt.value = y;
+            opt.text = y;
+            yearSelect.appendChild(opt);
+        }
+    }
+    initFilters();
 
     async function loadGroupsFromMateri() {
         const groupSelect = document.getElementById('filterGroupJadwal');
@@ -323,43 +350,50 @@
     }
 
     async function fetchAuditHistory() {
-        const now = new Date();
-        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const month = parseInt(document.getElementById('filterMonth').value);
+        const year = parseInt(document.getElementById('filterYear').value);
         
-        // Update Filter Info di Tampilan
-        const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-        document.getElementById('currentMonthInfo').innerText = `Data: ${monthNames[now.getMonth()]} ${now.getFullYear()}`;
-
-        const snap = await db.collection('jadwal_audit')
-            .where('status', '==', 'Selesai')
-            .where('updatedAt', '>=', startOfMonth)
-            .orderBy('updatedAt', 'desc')
-            .get();
+        const startOfMonth = new Date(year, month, 1);
+        const endOfMonth = new Date(year, month + 1, 0, 23, 59, 59);
 
         const body = document.getElementById('historyBody');
-        body.innerHTML = '';
-        
-        if(snap.empty) {
-            body.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:20px; color:#64748b;">Belum ada history audit untuk bulan ini.</td></tr>';
-            return;
-        }
+        body.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:20px;">Memuat data...</td></tr>';
 
-        snap.forEach(doc => {
-            const d = doc.data();
-            let fotoHtml = (d.foto || []).map(url => `<img src="${url}" class="thumb-img" onclick="window.open('${url}')">`).join('');
-            body.innerHTML += `
-                <tr>
-                    <td>${d.tglAudit}</td>
-                    <td><b>${d.group}</b><br>${d.auditee}</td>
-                    <td>${d.auditor}<br><small>${d.namaAuditeePerson || '-'}</small></td>
-                    <td><b>IK: ${d.judulIK}</b><br><i>${d.uraian || '-'}</i><br><small>Kategori: ${d.kategoriTemuan}</small></td>
-                    <td>${d.tindakan || '-'}</td>
-                    <td>${d.nilaiPencapaian}</td>
-                    <td>${fotoHtml}</td>
-                    <td>${d.updateCatatan || '-'}</td>
-                    <td><span class="badge ${d.statusVerifikasi==='CLOSED'?'badge-closed':'badge-open'}">${d.statusVerifikasi}</span></td>
-                </tr>`;
-        });
+        try {
+            const snap = await db.collection('jadwal_audit')
+                .where('status', '==', 'Selesai')
+                .where('updatedAt', '>=', startOfMonth)
+                .where('updatedAt', '<=', endOfMonth)
+                .orderBy('updatedAt', 'desc')
+                .get();
+
+            body.innerHTML = '';
+            
+            if(snap.empty) {
+                body.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:20px; color:#64748b;">Tidak ada data untuk periode ini.</td></tr>';
+                return;
+            }
+
+            snap.forEach(doc => {
+                const d = doc.data();
+                let fotoHtml = (d.foto || []).map(url => `<img src="${url}" class="thumb-img" onclick="window.open('${url}')">`).join('');
+                body.innerHTML += `
+                    <tr>
+                        <td>${d.tglAudit}</td>
+                        <td><b>${d.group}</b><br>${d.auditee}</td>
+                        <td>${d.auditor}<br><small>${d.namaAuditeePerson || '-'}</small></td>
+                        <td><b>IK: ${d.judulIK}</b><br><i>${d.uraian || '-'}</i><br><small>Kategori: ${d.kategoriTemuan}</small></td>
+                        <td>${d.tindakan || '-'}</td>
+                        <td>${d.nilaiPencapaian}</td>
+                        <td>${fotoHtml}</td>
+                        <td>${d.updateCatatan || '-'}</td>
+                        <td><span class="badge ${d.statusVerifikasi==='CLOSED'?'badge-closed':'badge-open'}">${d.statusVerifikasi}</span></td>
+                    </tr>`;
+            });
+        } catch (e) {
+            console.error(e);
+            body.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:20px; color:red;">Gagal memuat data.</td></tr>';
+        }
     }
     fetchAuditHistory();
 </script>
