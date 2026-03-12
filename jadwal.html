@@ -100,7 +100,6 @@
     let masterDocs = []; 
     let isSaving = false;
 
-    // Set Default Filter ke Bulan Sekarang untuk hemat kuota
     const now = new Date();
     document.getElementById('filterMonth').value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
@@ -114,14 +113,36 @@
 
     async function initMasterDocs() {
         try {
-            // Master docs biasanya tidak terlalu banyak, masih aman ditarik semua sekali jalan
-            const snap = await db.collection('documents').get();
-            masterDocs = snap.docs.map(doc => doc.data());
-            const btn = document.getElementById('btnAddRow');
-            btn.disabled = false;
-            btn.innerText = "+ Tambah Baris Baru";
+            // OPTIMASI: Gunakan Caching LocalStorage untuk menghemat 600 Read/load
+            const cachedData = localStorage.getItem('masterDocsCache');
+            const cacheTime = localStorage.getItem('masterDocsTime');
+            const oneDay = 24 * 60 * 60 * 1000;
+
+            if (cachedData && cacheTime && (Date.now() - cacheTime < oneDay)) {
+                masterDocs = JSON.parse(cachedData);
+                console.log("Menggunakan data master dari cache (Hemat Kuota)");
+                aktifkanTombolAdd();
+            } else {
+                const snap = await db.collection('documents').get();
+                masterDocs = snap.docs.map(doc => doc.data());
+                
+                // Simpan ke cache
+                localStorage.setItem('masterDocsCache', JSON.stringify(masterDocs));
+                localStorage.setItem('masterDocsTime', Date.now());
+                
+                console.log("Menarik data master dari Firebase (600 Read digunakan)");
+                aktifkanTombolAdd();
+            }
         } catch (e) {
             console.error("Gagal memuat data master:", e);
+        }
+    }
+
+    function aktifkanTombolAdd() {
+        const btn = document.getElementById('btnAddRow');
+        if (btn) {
+            btn.disabled = false;
+            btn.innerText = "+ Tambah Baris Baru";
         }
     }
 
@@ -275,7 +296,6 @@
         });
     }
 
-    // OPTIMASI UTAMA: Menarik data dengan Filter Periode & Limit
     async function fetchHistory() {
         const body = document.getElementById('historyBody');
         const filterVal = document.getElementById('filterMonth').value;
@@ -284,12 +304,9 @@
         
         try {
             let query = db.collection('jadwal_audit');
-            
-            // Jika filter bulan diisi, lakukan query spesifik (Hemat Read)
             if(filterVal) {
                 query = query.where('periode', '==', filterVal);
             } else {
-                // Jika tidak difilter, batasi hanya 50 data terbaru agar kuota tidak jebol
                 query = query.orderBy('periode', 'desc').limit(50);
             }
 
