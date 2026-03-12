@@ -49,10 +49,11 @@
         .badge-closed { background: #dcfce7; color: #166534; }
         .badge-open { background: #fee2e2; color: #991b1b; }
 
-        .filter-box { margin-bottom: 15px; display: flex; gap: 10px; }
-        .filter-box input { margin-bottom: 0; padding: 8px 12px; font-size: 13px; min-height: 40px; }
+        .filter-box { margin-bottom: 15px; display: flex; gap: 10px; align-items: center; }
+        .filter-box input, .filter-box select { margin-bottom: 0; padding: 8px 12px; font-size: 13px; min-height: 40px; }
+        .filter-info { font-size: 11px; color: #64748b; font-weight: bold; background: #f1f5f9; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); white-space: nowrap; }
 
-        @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } .filter-box { flex-direction: column; } }
+        @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } .filter-box { flex-direction: column; align-items: stretch; } }
     </style>
 </head>
 <body>
@@ -154,6 +155,7 @@
             <option value="OPEN">OPEN</option>
             <option value="CLOSED">CLOSED</option>
         </select>
+        <div class="filter-info" id="currentMonthInfo">Bulan: -</div>
     </div>
 
     <div class="table-container">
@@ -324,6 +326,10 @@
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
         
+        // Update Filter Info di Tampilan
+        const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+        document.getElementById('currentMonthInfo').innerText = `Data: ${monthNames[now.getMonth()]} ${now.getFullYear()}`;
+
         const snap = await db.collection('jadwal_audit')
             .where('status', '==', 'Selesai')
             .where('updatedAt', '>=', startOfMonth)
@@ -332,6 +338,12 @@
 
         const body = document.getElementById('historyBody');
         body.innerHTML = '';
+        
+        if(snap.empty) {
+            body.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:20px; color:#64748b;">Belum ada history audit untuk bulan ini.</td></tr>';
+            return;
+        }
+
         snap.forEach(doc => {
             const d = doc.data();
             let fotoHtml = (d.foto || []).map(url => `<img src="${url}" class="thumb-img" onclick="window.open('${url}')">`).join('');
