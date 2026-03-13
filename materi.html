@@ -170,63 +170,78 @@
     const PAGE_SIZE = 10;
     let firstDoc = null;
     let lastDoc = null;
-    let currentPage = 1;
+    let pageHistory = []; // Untuk melacak dokumen pertama setiap halaman
 
     window.onload = () => loadData('init');
 
     async function loadData(direction = 'init') {
         const tbody = document.getElementById('documentTableBody');
         const filterValue = document.getElementById('filterInput').value.trim();
-        let query = db.collection('documents').orderBy('nomor_dokumen', 'asc');
+        
+        // Indikator loading
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 20px; opacity: 0.5;">Memproses...</td></tr>';
 
-        if (direction === 'search' || direction === 'init') {
+        let query = db.collection('documents');
+
+        // Reset navigasi jika init atau search
+        if (direction === 'init' || direction === 'search') {
             firstDoc = null;
             lastDoc = null;
-            currentPage = 1;
+            pageHistory = [];
         }
 
+        // Gunakan filter jika ada
         if (filterValue) {
             query = query.where('nomor_dokumen', '>=', filterValue)
                          .where('nomor_dokumen', '<=', filterValue + '\uf8ff');
         }
 
+        // Tambahkan pengurutan
+        query = query.orderBy('nomor_dokumen', 'asc');
+
+        // Logika Paginasi
         if (direction === 'next' && lastDoc) {
             query = query.startAfter(lastDoc).limit(PAGE_SIZE);
-        } else if (direction === 'prev' && firstDoc) {
-            query = query.endBefore(firstDoc).limitToLast(PAGE_SIZE);
+        } else if (direction === 'prev' && pageHistory.length > 1) {
+            pageHistory.pop(); // Hapus halaman saat ini
+            const prevDoc = pageHistory[pageHistory.length - 1];
+            query = query.startAt(prevDoc).limit(PAGE_SIZE);
         } else {
             query = query.limit(PAGE_SIZE);
         }
 
         try {
             const snapshot = await query.get();
-            if (!snapshot.empty) {
-                if (direction === 'next') currentPage++;
-                if (direction === 'prev') currentPage--;
-                
-                firstDoc = snapshot.docs[0];
-                lastDoc = snapshot.docs[snapshot.docs.length - 1];
-                renderTable(snapshot);
-            } else if (direction === 'init' || direction === 'search') {
-                renderTable(snapshot);
-            }
             
+            if (snapshot.empty) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 20px; opacity: 0.5;">Data tidak ditemukan.</td></tr>';
+                updatePaginationButtons(0, direction);
+                return;
+            }
+
+            // Simpan posisi dokumen untuk navigasi
+            firstDoc = snapshot.docs[0];
+            lastDoc = snapshot.docs[snapshot.docs.length - 1];
+            
+            if (direction !== 'prev') {
+                if (!pageHistory.includes(firstDoc)) pageHistory.push(firstDoc);
+            }
+
+            renderTable(snapshot);
             updatePaginationButtons(snapshot.size, direction);
             updateTotalCount();
         } catch (error) {
-            console.error("Error loading data: ", error);
-            tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:red;">Gagal memuat data.</td></tr>`;
+            console.error("Firebase Error:", error);
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#f87171; padding: 20px;">
+                Terjadi kesalahan. Pastikan index Firestore sudah siap.<br>
+                <small>${error.message}</small>
+            </td></tr>`;
         }
     }
 
     function renderTable(snapshot) {
         const tbody = document.getElementById('documentTableBody');
         tbody.innerHTML = '';
-
-        if (snapshot.empty) {
-            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 20px; opacity: 0.5;">Tidak ada data ditemukan.</td></tr>';
-            return;
-        }
 
         snapshot.forEach(doc => {
             const data = doc.data();
@@ -245,8 +260,7 @@
     }
 
     function updatePaginationButtons(currentSize, direction) {
-        document.getElementById('btnPrev').disabled = (currentPage === 1);
-        // Tombol next aktif hanya jika jumlah data yang ditarik sama dengan limit (asumsi ada data selanjutnya)
+        document.getElementById('btnPrev').disabled = (pageHistory.length <= 1);
         document.getElementById('btnNext').disabled = (currentSize < PAGE_SIZE);
     }
 
