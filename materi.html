@@ -80,7 +80,17 @@
         .error-text { color: #f87171; }
         .info-text { color: #eab308; }
 
-        /* Filter Style */
+        /* Pagination Style */
+        .pagination-bar {
+            padding: 10px 15px; background: rgba(15, 23, 42, 0.5); 
+            display: flex; justify-content: center; gap: 10px; border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        .btn-nav {
+            background: #334155; color: white; border: none; padding: 6px 12px; 
+            border-radius: 6px; cursor: pointer; font-size: 12px;
+        }
+        .btn-nav:disabled { opacity: 0.3; cursor: not-allowed; }
+
         .search-box {
             padding: 10px 15px; background: rgba(15, 23, 42, 0.5); border-bottom: 1px solid rgba(255,255,255,0.1);
         }
@@ -116,11 +126,11 @@
 <div class="table-container">
     <div style="padding: 15px; font-weight: bold; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between;">
         <span>List Dokumen Terdaftar</span>
-        <span id="docCount" style="color: var(--primary);">0 Dokumen</span>
+        <span id="docCount" style="color: var(--primary);">Loading...</span>
     </div>
     
     <div class="search-box">
-        <input type="text" id="filterInput" placeholder="Cari Group, Auditee, atau Judul IK..." onkeyup="filterTable()">
+        <input type="text" id="filterInput" placeholder="Cari berdasarkan Nomor Dokumen (Eksak)..." onchange="loadData('search')">
     </div>
 
     <div style="overflow-x: auto;">
@@ -141,6 +151,11 @@
             </tbody>
         </table>
     </div>
+
+    <div class="pagination-bar">
+        <button class="btn-nav" id="btnPrev" onclick="loadData('prev')" disabled>Sebelumnya</button>
+        <button class="btn-nav" id="btnNext" onclick="loadData('next')" disabled>Berikutnya</button>
+    </div>
 </div>
 
 <script>
@@ -155,17 +170,62 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // --- REALTIME DATA FETCH ---
-    db.collection('documents').orderBy('updatedAt', 'desc').onSnapshot(snapshot => {
+    // --- PAGINATION SETTINGS ---
+    const PAGE_SIZE = 10;
+    let firstDoc = null;
+    let lastDoc = null;
+
+    // Load initial data
+    window.onload = () => loadData('init');
+
+    async function loadData(direction = 'init') {
         const tbody = document.getElementById('documentTableBody');
-        const countBox = document.getElementById('docCount');
+        const filterValue = document.getElementById('filterInput').value.trim();
+        let query = db.collection('documents');
+
+        // Reset if searching
+        if (direction === 'search') {
+            firstDoc = null;
+            lastDoc = null;
+        }
+
+        // Apply filtering (Firestore limited to exact match or prefix for optimization)
+        if (filterValue) {
+            query = query.where('nomor_dokumen', '>=', filterValue)
+                         .where('nomor_dokumen', '<=', filterValue + '\uf8ff');
+        }
+
+        query = query.orderBy('nomor_dokumen', 'asc');
+
+        if (direction === 'next' && lastDoc) {
+            query = query.startAfter(lastDoc).limit(PAGE_SIZE);
+        } else if (direction === 'prev' && firstDoc) {
+            query = query.endBefore(firstDoc).limitToLast(PAGE_SIZE);
+        } else {
+            query = query.limit(PAGE_SIZE);
+        }
+
+        try {
+            const snapshot = await query.get();
+            renderTable(snapshot);
+            updatePaginationButtons(snapshot, direction, !!filterValue);
+            updateTotalCount();
+        } catch (error) {
+            console.error("Error loading data: ", error);
+        }
+    }
+
+    function renderTable(snapshot) {
+        const tbody = document.getElementById('documentTableBody');
         tbody.innerHTML = '';
-        countBox.innerText = `${snapshot.size} Dokumen`;
 
         if (snapshot.empty) {
-            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 20px; opacity: 0.5;">Tidak ada data dokumen.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 20px; opacity: 0.5;">Tidak ada data ditemukan.</td></tr>';
             return;
         }
+
+        firstDoc = snapshot.docs[0];
+        lastDoc = snapshot.docs[snapshot.docs.length - 1];
 
         snapshot.forEach(doc => {
             const data = doc.data();
@@ -181,37 +241,37 @@
             `;
             tbody.appendChild(tr);
         });
-        // Re-apply filter after data updates if filter input is not empty
-        filterTable();
-    });
+    }
 
-    function filterTable() {
-        const input = document.getElementById('filterInput');
-        const filter = input.value.toLowerCase();
-        const table = document.getElementById('docTable');
-        const tr = table.getElementsByTagName('tr');
+    function updatePaginationButtons(snapshot, direction, isFiltered) {
+        const btnNext = document.getElementById('btnNext');
+        const btnPrev = document.getElementById('btnPrev');
 
-        for (let i = 1; i < tr.length; i++) {
-            let found = false;
-            const td = tr[i].getElementsByTagName('td');
-            // Cek Group (index 0), Auditee (index 1), dan Judul IK (index 2)
-            for (let j = 0; j < 3; j++) {
-                if (td[j]) {
-                    const txtValue = td[j].textContent || td[j].innerText;
-                    if (txtValue.toLowerCase().indexOf(filter) > -1) {
-                        found = true;
-                        break;
-                    }
-                }
-            }
-            tr[i].style.display = found ? "" : "none";
+        // Sederhana: Aktifkan next jika jumlah data sesuai limit
+        btnNext.disabled = snapshot.size < PAGE_SIZE;
+        
+        // Logika sederhana untuk tombol prev
+        if (direction === 'init' || direction === 'search') {
+            btnPrev.disabled = true;
+        } else if (direction === 'next') {
+            btnPrev.disabled = false;
+        } else if (direction === 'prev' && snapshot.size < PAGE_SIZE) {
+            // Jika di halaman pertama setelah balik
+            btnPrev.disabled = true;
         }
+    }
+
+    async function updateTotalCount() {
+        // Menggunakan count() aggregation (hemat kuota: 1 read per 1000 index entries)
+        const snapshot = await db.collection('documents').count().get();
+        document.getElementById('docCount').innerText = `${snapshot.data().count} Dokumen`;
     }
 
     async function deleteDoc(id) {
         if (confirm('Hapus dokumen ini?')) {
             try {
                 await db.collection('documents').doc(id).delete();
+                loadData('init'); // Refresh page
             } catch (err) {
                 alert('Gagal menghapus: ' + err.message);
             }
@@ -283,6 +343,7 @@
             }
             log.innerHTML += "<br>--- SELESAI ---";
             btn.disabled = false;
+            loadData('init');
         };
         reader.readAsArrayBuffer(fileInput.files[0]);
     }
