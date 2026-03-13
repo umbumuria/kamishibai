@@ -51,7 +51,6 @@
         .badge-open { background: #fee2e2; color: #991b1b; }
         .badge-obs { background: #fef9c3; color: #854d0e; }
 
-        /* Style Baru untuk Ringkasan Status Temuan */
         .finding-summary { display: flex; justify-content: space-around; background: #f8fafc; padding: 10px; border-radius: 8px; margin-bottom: 10px; border: 1px solid var(--border); }
         .finding-item { text-align: center; }
         .finding-count { display: block; font-weight: bold; font-size: 14px; }
@@ -99,7 +98,7 @@
             <div class="chart-container"><canvas id="chartGroup"></canvas></div>
         </div>
         <div class="chart-card">
-            <h4>Status Verifikasi & Temuan</h4>
+            <h4>Status Verifikasi (Open/Closed)</h4>
             <div class="finding-summary">
                 <div class="finding-item"><span class="finding-count" id="countMajor" style="color:var(--danger)">0</span><span class="finding-label">Major</span></div>
                 <div class="finding-item"><span class="finding-count" id="countMinor" style="color:var(--warning)">0</span><span class="finding-label">Minor</span></div>
@@ -133,6 +132,7 @@
                     <th>Tindakan Perbaikan</th>
                     <th>Nilai</th>
                     <th>Foto</th>
+                    <th>Status Temuan</th>
                     <th>Status</th>
                 </tr>
                 <tr class="filter-row">
@@ -144,6 +144,7 @@
                     <th><input type="text" id="filter-tindakan" class="filter-input" placeholder="Cari tindakan..." onkeyup="filterTabel()"></th>
                     <th><input type="text" id="filter-nilai" class="filter-input" placeholder="Cari nilai..." onkeyup="filterTabel()"></th>
                     <th></th>
+                    <th><input type="text" id="filter-statustemuan" class="filter-input" placeholder="Cari jenis..." onkeyup="filterTabel()"></th>
                     <th><input type="text" id="filter-status" class="filter-input" placeholder="Cari status..." onkeyup="filterTabel()"></th>
                 </tr>
             </thead>
@@ -219,6 +220,7 @@
             penyebab: document.getElementById("filter-penyebab").value.toLowerCase(),
             tindakan: document.getElementById("filter-tindakan").value.toLowerCase(),
             nilai: document.getElementById("filter-nilai").value.toLowerCase(),
+            statustemuan: document.getElementById("filter-statustemuan").value.toLowerCase(),
             status: document.getElementById("filter-status").value.toLowerCase()
         };
 
@@ -235,6 +237,7 @@
             if (filterInputs.penyebab && !(d.penyebab || "").toLowerCase().includes(filterInputs.penyebab)) isVisible = false;
             if (filterInputs.tindakan && !(d.tindakan || "").toLowerCase().includes(filterInputs.tindakan)) isVisible = false;
             if (filterInputs.nilai && !(d.nilaiPencapaian || "").toLowerCase().includes(filterInputs.nilai)) isVisible = false;
+            if (filterInputs.statustemuan && !(d.statusTemuan || "").toLowerCase().includes(filterInputs.statustemuan)) isVisible = false;
             if (filterInputs.status && !(d.statusVerifikasi || "OPEN").toLowerCase().includes(filterInputs.status)) isVisible = false;
 
             if (currentCardFilter === 'Selesai' && d.status !== 'Selesai') isVisible = false;
@@ -263,7 +266,6 @@
         document.getElementById('valOnTime').innerText = data.filter(d => d.timing === 'OnTime').length;
         document.getElementById('valLate').innerText = data.filter(d => d.timing === 'Late').length;
 
-        // Update Finding Status Counts
         document.getElementById('countMajor').innerText = data.filter(d => d.statusTemuan === 'Major').length;
         document.getElementById('countMinor').innerText = data.filter(d => d.statusTemuan === 'Minor').length;
         document.getElementById('countObs').innerText = data.filter(d => d.statusTemuan === 'Observasi').length;
@@ -288,9 +290,10 @@
                 <td>${d.tindakan || '-'}</td>
                 <td style="font-weight:bold">${d.nilaiPencapaian || '-'}</td>
                 <td><div style="display:flex">${fotoHtml || '-'}</div></td>
+                <td><span class="badge ${d.statusTemuan === 'Observasi' ? 'badge-obs' : (d.statusTemuan === 'Major' ? 'badge-open' : 'badge-pending')}">${d.statusTemuan || '-'}</span></td>
                 <td>
                     <span class="badge ${d.status==='Selesai'?'badge-success':'badge-pending'}">${d.status || 'Belum'}</span><br>
-                    <span class="badge ${d.statusVerifikasi==='CLOSED'?'badge-closed':(d.statusVerifikasi==='OBSERVASI'?'badge-obs':'badge-open')}">${d.statusVerifikasi || 'OPEN'}</span>
+                    <span class="badge ${d.statusVerifikasi==='CLOSED'?'badge-closed':'badge-open'}">${d.statusVerifikasi || 'OPEN'}</span>
                 </td>
             `;
             body.appendChild(row);
@@ -299,17 +302,16 @@
 
     function updateCharts(data) {
         const groupCounts = { "SUGAR FACTORY": 0, "SUGAR PLANTATION": 0, "SUPPORTING": 0 };
-        const statusCounts = { CLOSED: 0, OPEN: 0, OBSERVASI: 0 };
+        const statusCounts = { CLOSED: 0, OPEN: 0 };
         const deptCounts = {};
         const kategoriCounts = {};
 
         data.forEach(d => {
             if(groupCounts[d.group] !== undefined) groupCounts[d.group]++;
-            const s = d.statusVerifikasi || 'OPEN';
+            const s = d.statusVerifikasi === 'CLOSED' ? 'CLOSED' : 'OPEN';
             if(statusCounts[s] !== undefined) statusCounts[s]++;
             if(d.auditee) deptCounts[d.auditee] = (deptCounts[d.auditee] || 0) + 1;
             
-            // Hitung Kategori Temuan
             if(d.kategoriTemuan) {
                 const cats = d.kategoriTemuan.split(', ');
                 cats.forEach(c => { kategoriCounts[c] = (kategoriCounts[c] || 0) + 1; });
@@ -320,7 +322,7 @@
         const sortedKats = Object.keys(kategoriCounts).sort((a,b) => kategoriCounts[b] - kategoriCounts[a]);
 
         renderChart('chartGroup', 'pie', Object.keys(groupCounts), Object.values(groupCounts), ['#2563eb', '#10b981', '#f59e0b'], 'filter-dept');
-        renderChart('chartStatus', 'pie', Object.keys(statusCounts), Object.values(statusCounts), ['#10b981', '#ef4444', '#f59e0b'], 'filter-status');
+        renderChart('chartStatus', 'pie', Object.keys(statusCounts), Object.values(statusCounts), ['#10b981', '#ef4444'], 'filter-status');
         renderChart('chartKategori', 'bar', sortedKats, sortedKats.map(k => kategoriCounts[k]), '#8b5cf6', 'filter-temuan');
         renderChart('chartDept', 'pie', sortedDepts, sortedDepts.map(l => deptCounts[l]), ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'], 'filter-dept');
     }
@@ -342,7 +344,7 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                indexAxis: type === 'bar' ? 'y' : 'x', // Horizontal bar jika bar
+                indexAxis: type === 'bar' ? 'y' : 'x',
                 onClick: (evt, elements) => {
                     if (elements.length > 0) {
                         const index = elements[0].index;
