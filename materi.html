@@ -60,7 +60,6 @@
             border: 1px solid rgba(255,255,255,0.05); line-height: 1.6;
         }
 
-        /* --- TABLE STYLE --- */
         .table-container {
             width: 100%; max-width: 900px; background: #1e293b; border-radius: 15px;
             border: 1px solid rgba(255,255,255,0.1); overflow: hidden;
@@ -76,11 +75,6 @@
         }
         .btn-delete:hover { background: var(--danger); color: white; }
 
-        .success-text { color: #4ade80; font-weight: bold; }
-        .error-text { color: #f87171; }
-        .info-text { color: #eab308; }
-
-        /* Pagination Style */
         .pagination-bar {
             padding: 10px 15px; background: rgba(15, 23, 42, 0.5); 
             display: flex; justify-content: center; gap: 10px; border-top: 1px solid rgba(255,255,255,0.1);
@@ -99,6 +93,9 @@
             padding: 8px 12px; border-radius: 8px; color: white; font-size: 13px; outline: none; box-sizing: border-box;
         }
         .search-box input:focus { border-color: var(--primary); }
+        .success-text { color: #4ade80; font-weight: bold; }
+        .error-text { color: #f87171; }
+        .info-text { color: #eab308; }
     </style>
 </head>
 <body>
@@ -126,7 +123,7 @@
 <div class="table-container">
     <div style="padding: 15px; font-weight: bold; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between;">
         <span>List Dokumen Terdaftar</span>
-        <span id="docCount" style="color: var(--primary);">Loading...</span>
+        <span id="docCount" style="color: var(--primary);">Menghitung...</span>
     </div>
     
     <div class="search-box">
@@ -170,32 +167,28 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // --- PAGINATION SETTINGS ---
     const PAGE_SIZE = 10;
     let firstDoc = null;
     let lastDoc = null;
+    let currentPage = 1;
 
-    // Load initial data
     window.onload = () => loadData('init');
 
     async function loadData(direction = 'init') {
         const tbody = document.getElementById('documentTableBody');
         const filterValue = document.getElementById('filterInput').value.trim();
-        let query = db.collection('documents');
+        let query = db.collection('documents').orderBy('nomor_dokumen', 'asc');
 
-        // Reset if searching
-        if (direction === 'search') {
+        if (direction === 'search' || direction === 'init') {
             firstDoc = null;
             lastDoc = null;
+            currentPage = 1;
         }
 
-        // Apply filtering (Firestore limited to exact match or prefix for optimization)
         if (filterValue) {
             query = query.where('nomor_dokumen', '>=', filterValue)
                          .where('nomor_dokumen', '<=', filterValue + '\uf8ff');
         }
-
-        query = query.orderBy('nomor_dokumen', 'asc');
 
         if (direction === 'next' && lastDoc) {
             query = query.startAfter(lastDoc).limit(PAGE_SIZE);
@@ -207,11 +200,22 @@
 
         try {
             const snapshot = await query.get();
-            renderTable(snapshot);
-            updatePaginationButtons(snapshot, direction, !!filterValue);
+            if (!snapshot.empty) {
+                if (direction === 'next') currentPage++;
+                if (direction === 'prev') currentPage--;
+                
+                firstDoc = snapshot.docs[0];
+                lastDoc = snapshot.docs[snapshot.docs.length - 1];
+                renderTable(snapshot);
+            } else if (direction === 'init' || direction === 'search') {
+                renderTable(snapshot);
+            }
+            
+            updatePaginationButtons(snapshot.size, direction);
             updateTotalCount();
         } catch (error) {
             console.error("Error loading data: ", error);
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:red;">Gagal memuat data.</td></tr>`;
         }
     }
 
@@ -223,9 +227,6 @@
             tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 20px; opacity: 0.5;">Tidak ada data ditemukan.</td></tr>';
             return;
         }
-
-        firstDoc = snapshot.docs[0];
-        lastDoc = snapshot.docs[snapshot.docs.length - 1];
 
         snapshot.forEach(doc => {
             const data = doc.data();
@@ -243,35 +244,26 @@
         });
     }
 
-    function updatePaginationButtons(snapshot, direction, isFiltered) {
-        const btnNext = document.getElementById('btnNext');
-        const btnPrev = document.getElementById('btnPrev');
-
-        // Sederhana: Aktifkan next jika jumlah data sesuai limit
-        btnNext.disabled = snapshot.size < PAGE_SIZE;
-        
-        // Logika sederhana untuk tombol prev
-        if (direction === 'init' || direction === 'search') {
-            btnPrev.disabled = true;
-        } else if (direction === 'next') {
-            btnPrev.disabled = false;
-        } else if (direction === 'prev' && snapshot.size < PAGE_SIZE) {
-            // Jika di halaman pertama setelah balik
-            btnPrev.disabled = true;
-        }
+    function updatePaginationButtons(currentSize, direction) {
+        document.getElementById('btnPrev').disabled = (currentPage === 1);
+        // Tombol next aktif hanya jika jumlah data yang ditarik sama dengan limit (asumsi ada data selanjutnya)
+        document.getElementById('btnNext').disabled = (currentSize < PAGE_SIZE);
     }
 
     async function updateTotalCount() {
-        // Menggunakan count() aggregation (hemat kuota: 1 read per 1000 index entries)
-        const snapshot = await db.collection('documents').count().get();
-        document.getElementById('docCount').innerText = `${snapshot.data().count} Dokumen`;
+        try {
+            const snapshot = await db.collection('documents').count().get();
+            document.getElementById('docCount').innerText = `${snapshot.data().count} Dokumen`;
+        } catch (e) {
+            document.getElementById('docCount').innerText = "Terhubung";
+        }
     }
 
     async function deleteDoc(id) {
         if (confirm('Hapus dokumen ini?')) {
             try {
                 await db.collection('documents').doc(id).delete();
-                loadData('init'); // Refresh page
+                loadData('init');
             } catch (err) {
                 alert('Gagal menghapus: ' + err.message);
             }
@@ -334,7 +326,6 @@
                         status: String(item.status || "Aktif").trim(),
                         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                     }, { merge: true });
-
                     log.innerHTML += `<span class="success-text">[OK] ${docId} BERHASIL</span><br>`;
                 } catch (err) {
                     log.innerHTML += `<span class="error-text">[ERROR] ${docId}: ${err.message}</span><br>`;
