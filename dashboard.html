@@ -3,137 +3,201 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Analisa Kamishibai</title>
+    <title>Form Audit Kamishibai</title>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root { --primary: #2563eb; --bg: #f8fafc; --border: #e2e8f0; --text: #1e293b; --danger: #ef4444; --success: #10b981; --warning: #f59e0b; }
+        :root { --primary: #2563eb; --bg: #f8fafc; --border: #e2e8f0; --text: #1e293b; --danger: #ef4444; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding: 15px; margin: 0; }
-        
-        .container { max-width: 1300px; margin: 0 auto; background: white; padding: 20px; border-radius: 15px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 25px; }
-        .section-title { font-size: 16px; font-weight: bold; margin: 20px 0 15px 0; border-left: 5px solid var(--primary); padding-left: 12px; color: var(--primary); text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; }
-        
-        .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px; background: #f1f5f9; padding: 15px; border-radius: 10px; }
+        .container { max-width: 900px; margin: 0 auto; background: white; padding: 20px; border-radius: 15px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 30px; }
+        .section-title { font-size: 18px; font-weight: bold; margin-bottom: 20px; border-left: 5px solid var(--primary); padding-left: 15px; color: var(--primary); }
+
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         label { display: block; font-size: 10px; font-weight: bold; margin-bottom: 5px; color: #64748b; text-transform: uppercase; }
-        select, input { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; outline: none; background: white; box-sizing: border-box; }
 
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px; }
-        .stat-box { padding: 15px; border-radius: 12px; border: 1px solid var(--border); text-align: center; background: #fff; cursor: pointer; transition: 0.2s; position: relative; }
-        .stat-box:hover { transform: translateY(-3px); border-color: var(--primary); }
-        .stat-box.active { border: 2px solid var(--primary); background: #eff6ff; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1); }
-        .stat-val { font-size: 22px; font-weight: 800; display: block; margin-top: 5px; }
-        .stat-lbl { font-size: 9px; font-weight: bold; color: #64748b; text-transform: uppercase; }
+        input, select, textarea { 
+            width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid var(--border); 
+            border-radius: 10px; font-size: 16px; box-sizing: border-box; outline: none; 
+            min-height: 48px;
+        }
+        select[multiple] { min-height: 100px; padding: 5px; }
 
-        .chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 15px; margin-bottom: 25px; }
-        .chart-card { background: white; padding: 15px; border-radius: 12px; border: 1px solid var(--border); height: 320px; display: flex; flex-direction: column; min-width: 0; overflow: hidden; box-sizing: border-box; }
-        .chart-card h4 { font-size: 11px; margin-top: 0; margin-bottom: 15px; color: #64748b; text-transform: uppercase; text-align: center; letter-spacing: 0.5px; }
-        .chart-container { flex-grow: 1; position: relative; width: 100%; height: 100%; min-height: 0; }
+        textarea { min-height: 80px; }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary); background: #f0f7ff; }
+        input:read-only { background: #f1f5f9; color: #64748b; }
+
+        .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; margin-bottom: 20px; }
+        .photo-box { border: 2px dashed var(--border); border-radius: 10px; padding: 5px; text-align: center; cursor: pointer; min-height: 100px; display: flex; align-items: center; justify-content: center; flex-direction: column; overflow: hidden; background: #fafafa; position: relative; }
+        .photo-box img { width: 100%; height: 100%; border-radius: 5px; display: none; object-fit: cover; }
+        .photo-box span { font-size: 10px; color: #64748b; font-weight: bold; }
+        
+        .btn-remove {
+            position: absolute; top: 5px; right: 5px; background: var(--danger); color: white;
+            border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 12px;
+            cursor: pointer; display: none; z-index: 10; align-items: center; justify-content: center;
+        }
+
+        .btn-submit { width: 100%; padding: 18px; background: var(--primary); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 18px; transition: 0.3s; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3); }
 
         .table-container { background: white; border-radius: 12px; border: 1px solid var(--border); overflow-x: auto; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 1300px; }
-        th { background: #f8fafc; padding: 12px 10px; text-align: left; color: #475569; border-bottom: 2px solid var(--border); font-size: 10px; text-transform: uppercase; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 1200px; }
+        th { background: #f8fafc; padding: 12px 10px; text-align: left; color: #475569; border-bottom: 2px solid var(--border); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
         td { padding: 12px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
-
-        .filter-row { background: #ffffff; }
-        .filter-row th { padding: 5px 10px 10px 10px; border-bottom: 1px solid var(--border); }
-        .filter-input { width: 100%; padding: 8px 10px; font-size: 11px; border: 1px solid #e2e8f0; border-radius: 6px; box-sizing: border-box; outline: none; background: #fdfdfd; font-weight: normal; }
-        .filter-input:focus { border-color: var(--primary); background: white; }
-
-        .btn-clear { background: var(--danger); color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 10px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
-        .btn-clear:hover { opacity: 0.9; }
 
         .thumb-img { width: 45px; height: 45px; object-fit: cover; border-radius: 6px; margin-right: 4px; border: 1px solid #ddd; cursor: pointer; }
         .badge { padding: 4px 8px; border-radius: 12px; font-size: 9px; font-weight: bold; display: inline-block; margin-top: 2px; }
-        .badge-success { background: #dcfce7; color: #166534; }
-        .badge-pending { background: #fff7ed; color: #9a3412; }
         .badge-closed { background: #dcfce7; color: #166534; }
         .badge-open { background: #fee2e2; color: #991b1b; }
-        .badge-obs { background: #fef9c3; color: #854d0e; }
 
-        @media (max-width: 768px) {
-            .chart-grid { grid-template-columns: 1fr; }
-            .chart-card { height: 300px; }
-        }
+        .filter-box { margin-bottom: 15px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .filter-box input, .filter-box select { margin-bottom: 0; padding: 8px 12px; font-size: 13px; min-height: 40px; width: auto; }
+
+        /* Style tambahan untuk dashboard statistik */
+        .dashboard-stats { margin-top: 20px; display: grid; grid-template-columns: 1fr 2fr; gap: 20px; }
+        .stat-card { background: white; padding: 15px; border-radius: 12px; border: 1px solid var(--border); }
+        .stat-value { font-size: 24px; font-weight: bold; color: var(--primary); }
+
+        @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } .filter-box { flex-direction: column; align-items: stretch; } .filter-box select, .filter-box input { width: 100%; } .dashboard-stats { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="section-title" style="margin-top:0">
-        Dashboard Analisa Performa
-        <button class="btn-clear" onclick="clearAllFilters()">Clear All Filters</button>
-    </div>
-    
-    <div class="filter-grid">
-        <div>
-            <label>Group Unit</label>
-            <select id="fGroup" onchange="fetchData()">
-                <option value="">Semua Group</option>
-                <option value="SUGAR FACTORY">SUGAR FACTORY</option>
-                <option value="SUGAR PLANTATION">SUGAR PLANTATION</option>
-                <option value="SUPPORTING">SUPPORTING</option>
-            </select>
-        </div>
-        <div><label>Bulan Jadwal</label><input type="month" id="fMonth" onchange="fetchData()"></div>
-    </div>
+    <div class="section-title">FORM INPUT AUDIT KAMISHIBAI</div>
 
-    <div class="stats-grid">
-        <div class="stat-box active" onclick="filterByCard('all')" id="card-all" style="border-top: 4px solid var(--primary);"><span class="stat-lbl">Total Jadwal</span><span class="stat-val" id="valTotal">0</span></div>
-        <div class="stat-box" onclick="filterByCard('Selesai')" id="card-Selesai" style="border-top: 4px solid var(--success);"><span class="stat-lbl">Selesai</span><span class="stat-val" id="valSelesai" style="color: var(--success);">0</span></div>
-        <div class="stat-box" onclick="filterByCard('Pending')" id="card-Pending" style="border-top: 4px solid var(--warning);"><span class="stat-lbl">Pending Audit</span><span class="stat-val" id="valPending" style="color: var(--warning);">0</span></div>
-        <div class="stat-box" style="border-top: 4px solid #8b5cf6;"><span class="stat-lbl">Avg Score</span><span class="stat-val" id="valAvg" style="color: #8b5cf6;">0%</span></div>
-        <div class="stat-box" onclick="filterByCard('OnTime')" id="card-OnTime" style="border-top: 4px solid var(--success);"><span class="stat-lbl">On Time</span><span class="stat-val" id="valOnTime" style="color: var(--success);">0</span></div>
-        <div class="stat-box" onclick="filterByCard('Late')" id="card-Late" style="border-top: 4px solid var(--danger);"><span class="stat-lbl">Late</span><span class="stat-val" id="valLate" style="color: var(--danger);">0</span></div>
-    </div>
+    <form id="auditForm">
+        <label>1. Pilih Group Unit</label>
+        <select id="filterGroupJadwal" onchange="loadJadwal()">
+            <option value="">-- Memuat Group... --</option>
+        </select>
 
-    <div class="chart-grid">
-        <div class="chart-card">
-            <h4>Sebaran Per Group</h4>
-            <div class="chart-container"><canvas id="chartGroup"></canvas></div>
+        <label>2. Pilih Jadwal Audit</label>
+        <select id="selectJadwal" onchange="fillJadwalData(this.value)" required>
+            <option value="">-- Pilih Group Dahulu --</option>
+        </select>
+
+        <div class="grid">
+            <div><label>Group Terpilih</label><input type="text" id="displayGroup" readonly></div>
+            <div><label>Tanggal Audit</label><input type="date" id="tglAudit" required></div>
+            <div><label>Auditor</label><input type="text" id="displayAuditor" readonly></div>
+            <div><label>Dept. Auditee</label><input type="text" id="displayDept" readonly></div>
+            <div><label>Nama Personel Auditee</label><input type="text" id="namaAuditee" required></div>
+            <div><label>Judul IK / Materi</label><input type="text" id="judulIK" readonly></div>
+            <div><label>Jumlah Item Cek</label><input type="number" id="jmlItem" value="10" oninput="hitungNilai()" required></div>
+            <div><label>Jumlah Temuan</label><input type="number" id="jmlTemuan" value="0" oninput="hitungNilai()" required></div>
+            <div><label>Nilai Pencapaian (%)</label><input type="text" id="nilaiTemuan" readonly></div>
+            <div>
+                <label>Status Akhir</label>
+                <select id="statusVerifikasi">
+                    <option value="OPEN">OPEN (Perlu Perbaikan)</option>
+                    <option value="CLOSED">CLOSED (Sudah Sesuai)</option>
+                    <option value="OBSERVASI">OBSERVASI</option>
+                </select>
+            </div>
+            <div>
+                <label>Status Temuan</label>
+                <select id="statusTemuan">
+                    <option value="Major">Major</option>
+                    <option value="Minor">Minor</option>
+                    <option value="Tidak ada temuan">Tidak ada temuan</option>
+                    <option value="Observasi">Observasi</option>
+                </select>
+            </div>
+            <div>
+                <label>Kategori Temuan</label>
+                <select id="kategoriTemuan" multiple>
+                    <option value="Proses">Proses</option>
+                    <option value="Dokumen">Dokumen</option>
+                    <option value="Safety">Safety</option>
+                    <option value="Lingkungan">Lingkungan</option>
+                    <option value="5R">5R</option>
+                </select>
+            </div>
         </div>
-        <div class="chart-card">
-            <h4>Status Verifikasi</h4>
-            <div class="chart-container"><canvas id="chartStatus"></canvas></div>
+
+        <label>Uraian Ketidaksesuaian</label>
+        <textarea id="uraian" rows="3"></textarea>
+
+        <div class="grid">
+            <div><label>Analisa Penyebab</label><textarea id="penyebab" rows="2"></textarea></div>
+            <div><label>Tindakan Perbaikan</label><textarea id="tindakan" rows="2"></textarea></div>
         </div>
-        <div class="chart-card">
-            <h4>Top 10 Dept Teraktif</h4>
-            <div class="chart-container"><canvas id="chartDept"></canvas></div>
+
+        <label>Foto Bukti</label>
+        <div class="photo-grid">
+            <script>
+                for(let i=1; i<=5; i++) {
+                    document.write(`
+                        <div class="photo-box" id="box${i}">
+                            <button type="button" class="btn-remove" id="btnDel${i}" onclick="removeImage(event, ${i})">✕</button>
+                            <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; flex-direction:column;" onclick="document.getElementById('file${i}').click()">
+                                <img id="img${i}" src="">
+                                <span id="text${i}">${i===5?'FOTO BERSAMA':`FOTO ${i}`}</span>
+                                <div id="load${i}" style="display:none; font-size:10px; color:var(--primary);">Uploading...</div>
+                            </div>
+                            <input type="file" id="file${i}" accept="image/*" hidden onchange="uploadImage(this, ${i})">
+                            <input type="hidden" id="url${i}">
+                        </div>
+                    `);
+                }
+            </script>
         </div>
-    </div>
+
+        <label>Catatan Tambahan</label>
+        <input type="text" id="updateCatatan">
+        <button type="submit" id="btnSave" class="btn-submit">SIMPAN HASIL AUDIT</button>
+    </form>
 </div>
 
-<div style="max-width: 1300px; margin: 0 auto; padding-bottom: 50px;">
-    <div class="section-title">History & Detail Log Audit</div>
+<div style="max-width: 1300px; margin: 0 auto; margin-bottom: 80px; padding:0 15px;">
+    <div class="section-title">HISTORY AUDIT LOG</div>
     
+    <div class="filter-box">
+        <input type="text" id="searchTable" placeholder="Cari Auditor, Dept, atau Materi..." onkeyup="filterTable()">
+        <select id="filterStatus" onchange="filterTable()">
+            <option value="">Semua Status</option>
+            <option value="OPEN">OPEN</option>
+            <option value="CLOSED">CLOSED</option>
+        </select>
+        
+        <select id="filterMonth" onchange="fetchAuditHistory()"></select>
+        <select id="filterYear" onchange="fetchAuditHistory()"></select>
+    </div>
+
     <div class="table-container">
-        <table id="mainTable">
+        <table id="historyTable">
             <thead>
                 <tr>
                     <th>Tgl Audit</th>
                     <th>Group / Dept</th>
                     <th>Auditor / Auditee</th>
                     <th>Materi & Temuan</th>
+                    <th>Status Temuan</th>
                     <th>Penyebab</th>
-                    <th>Tindakan Perbaikan</th>
+                    <th>Perbaikan</th>
                     <th>Nilai</th>
                     <th>Foto</th>
+                    <th>Catatan</th>
                     <th>Status</th>
                 </tr>
-                <tr class="filter-row">
-                    <th><input type="text" id="filter-tgl" class="filter-input" placeholder="Cari tgl..." onkeyup="filterTabel()"></th>
-                    <th><input type="text" id="filter-dept" class="filter-input" placeholder="Cari dept..." onkeyup="filterTabel()"></th>
-                    <th><input type="text" id="filter-nama" class="filter-input" placeholder="Cari nama..." onkeyup="filterTabel()"></th>
-                    <th><input type="text" id="filter-temuan" class="filter-input" placeholder="Cari temuan..." onkeyup="filterTabel()"></th>
-                    <th><input type="text" id="filter-penyebab" class="filter-input" placeholder="Cari penyebab..." onkeyup="filterTabel()"></th>
-                    <th><input type="text" id="filter-tindakan" class="filter-input" placeholder="Cari tindakan..." onkeyup="filterTabel()"></th>
-                    <th><input type="text" id="filter-nilai" class="filter-input" placeholder="Cari nilai..." onkeyup="filterTabel()"></th>
-                    <th></th>
-                    <th><input type="text" id="filter-status" class="filter-input" placeholder="Cari status..." onkeyup="filterTabel()"></th>
-                </tr>
             </thead>
-            <tbody id="mainBody"></tbody>
+            <tbody id="historyBody"></tbody>
         </table>
+    </div>
+
+    <div class="dashboard-stats">
+        <div class="stat-card">
+            <label>Total Temuan Periode Ini</label>
+            <div id="totalTemuanValue" class="stat-value">0</div>
+            <hr style="border:0; border-top:1px solid var(--border); margin:10px 0;">
+            <label>Major</label> <span id="countMajor">0</span><br>
+            <label>Minor</label> <span id="countMinor">0</span><br>
+            <label>Observasi</label> <span id="countObs">0</span>
+        </div>
+        <div class="stat-card">
+            <canvas id="chartStatusTemuan" style="max-height: 250px;"></canvas>
+        </div>
     </div>
 </div>
 
@@ -149,194 +213,250 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    let masterData = [];
-    let currentCardFilter = 'all';
-    let charts = {};
+    const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/ddhsrvefu/image/upload";
+    const CLOUDINARY_PRESET = "kamishiba_foto";
 
-    const now = new Date();
-    const currentMonth = now.toISOString().substring(0, 7);
-    document.getElementById('fMonth').value = currentMonth;
+    let cacheJadwal = {};
+    let chartInstance = null;
 
-    async function fetchData() {
-        const g = document.getElementById('fGroup').value;
-        const m = document.getElementById('fMonth').value;
+    function initFilters() {
+        const monthSelect = document.getElementById('filterMonth');
+        const yearSelect = document.getElementById('filterYear');
+        const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+        
+        const now = new Date();
+        
+        monthNames.forEach((m, i) => {
+            let opt = document.createElement('option');
+            opt.value = i;
+            opt.text = m;
+            if(i === now.getMonth()) opt.selected = true;
+            monthSelect.appendChild(opt);
+        });
+
+        const currentYear = now.getFullYear();
+        for(let y = currentYear; y >= currentYear - 2; y--) {
+            let opt = document.createElement('option');
+            opt.value = y;
+            opt.text = y;
+            yearSelect.appendChild(opt);
+        }
+    }
+    initFilters();
+
+    async function loadGroupsFromMateri() {
+        const groupSelect = document.getElementById('filterGroupJadwal');
         try {
-            let query = db.collection('jadwal_audit');
-            if(g) query = query.where('group', '==', g);
-            if(m) query = query.where('periode', '==', m);
-            
-            const snap = await query.get();
-            masterData = snap.docs.map(doc => {
-                const d = doc.data();
-                let timing = '-';
-                if(d.status === 'Selesai' && d.tglAudit && d.periode) {
-                    timing = (d.tglAudit.substring(0, 7) === d.periode) ? 'OnTime' : 'Late';
-                }
-                return { ...d, timing };
+            const snap = await db.collection('documents').get();
+            const groups = new Set();
+            snap.forEach(doc => {
+                if(doc.data().group) groups.add(doc.data().group);
             });
             
-            renderTable(masterData);
-            filterTabel(); 
-        } catch (e) { console.error("Fetch Error:", e); }
+            groupSelect.innerHTML = '<option value="">-- Pilih Group --</option>';
+            groups.forEach(g => {
+                groupSelect.innerHTML += `<option value="${g}">${g}</option>`;
+            });
+        } catch (e) {
+            console.error("Error loading groups:", e);
+            groupSelect.innerHTML = '<option value="">Gagal memuat group</option>';
+        }
+    }
+    loadGroupsFromMateri();
+
+    async function loadJadwal() {
+        const groupFilter = document.getElementById('filterGroupJadwal').value;
+        const sel = document.getElementById('selectJadwal');
+        if(!groupFilter) {
+            sel.innerHTML = '<option value="">-- Pilih Group Dahulu --</option>';
+            return;
+        }
+        sel.innerHTML = '<option value="">-- Memuat... --</option>';
+        const snap = await db.collection('jadwal_audit').where('status', '==', 'Pending').where('group', '==', groupFilter).get();
+        sel.innerHTML = '<option value="">-- Pilih Jadwal --</option>';
+        snap.forEach(doc => {
+            cacheJadwal[doc.id] = doc.data();
+            sel.innerHTML += `<option value="${doc.id}">${doc.data().periode} | ${doc.data().auditor}</option>`;
+        });
     }
 
-    function clearAllFilters() {
-        document.querySelectorAll('.filter-input').forEach(i => i.value = '');
-        currentCardFilter = 'all';
-        document.querySelectorAll('.stat-box').forEach(b => b.classList.remove('active'));
-        document.getElementById('card-all').classList.add('active');
-        filterTabel();
+    function fillJadwalData(id) {
+        if(!id) return;
+        const d = cacheJadwal[id];
+        document.getElementById('displayGroup').value = d.group || '';
+        document.getElementById('displayAuditor').value = d.auditor || '';
+        document.getElementById('displayDept').value = d.auditee || '';
+        document.getElementById('judulIK').value = d.judulIK || d.materi || '';
+        hitungNilai();
     }
 
-    function filterByCard(type) {
-        currentCardFilter = type;
-        document.querySelectorAll('.stat-box').forEach(b => b.classList.remove('active'));
-        document.getElementById('card-' + type).classList.add('active');
-        filterTabel();
+    function hitungNilai() {
+        const i = parseFloat(document.getElementById('jmlItem').value) || 0;
+        const t = parseFloat(document.getElementById('jmlTemuan').value) || 0;
+        document.getElementById('nilaiTemuan').value = i > 0 ? ((1-(t/i))*100).toFixed(2) + "%" : "0%";
     }
 
-    function filterTabel() {
-        const filterInputs = {
-            tgl: document.getElementById("filter-tgl").value.toLowerCase(),
-            dept: document.getElementById("filter-dept").value.toLowerCase(),
-            nama: document.getElementById("filter-nama").value.toLowerCase(),
-            temuan: document.getElementById("filter-temuan").value.toLowerCase(),
-            penyebab: document.getElementById("filter-penyebab").value.toLowerCase(),
-            tindakan: document.getElementById("filter-tindakan").value.toLowerCase(),
-            nilai: document.getElementById("filter-nilai").value.toLowerCase(),
-            status: document.getElementById("filter-status").value.toLowerCase()
+    async function uploadImage(input, idx) {
+        const file = input.files[0]; if(!file) return;
+        document.getElementById(`load${idx}`).style.display = 'block';
+        const fd = new FormData(); fd.append('file', file); fd.append('upload_preset', CLOUDINARY_PRESET);
+        try {
+            const res = await fetch(CLOUDINARY_URL, { method: 'POST', body: fd });
+            const data = await res.json();
+            document.getElementById(`url${idx}`).value = data.secure_url;
+            document.getElementById(`img${idx}`).src = data.secure_url;
+            document.getElementById(`img${idx}`).style.display = 'block';
+            document.getElementById(`text${idx}`).style.display = 'none';
+            document.getElementById(`btnDel${idx}`).style.display = 'flex'; 
+        } catch (e) { alert("Upload Gagal"); }
+        document.getElementById(`load${idx}`).style.display = 'none';
+    }
+
+    function removeImage(event, idx) {
+        event.stopPropagation(); 
+        if(confirm("Batalkan foto ini?")) {
+            document.getElementById(`file${idx}`).value = "";
+            document.getElementById(`url${idx}`).value = "";
+            document.getElementById(`img${idx}`).src = "";
+            document.getElementById(`img${idx}`).style.display = 'none';
+            document.getElementById(`text${idx}`).style.display = 'block';
+            document.getElementById(`btnDel${idx}`).style.display = 'none';
+        }
+    }
+
+    document.getElementById('auditForm').onsubmit = async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('selectJadwal').value;
+        if(!id) return alert("Pilih jadwal!");
+
+        const kategoriSelect = document.getElementById('kategoriTemuan');
+        const kategoriValues = Array.from(kategoriSelect.selectedOptions).map(opt => opt.value).join(', ');
+
+        const data = {
+            tglAudit: document.getElementById('tglAudit').value,
+            namaAuditeePerson: document.getElementById('namaAuditee').value,
+            judulIK: document.getElementById('judulIK').value,
+            jmlItem: document.getElementById('jmlItem').value,
+            jmlTemuan: document.getElementById('jmlTemuan').value,
+            nilaiPencapaian: document.getElementById('nilaiTemuan').value,
+            uraian: document.getElementById('uraian').value,
+            penyebab: document.getElementById('penyebab').value,
+            tindakan: document.getElementById('tindakan').value,
+            statusVerifikasi: document.getElementById('statusVerifikasi').value,
+            statusTemuan: document.getElementById('statusTemuan').value,
+            kategoriTemuan: kategoriValues,
+            updateCatatan: document.getElementById('updateCatatan').value,
+            status: "Selesai",
+            foto: [1,2,3,4,5].map(i => document.getElementById(`url${i}`).value).filter(v => v),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
 
-        const rows = document.getElementById("mainBody").getElementsByTagName("tr");
-        let filteredData = [];
+        try {
+            await db.collection('jadwal_audit').doc(id).update(data);
+            alert("Berhasil!"); location.reload();
+        } catch (e) { alert("Error!"); }
+    };
 
-        masterData.forEach((d, index) => {
-            let isVisible = true;
+    function filterTable() {
+        const input = document.getElementById("searchTable").value.toUpperCase();
+        const status = document.getElementById("filterStatus").value.toUpperCase();
+        const rows = document.getElementById("historyBody").getElementsByTagName("tr");
 
-            if (filterInputs.tgl && !(d.tglAudit || "").toLowerCase().includes(filterInputs.tgl)) isVisible = false;
-            if (filterInputs.dept && !(d.group + " " + d.auditee).toLowerCase().includes(filterInputs.dept)) isVisible = false;
-            if (filterInputs.nama && !(d.auditor + " " + d.namaAuditeePerson).toLowerCase().includes(filterInputs.nama)) isVisible = false;
-            if (filterInputs.temuan && !(d.uraian || "").toLowerCase().includes(filterInputs.temuan)) isVisible = false;
-            if (filterInputs.penyebab && !(d.penyebab || "").toLowerCase().includes(filterInputs.penyebab)) isVisible = false;
-            if (filterInputs.tindakan && !(d.tindakan || "").toLowerCase().includes(filterInputs.tindakan)) isVisible = false;
-            if (filterInputs.nilai && !(d.nilaiPencapaian || "").toLowerCase().includes(filterInputs.nilai)) isVisible = false;
-            if (filterInputs.status && !(d.statusVerifikasi || "OPEN").toLowerCase().includes(filterInputs.status)) isVisible = false;
+        for (let i = 0; i < rows.length; i++) {
+            const text = rows[i].textContent || rows[i].innerText;
+            const matchesSearch = text.toUpperCase().indexOf(input) > -1;
+            const matchesStatus = status === "" || text.toUpperCase().indexOf(status) > -1;
+            rows[i].style.display = (matchesSearch && matchesStatus) ? "" : "none";
+        }
+    }
 
-            if (currentCardFilter === 'Selesai' && d.status !== 'Selesai') isVisible = false;
-            if (currentCardFilter === 'Pending' && d.status === 'Selesai') isVisible = false;
-            if (currentCardFilter === 'OnTime' && d.timing !== 'OnTime') isVisible = false;
-            if (currentCardFilter === 'Late' && d.timing !== 'Late') isVisible = false;
-
-            if (rows[index]) rows[index].style.display = isVisible ? "" : "none";
-            
-            if (isVisible) filteredData.push(d);
+    function updateDashboard(dataArr) {
+        let major = 0, minor = 0, obs = 0, total = 0;
+        dataArr.forEach(d => {
+            total += parseInt(d.jmlTemuan) || 0;
+            if(d.statusTemuan === 'Major') major++;
+            else if(d.statusTemuan === 'Minor') minor++;
+            else if(d.statusTemuan === 'Observasi') obs++;
         });
 
-        updateStats(filteredData);
-        updateCharts(filteredData);
-    }
+        document.getElementById('totalTemuanValue').innerText = total;
+        document.getElementById('countMajor').innerText = major;
+        document.getElementById('countMinor').innerText = minor;
+        document.getElementById('countObs').innerText = obs;
 
-    function updateStats(data) {
-        const fin = data.filter(d => d.status === 'Selesai');
-        const pen = data.filter(d => d.status !== 'Selesai');
-        const avg = fin.length ? (fin.reduce((a, b) => a + (parseFloat(b.nilaiPencapaian?.toString().replace('%','')) || 0), 0) / fin.length).toFixed(1) : 0;
-
-        document.getElementById('valTotal').innerText = data.length;
-        document.getElementById('valSelesai').innerText = fin.length;
-        document.getElementById('valPending').innerText = pen.length;
-        document.getElementById('valAvg').innerText = avg + "%";
-        document.getElementById('valOnTime').innerText = data.filter(d => d.timing === 'OnTime').length;
-        document.getElementById('valLate').innerText = data.filter(d => d.timing === 'Late').length;
-    }
-
-    function renderTable(data) {
-        const body = document.getElementById('mainBody');
-        body.innerHTML = '';
-        data.forEach((d, index) => {
-            let fotoHtml = '';
-            if(d.foto && Array.isArray(d.foto)) {
-                d.foto.forEach(url => { fotoHtml += `<img src="${url}" class="thumb-img" onclick="window.open('${url}')">`; });
-            }
-
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${d.tglAudit || '-'}</td>
-                <td><b>${d.group}</b><br>${d.auditee}</td>
-                <td><small>Auditor:</small> ${d.auditor}<br><small>Auditee:</small> ${d.namaAuditeePerson || '-'}</td>
-                <td><small>IK: ${d.judulIK || '-'}</small><br><i style="color:#64748b">${d.uraian || '-'}</i></td>
-                <td>${d.penyebab || '-'}</td>
-                <td>${d.tindakan || '-'}</td>
-                <td style="font-weight:bold">${d.nilaiPencapaian || '-'}</td>
-                <td><div style="display:flex">${fotoHtml || '-'}</div></td>
-                <td>
-                    <span class="badge ${d.status==='Selesai'?'badge-success':'badge-pending'}">${d.status || 'Belum'}</span><br>
-                    <span class="badge ${d.statusVerifikasi==='CLOSED'?'badge-closed':(d.statusVerifikasi==='OBSERVASI'?'badge-obs':'badge-open')}">${d.statusVerifikasi || 'OPEN'}</span>
-                </td>
-            `;
-            body.appendChild(row);
-        });
-    }
-
-    function updateCharts(data) {
-        // Updated Group Keys
-        const groupCounts = { "SUGAR FACTORY": 0, "SUGAR PLANTATION": 0, "SUPPORTING": 0 };
-        const statusCounts = { CLOSED: 0, OPEN: 0, OBSERVASI: 0 };
-        const deptCounts = {};
-
-        data.forEach(d => {
-            if(groupCounts[d.group] !== undefined) groupCounts[d.group]++;
-            const s = d.statusVerifikasi || 'OPEN';
-            if(statusCounts[s] !== undefined) statusCounts[s]++;
-            if(d.auditee) deptCounts[d.auditee] = (deptCounts[d.auditee] || 0) + 1;
-        });
-
-        const sortedDepts = Object.keys(deptCounts).sort((a,b) => deptCounts[b] - deptCounts[a]).slice(0, 10);
-        const deptPalette = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316', '#64748b', '#84cc16'];
-
-        renderChart('chartGroup', 'pie', Object.keys(groupCounts), Object.values(groupCounts), ['#2563eb', '#10b981', '#f59e0b'], 'filter-dept');
-        renderChart('chartStatus', 'pie', Object.keys(statusCounts), Object.values(statusCounts), ['#10b981', '#ef4444', '#f59e0b'], 'filter-status');
-        renderChart('chartDept', 'pie', sortedDepts, sortedDepts.map(l => deptCounts[l]), deptPalette, 'filter-dept');
-    }
-
-    function renderChart(id, type, labels, data, colors, targetFilterId) {
-        if(charts[id]) charts[id].destroy();
-        const ctx = document.getElementById(id).getContext('2d');
-        charts[id] = new Chart(ctx, {
-            type: type,
+        const ctx = document.getElementById('chartStatusTemuan').getContext('2d');
+        if(chartInstance) chartInstance.destroy();
+        
+        chartInstance = new Chart(ctx, {
+            type: 'bar',
             data: {
-                labels: labels,
+                labels: ['Major', 'Minor', 'Observasi'],
                 datasets: [{
-                    data: data,
-                    backgroundColor: colors,
-                    borderWidth: 1
+                    label: 'Frekuensi Status Temuan',
+                    data: [major, minor, obs],
+                    backgroundColor: ['#ef4444', '#f59e0b', '#2563eb'],
+                    borderRadius: 5
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                onClick: (evt, elements) => {
-                    if (elements.length > 0) {
-                        const index = elements[0].index;
-                        const label = labels[index];
-                        const filterInput = document.getElementById(targetFilterId);
-                        if (filterInput) {
-                            filterInput.value = label;
-                            filterTabel();
-                        }
-                    }
-                },
-                layout: { padding: { bottom: 10, top: 5, left: 10, right: 10 } },
-                plugins: { 
-                    legend: { 
-                        position: 'bottom',
-                        labels: { boxWidth: 10, font: { size: 9 }, padding: 12, usePointStyle: true } 
-                    }
-                }
+                scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
             }
         });
     }
 
-    fetchData();
+    async function fetchAuditHistory() {
+        const month = parseInt(document.getElementById('filterMonth').value);
+        const year = parseInt(document.getElementById('filterYear').value);
+        const startOfMonth = new Date(year, month, 1);
+        const endOfMonth = new Date(year, month + 1, 0, 23, 59, 59);
+
+        const body = document.getElementById('historyBody');
+        body.innerHTML = '<tr><td colspan="11" style="text-align:center; padding:20px;">Memuat data...</td></tr>';
+
+        try {
+            const snap = await db.collection('jadwal_audit')
+                .where('status', '==', 'Selesai')
+                .where('updatedAt', '>=', startOfMonth)
+                .where('updatedAt', '<=', endOfMonth)
+                .orderBy('updatedAt', 'desc')
+                .get();
+
+            body.innerHTML = '';
+            let results = [];
+            if(snap.empty) {
+                body.innerHTML = '<tr><td colspan="11" style="text-align:center; padding:20px; color:#64748b;">Tidak ada data untuk periode ini.</td></tr>';
+                updateDashboard([]);
+                return;
+            }
+
+            snap.forEach(doc => {
+                const d = doc.data();
+                results.push(d);
+                let fotoHtml = (d.foto || []).map(url => `<img src="${url}" class="thumb-img" onclick="window.open('${url}')">`).join('');
+                body.innerHTML += `
+                    <tr>
+                        <td>${d.tglAudit}</td>
+                        <td><b>${d.group}</b><br>${d.auditee}</td>
+                        <td>${d.auditor}<br><small>${d.namaAuditeePerson || '-'}</small></td>
+                        <td><b>IK: ${d.judulIK}</b><br><i>${d.uraian || '-'}</i><br><small>Kategori: ${d.kategoriTemuan}</small></td>
+                        <td>${d.statusTemuan || '-'}</td>
+                        <td>${d.penyebab || '-'}</td>
+                        <td>${d.tindakan || '-'}</td>
+                        <td>${d.nilaiPencapaian}</td>
+                        <td>${fotoHtml}</td>
+                        <td>${d.updateCatatan || '-'}</td>
+                        <td><span class="badge ${d.statusVerifikasi==='CLOSED'?'badge-closed':'badge-open'}">${d.statusVerifikasi}</span></td>
+                    </tr>`;
+            });
+            updateDashboard(results);
+        } catch (e) {
+            console.error(e);
+            body.innerHTML = '<tr><td colspan="11" style="text-align:center; padding:20px; color:red;">Gagal memuat data.</td></tr>';
+        }
+    }
+    fetchAuditHistory();
 </script>
 </body>
 </html>
