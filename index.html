@@ -1,251 +1,338 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Kamishibai MSM System</title>
-    <link rel="icon" type="image/png" href="https://res.cloudinary.com/ddhsrvefu/image/upload/v1772248994/Gemini_Generated_Image_ilzww2ilzww2ilzw_vhl8zx.png">
-    
-    <style>
-        :root {
-            --sidebar-width: 260px;
-            --primary: #3b82f6;
-            --bg-dark: #0f172a;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-        *{ box-sizing:border-box; -webkit-tap-highlight-color: transparent; transition: all 0.3s ease; }
-        
-        html, body { margin: 0; padding: 0; background: var(--bg-dark); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: white; height: 100dvh; overflow: hidden; }
+<title>Kamishibai MSM System</title>
 
-        /* --- LOGIN SECTION --- */
-        #login-overlay {
-            position: fixed; inset: 0; z-index: 1000;
-            background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
-            display: flex; justify-content: center; align-items: center; padding: 20px;
-        }
+<link rel="icon" type="image/png" href="https://res.cloudinary.com/ddhsrvefu/image/upload/v1772248994/Gemini_Generated_Image_ilzww2ilzww2ilzw_vhl8zx.png">
 
-        .login-card {
-            background: rgba(30, 41, 59, 0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-            border-top: 4px solid var(--primary); border-radius: 20px;
-            padding: 25px; text-align: center; width: 100%; max-width: 350px;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1);
-        }
+<style>
 
-        .status-dots { display: flex; justify-content: center; gap: 8px; margin-bottom: 15px; }
-        .dot { width: 10px; height: 10px; border-radius: 50%; }
-        .dot.green { background: #22c55e; box-shadow: 0 0 10px #22c55e; }
-        .dot.red { background: #ef4444; box-shadow: 0 0 10px #ef4444; }
+:root{
+--sidebar-width:260px;
+--primary:#3b82f6;
+--bg-dark:#0f172a;
+}
 
-        .logo { width: 75px; height: auto; margin-bottom: 10px; }
-        .title { font-size: 19px; font-weight: 800; letter-spacing: 1px; margin-bottom: 5px; }
-        .subtitle { font-size: 10px; opacity: 0.7; margin-bottom: 20px; text-transform: uppercase; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;}
+*{
+box-sizing:border-box;
+-webkit-tap-highlight-color:transparent;
+transition:all .3s ease;
+}
 
-        /* --- SIDEBAR & NAVIGATION --- */
-        .sidebar {
-            position: fixed; top: 0; left: 0; bottom: 0;
-            width: var(--sidebar-width); background: #1e293b;
-            border-right: 1px solid rgba(255,255,255,0.1);
-            display: flex; flex-direction: column; z-index: 999;
-            transform: translateX(-100%);
-        }
+html,body{
+margin:0;
+padding:0;
+background:var(--bg-dark);
+font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+color:white;
+height:100dvh;
+overflow:hidden;
+}
 
-        .sidebar.active { transform: translateX(0); }
+/* LOGIN */
 
-        .sidebar-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.4);
-            z-index: 998; display: none; backdrop-filter: blur(2px);
-        }
-        .sidebar-overlay.active { display: block; }
+#login-overlay{
+position:fixed;
+inset:0;
+z-index:1000;
+background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);
+display:flex;
+justify-content:center;
+align-items:center;
+padding:20px;
+}
 
-        .sidebar-header { padding: 25px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .nav-links { flex: 1; padding: 15px; overflow-y: auto; }
-        .nav-item {
-            display: flex; align-items: center; padding: 14px;
-            color: #cbd5e1; text-decoration: none; border-radius: 10px;
-            margin-bottom: 8px; font-weight: 500; font-size: 14px;
-            cursor: pointer;
-        }
-        .nav-item:hover { background: rgba(59, 130, 246, 0.1); color: var(--primary); }
-        .nav-item.active { background: var(--primary); color: white; }
-        .nav-item span { font-size: 18px; margin-right: 12px; }
+.login-card{
+background:rgba(30,41,59,.85);
+backdrop-filter:blur(10px);
+border-top:4px solid var(--primary);
+border-radius:20px;
+padding:25px;
+text-align:center;
+width:100%;
+max-width:350px;
+box-shadow:0 25px 50px rgba(0,0,0,.5);
+border:1px solid rgba(255,255,255,.1);
+}
 
-        /* --- MAIN AREA --- */
-        .main-content { 
-            margin-left: 0; height: 100%; display: flex; flex-direction: column; 
-            transition: margin-left 0.3s ease;
-        }
+.status-dots{
+display:flex;
+justify-content:center;
+gap:8px;
+margin-bottom:15px;
+}
 
-        @media (min-width: 992px) {
-            .main-content.shifted { margin-left: var(--sidebar-width); }
-        }
-        
-        header {
-            height: 60px; display: flex; align-items: center; padding: 0 20px;
-            background: rgba(15, 23, 42, 0.8); border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
+.dot{
+width:10px;
+height:10px;
+border-radius:50%;
+}
 
-        .menu-toggle { font-size: 24px; cursor: pointer; color: var(--primary); margin-right: 15px; }
+.dot.green{background:#22c55e;box-shadow:0 0 10px #22c55e;}
+.dot.red{background:#ef4444;box-shadow:0 0 10px #ef4444;}
 
-        /* Konten Frame */
-        #main-frame { width: 100%; height: 100%; border: none; background: transparent; }
+.logo{
+width:75px;
+margin-bottom:10px;
+}
 
-        /* Utility */
-        .input-group { text-align: left; margin-bottom: 15px; }
-        .input-group label { display: block; font-size: 11px; margin-bottom: 6px; color: #cbd5e1; font-weight: 600; margin-left: 4px;}
-        select, input {
-            width: 100%; height: 50px; padding: 0 15px; border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.2); background: rgba(15, 23, 42, 0.9);
-            color: white; outline: none; font-size: 16px;
-        }
-        .btn-login {
-            width: 100%; height: 50px; border: none; border-radius: 12px; 
-            background: var(--primary); color: white; font-weight: 700; cursor: pointer;
-        }
-        .hidden { display: none !important; }
-        .footer { margin-top: 25px; font-size: 9px; opacity: 0.5; }
-    </style>
+.title{
+font-size:19px;
+font-weight:800;
+letter-spacing:1px;
+margin-bottom:5px;
+}
+
+.subtitle{
+font-size:10px;
+opacity:.7;
+margin-bottom:20px;
+text-transform:uppercase;
+border-bottom:1px solid rgba(255,255,255,.1);
+padding-bottom:10px;
+}
+
+/* SIDEBAR */
+
+.sidebar{
+position:fixed;
+top:0;
+left:0;
+bottom:0;
+width:var(--sidebar-width);
+background:#1e293b;
+border-right:1px solid rgba(255,255,255,.1);
+display:flex;
+flex-direction:column;
+z-index:999;
+transform:translateX(-100%);
+}
+
+.sidebar.active{transform:translateX(0)}
+
+.sidebar-overlay{
+position:fixed;
+inset:0;
+background:rgba(0,0,0,.4);
+z-index:998;
+display:none;
+backdrop-filter:blur(2px);
+}
+
+.sidebar-overlay.active{display:block}
+
+.sidebar-header{
+padding:25px;
+text-align:center;
+border-bottom:1px solid rgba(255,255,255,.05);
+}
+
+.nav-links{
+flex:1;
+padding:15px;
+overflow-y:auto;
+}
+
+.nav-item{
+display:flex;
+align-items:center;
+padding:14px;
+color:#cbd5e1;
+border-radius:10px;
+margin-bottom:8px;
+font-weight:500;
+font-size:14px;
+cursor:pointer;
+}
+
+.nav-item:hover{
+background:rgba(59,130,246,.1);
+color:var(--primary);
+}
+
+.nav-item.active{
+background:var(--primary);
+color:white;
+}
+
+.nav-item span{
+font-size:18px;
+margin-right:12px;
+}
+
+/* MAIN */
+
+.main-content{
+margin-left:0;
+height:100%;
+display:flex;
+flex-direction:column;
+transition:margin-left .3s ease;
+}
+
+@media(min-width:992px){
+.main-content.shifted{
+margin-left:var(--sidebar-width);
+}
+}
+
+header{
+height:60px;
+display:flex;
+align-items:center;
+padding:0 20px;
+background:rgba(15,23,42,.8);
+border-bottom:1px solid rgba(255,255,255,.1);
+}
+
+.menu-toggle{
+font-size:24px;
+cursor:pointer;
+color:var(--primary);
+margin-right:15px;
+}
+
+#main-frame{
+width:100%;
+height:100%;
+border:none;
+background:transparent;
+}
+
+.input-group{
+text-align:left;
+margin-bottom:15px;
+}
+
+.input-group label{
+display:block;
+font-size:11px;
+margin-bottom:6px;
+color:#cbd5e1;
+font-weight:600;
+margin-left:4px;
+}
+
+select,input{
+width:100%;
+height:50px;
+padding:0 15px;
+border-radius:12px;
+border:1px solid rgba(255,255,255,.2);
+background:rgba(15,23,42,.9);
+color:white;
+outline:none;
+font-size:16px;
+}
+
+.btn-login{
+width:100%;
+height:50px;
+border:none;
+border-radius:12px;
+background:var(--primary);
+color:white;
+font-weight:700;
+cursor:pointer;
+}
+
+.hidden{display:none!important}
+
+.footer{
+margin-top:25px;
+font-size:9px;
+opacity:.5;
+}
+
+</style>
 </head>
+
 <body>
 
-    <div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
+<div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
 
-    <div id="login-overlay">
-        <div class="login-card">
-            <div class="status-dots">
-                <div class="dot green"></div><div class="dot red"></div><div class="dot green"></div>
-            </div>
-            <img class="logo" src="https://res.cloudinary.com/ddhsrvefu/image/upload/v1772248994/Gemini_Generated_Image_ilzww2ilzww2ilzw_vhl8zx.png">
-            <div class="title">AUDIT KAMISHIBAI</div>
-            <div class="subtitle">MSM SP/SF/SUPPORTING</div>
-            
-            <div class="input-group">
-                <label>PILIH USER</label>
-                <select id="username" onchange="togglePassword()">
-                    <option value="auditor">AUDITOR</option>
-                    <option value="admin">ADMIN</option>
-                </select>
-            </div>
-            <div class="input-group hidden" id="pwd-group">
-                <label>PASSWORD ADMIN</label>
-                <input type="password" id="password" placeholder="••••••••">
-            </div>
-            <button class="btn-login" onclick="loginLokal()">Masuk Sistem</button>
-            <div class="footer">CIQA MSM<br>© 2026 Arifianto Hidayat</div>
-        </div>
-    </div>
+<div id="login-overlay">
+<div class="login-card">
 
-    <nav class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-            <img src="https://res.cloudinary.com/ddhsrvefu/image/upload/v1772248994/Gemini_Generated_Image_ilzww2ilzww2ilzw_vhl8zx.png" style="width: 50px;">
-            <div style="font-weight: 800; font-size: 14px; margin-top: 10px;">MSM MENU</div>
-            <div id="user-display" style="font-size: 10px; color: var(--primary); text-transform: uppercase;">Role: Guest</div>
-        </div>
-        <div class="nav-links">
-            <div onclick="loadPage('dashboard.html', 'Dashboard Analysis', this)" id="menu-dashboard" class="nav-item">
-                <span>📊</span> Analisa Dashboard
-            </div>
-            <div onclick="loadPage('audit.html', 'Audit System', this)" id="menu-audit" class="nav-item">
-                <span>📋</span> Input Audit
-            </div>
-            <div onclick="loadPage('auditedit.html', 'Edit Data Audit', this)" id="menu-edit" class="nav-item hidden">
-                <span>✏️</span> Edit Data Audit
-            </div>
-            <div onclick="loadPage('jadwal.html', 'Audit Schedule', this)" id="menu-jadwal" class="nav-item hidden">
-                <span>📅</span> Jadwal Audit
-            </div>
-            <div onclick="loadPage('materi.html', 'Import Materi Audit', this)" id="menu-materi" class="nav-item hidden">
-                <span>📁</span> Import Materi (SOP/IK)
-            </div>
-            <div onclick="loadPage('upload.html', 'Import Data Excel', this)" id="menu-upload" class="nav-item hidden">
-                <span>🚀</span> Import Data Sistem Lama (xls)
-            </div>
-        </div>
-        <button onclick="location.reload()" style="margin: 20px; background: #ef4444; border: none; padding: 10px; border-radius: 8px; color: white; cursor: pointer; font-weight: bold;">LOGOUT</button>
-    </nav>
+<div class="status-dots">
+<div class="dot green"></div>
+<div class="dot red"></div>
+<div class="dot green"></div>
+</div>
 
-    <div class="main-content" id="content">
-        <header>
-            <div class="menu-toggle" onclick="toggleSidebar()">☰</div>
-            <div id="page-title" style="font-weight: bold; font-size: 15px;">MSM Integrated System</div>
-        </header>
-        <main style="flex: 1; overflow: hidden;">
-            <iframe name="content-frame" id="main-frame" src="about:blank"></iframe>
-        </main>
-    </div>
+<img class="logo" src="https://res.cloudinary.com/ddhsrvefu/image/upload/v1772248994/Gemini_Generated_Image_ilzww2ilzww2ilzw_vhl8zx.png">
 
-    <script>
-        function toggleSidebar() { 
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('overlay');
-            const content = document.getElementById('content');
-            sidebar.classList.toggle('active');
-            if(window.innerWidth < 992) {
-                overlay.classList.toggle('active');
-            } else {
-                content.classList.toggle('shifted');
-            }
-        }
+<div class="title">AUDIT KAMISHIBAI</div>
+<div class="subtitle">MSM SP/SF/SUPPORTING</div>
 
-        function togglePassword() {
-            const user = document.getElementById("username").value;
-            document.getElementById("pwd-group").classList.toggle("hidden", user !== "admin");
-        }
+<div class="input-group">
+<label>PILIH USER</label>
+<select id="username" onchange="togglePassword()">
+<option value="auditor">AUDITOR</option>
+<option value="admin">ADMIN</option>
+</select>
+</div>
 
-        function loadPage(url, title, element) {
-            const iframe = document.getElementById('main-frame');
-            const pageTitle = document.getElementById('page-title');
-            
-            iframe.src = url;
-            pageTitle.innerText = title;
+<div class="input-group hidden" id="pwd-group">
+<label>PASSWORD ADMIN</label>
+<input type="password" id="password" placeholder="••••••••">
+</div>
 
-            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-            if(element) element.classList.add('active');
+<button class="btn-login" onclick="loginLokal()">Masuk Sistem</button>
 
-            if(window.innerWidth < 992) {
-                const sidebar = document.getElementById('sidebar');
-                const overlay = document.getElementById('overlay');
-                sidebar.classList.remove('active');
-                overlay.classList.remove('active');
-            }
-        }
+<div class="footer">
+CIQA MSM<br>© 2026 Arifianto Hidayat
+</div>
 
-        function loginLokal() {
-            const user = document.getElementById("username").value;
-            const pass = document.getElementById("password").value;
+</div>
+</div>
 
-            if (user === "admin" && pass !== "admin123") { 
-                alert("Password Admin Salah!"); 
-                return; 
-            }
+<nav class="sidebar" id="sidebar">
 
-            document.getElementById('login-overlay').classList.add('hidden');
-            document.getElementById('user-display').innerText = "Role: " + user;
-            
-            // Atur Visibilitas Menu
-            const mAudit = document.getElementById('menu-audit');
-            const mEdit = document.getElementById('menu-edit');
-            const mJadwal = document.getElementById('menu-jadwal');
-            const mUpload = document.getElementById('menu-upload');
-            const mMateri = document.getElementById('menu-materi');
+<div class="sidebar-header">
+<img src="https://res.cloudinary.com/ddhsrvefu/image/upload/v1772248994/Gemini_Generated_Image_ilzww2ilzww2ilzw_vhl8zx.png" style="width:50px;">
+<div style="font-weight:800;font-size:14px;margin-top:10px;">MSM MENU</div>
+<div id="user-display" style="font-size:10px;color:var(--primary);text-transform:uppercase;">Role: Guest</div>
+</div>
 
-            if (user === "auditor") {
-                mAudit.classList.remove('hidden');
-                mEdit.classList.add('hidden');
-                mJadwal.classList.add('hidden');
-                mUpload.classList.add('hidden');
-                mMateri.classList.add('hidden');
-                loadPage('audit.html', 'Audit System', document.getElementById('menu-audit'));
-            } else {
-                mAudit.classList.add('hidden');
-                mEdit.classList.remove('hidden');
-                mJadwal.classList.remove('hidden');
-                mUpload.classList.remove('hidden');
-                mMateri.classList.remove('hidden');
-                loadPage('dashboard.html', 'Admin Dashboard', document.getElementById('menu-dashboard'));
-            }
+<div class="nav-links">
 
-            if(window.innerWidth >= 992) toggleSidebar();
-        }
-    </script>
-</body>
-</html>
+<div onclick="loadPage('dashboard.html','Dashboard Analysis',this)" id="menu-dashboard" class="nav-item">
+<span>📊</span> Analisa Dashboard
+</div>
+
+<div onclick="loadPage('audit.html','Audit System',this)" id="menu-audit" class="nav-item">
+<span>📋</span> Input Audit
+</div>
+
+<div onclick="loadPage('auditedit.html','Edit Data Audit',this)" id="menu-edit" class="nav-item hidden">
+<span>✏️</span> Edit Data Audit
+</div>
+
+<div onclick="loadPage('jadwal.html','Audit Schedule',this)" id="menu-jadwal" class="nav-item hidden">
+<span>📅</span> Jadwal Audit
+</div>
+
+<div onclick="loadPage('upload.html','Import Data Excel',this)" id="menu-upload" class="nav-item hidden">
+<span>🚀</span> Import Data Sistem Lama (xls)
+</div>
+
+</div>
+
+<button onclick="location.reload()" style="margin:20px;background:#ef4444;border:none;padding:10px;border-radius:8px;color:white;font-weight:bold;cursor:pointer;">
+LOGOUT
+</button>
+
+</nav>
+
+<div class="main-content" id="content">
+
+<header>
+<div class="menu-toggle" onclick="toggleSidebar()">☰</div>
+<div id="page-title" style="font-weight:bold;font-size:15px;">MSM Integrated System</div>
+</header>
+
+<main style="flex:1;ov
