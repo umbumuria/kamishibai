@@ -11,47 +11,29 @@
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding: 15px; margin: 0; }
         .container { max-width: 900px; margin: 0 auto; background: white; padding: 20px; border-radius: 15px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 30px; }
         .section-title { font-size: 18px; font-weight: bold; margin-bottom: 20px; border-left: 5px solid var(--primary); padding-left: 15px; color: var(--primary); }
-
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         label { display: block; font-size: 10px; font-weight: bold; margin-bottom: 5px; color: #64748b; text-transform: uppercase; }
-
-        input, select, textarea { 
-            width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid var(--border); 
-            border-radius: 10px; font-size: 16px; box-sizing: border-box; outline: none; 
-            min-height: 48px;
-        }
+        input, select, textarea { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid var(--border); border-radius: 10px; font-size: 16px; box-sizing: border-box; outline: none; min-height: 48px; }
         select[multiple] { min-height: 100px; padding: 5px; }
-
         textarea { min-height: 80px; }
         input:focus, select:focus, textarea:focus { border-color: var(--primary); background: #f0f7ff; }
         input:read-only { background: #f1f5f9; color: #64748b; }
-
         .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; margin-bottom: 20px; }
         .photo-box { border: 2px dashed var(--border); border-radius: 10px; padding: 5px; text-align: center; cursor: pointer; min-height: 100px; display: flex; align-items: center; justify-content: center; flex-direction: column; overflow: hidden; background: #fafafa; position: relative; }
         .photo-box img { width: 100%; height: 100%; border-radius: 5px; display: none; object-fit: cover; }
         .photo-box span { font-size: 10px; color: #64748b; font-weight: bold; }
-        
-        .btn-remove {
-            position: absolute; top: 5px; right: 5px; background: var(--danger); color: white;
-            border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 12px;
-            cursor: pointer; display: none; z-index: 10; align-items: center; justify-content: center;
-        }
-
+        .btn-remove { position: absolute; top: 5px; right: 5px; background: var(--danger); color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; cursor: pointer; display: none; z-index: 10; align-items: center; justify-content: center; }
         .btn-submit { width: 100%; padding: 18px; background: var(--primary); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 18px; transition: 0.3s; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3); }
-
         .table-container { background: white; border-radius: 12px; border: 1px solid var(--border); overflow-x: auto; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 1200px; }
         th { background: #f8fafc; padding: 12px 10px; text-align: left; color: #475569; border-bottom: 2px solid var(--border); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
         td { padding: 12px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
-
         .thumb-img { width: 45px; height: 45px; object-fit: cover; border-radius: 6px; margin-right: 4px; border: 1px solid #ddd; cursor: pointer; }
         .badge { padding: 4px 8px; border-radius: 12px; font-size: 9px; font-weight: bold; display: inline-block; margin-top: 2px; }
         .badge-closed { background: #dcfce7; color: #166534; }
         .badge-open { background: #fee2e2; color: #991b1b; }
-
         .filter-box { margin-bottom: 15px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
         .filter-box input, .filter-box select { margin-bottom: 0; padding: 8px 12px; font-size: 13px; min-height: 40px; width: auto; }
-
         @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } .filter-box { flex-direction: column; align-items: stretch; } .filter-box select, .filter-box input { width: 100%; } }
     </style>
 </head>
@@ -59,18 +41,15 @@
 
 <div class="container">
     <div class="section-title">FORM INPUT AUDIT KAMISHIBAI</div>
-
     <form id="auditForm">
         <label>1. Pilih Group Unit</label>
         <select id="filterGroupJadwal" onchange="loadJadwal()">
             <option value="">-- Memuat Group... --</option>
         </select>
-
         <label>2. Pilih Jadwal Audit</label>
         <select id="selectJadwal" onchange="fillJadwalData(this.value)" required>
             <option value="">-- Pilih Group Dahulu --</option>
         </select>
-
         <div class="grid">
             <div><label>Group Terpilih</label><input type="text" id="displayGroup" readonly></div>
             <div><label>Tanggal Audit</label><input type="date" id="tglAudit" required></div>
@@ -86,7 +65,6 @@
                 <select id="statusVerifikasi">
                     <option value="OPEN">OPEN (Perlu Perbaikan)</option>
                     <option value="CLOSED">CLOSED (Sudah Sesuai)</option>
-                    
                 </select>
             </div>
             <div>
@@ -109,15 +87,12 @@
                 </select>
             </div>
         </div>
-
         <label>Uraian Ketidaksesuaian</label>
         <textarea id="uraian" rows="3"></textarea>
-
         <div class="grid">
             <div><label>Analisa Penyebab</label><textarea id="penyebab" rows="2"></textarea></div>
             <div><label>Tindakan Perbaikan</label><textarea id="tindakan" rows="2"></textarea></div>
         </div>
-
         <label>Foto Bukti</label>
         <div class="photo-grid">
             <script>
@@ -137,7 +112,6 @@
                 }
             </script>
         </div>
-
         <label>Catatan Tambahan</label>
         <input type="text" id="updateCatatan">
         <button type="submit" id="btnSave" class="btn-submit">SIMPAN HASIL AUDIT</button>
@@ -146,7 +120,6 @@
 
 <div style="max-width: 1300px; margin: 0 auto; margin-bottom: 80px; padding:0 15px;">
     <div class="section-title">HISTORY AUDIT LOG</div>
-    
     <div class="filter-box">
         <input type="text" id="searchTable" placeholder="Cari Auditor, Dept, atau Materi..." onkeyup="filterTable()">
         <select id="filterStatus" onchange="filterTable()">
@@ -154,11 +127,9 @@
             <option value="OPEN">OPEN</option>
             <option value="CLOSED">CLOSED</option>
         </select>
-        
         <select id="filterMonth" onchange="fetchAuditHistory()"></select>
         <select id="filterYear" onchange="fetchAuditHistory()"></select>
     </div>
-
     <div class="table-container">
         <table id="historyTable">
             <thead>
@@ -197,28 +168,22 @@
     const CLOUDINARY_PRESET = "kamishiba_foto";
 
     let cacheJadwal = {};
-    let cacheHistory = {};
 
     function initFilters() {
         const monthSelect = document.getElementById('filterMonth');
         const yearSelect = document.getElementById('filterYear');
         const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-        
         const now = new Date();
-        
         monthNames.forEach((m, i) => {
             let opt = document.createElement('option');
-            opt.value = i;
-            opt.text = m;
+            opt.value = i; opt.text = m;
             if(i === now.getMonth()) opt.selected = true;
             monthSelect.appendChild(opt);
         });
-
         const currentYear = now.getFullYear();
         for(let y = currentYear; y >= currentYear - 2; y--) {
             let opt = document.createElement('option');
-            opt.value = y;
-            opt.text = y;
+            opt.value = y; opt.text = y;
             yearSelect.appendChild(opt);
         }
     }
@@ -226,38 +191,47 @@
 
     async function loadGroupsFromMateri() {
         const groupSelect = document.getElementById('filterGroupJadwal');
+        // Cache group list in localStorage to save 1 read call per refresh
+        const cachedGroups = localStorage.getItem('kamishiba_groups');
+        if(cachedGroups) {
+            renderGroups(JSON.parse(cachedGroups));
+            return;
+        }
+
         try {
             const snap = await db.collection('documents').get();
-            const groups = new Set();
-            snap.forEach(doc => {
-                if(doc.data().group) groups.add(doc.data().group);
-            });
-            
-            groupSelect.innerHTML = '<option value="">-- Pilih Group --</option>';
-            groups.forEach(g => {
-                groupSelect.innerHTML += `<option value="${g}">${g}</option>`;
-            });
+            const groups = [...new Set(snap.docs.map(doc => doc.data().group).filter(g => g))];
+            localStorage.setItem('kamishiba_groups', JSON.stringify(groups));
+            renderGroups(groups);
         } catch (e) {
-            console.error("Error loading groups:", e);
             groupSelect.innerHTML = '<option value="">Gagal memuat group</option>';
         }
     }
-    loadGroupsFromMateri();
+
+    function renderGroups(groups) {
+        const groupSelect = document.getElementById('filterGroupJadwal');
+        groupSelect.innerHTML = '<option value="">-- Pilih Group --</option>';
+        groups.forEach(g => groupSelect.innerHTML += `<option value="${g}">${g}</option>`);
+    }
 
     async function loadJadwal() {
         const groupFilter = document.getElementById('filterGroupJadwal').value;
         const sel = document.getElementById('selectJadwal');
-        if(!groupFilter) {
-            sel.innerHTML = '<option value="">-- Pilih Group Dahulu --</option>';
-            return;
-        }
+        if(!groupFilter) { sel.innerHTML = '<option value="">-- Pilih Group Dahulu --</option>'; return; }
         sel.innerHTML = '<option value="">-- Memuat... --</option>';
-        const snap = await db.collection('jadwal_audit').where('status', '==', 'Pending').where('group', '==', groupFilter).get();
-        sel.innerHTML = '<option value="">-- Pilih Jadwal --</option>';
-        snap.forEach(doc => {
-            cacheJadwal[doc.id] = doc.data();
-            sel.innerHTML += `<option value="${doc.id}">${doc.data().periode} | ${doc.data().auditor}</option>`;
-        });
+        
+        try {
+            const snap = await db.collection('jadwal_audit')
+                .where('status', '==', 'Pending')
+                .where('group', '==', groupFilter)
+                .get();
+            
+            sel.innerHTML = '<option value="">-- Pilih Jadwal --</option>';
+            snap.forEach(doc => {
+                cacheJadwal[doc.id] = doc.data();
+                sel.innerHTML += `<option value="${doc.id}">${doc.data().periode} | ${doc.data().auditor}</option>`;
+            });
+        } catch(e) { sel.innerHTML = '<option value="">Error memuat</option>'; }
     }
 
     function fillJadwalData(id) {
@@ -308,10 +282,8 @@
         e.preventDefault();
         const id = document.getElementById('selectJadwal').value;
         if(!id) return alert("Pilih jadwal!");
-
-        const kategoriSelect = document.getElementById('kategoriTemuan');
-        const kategoriValues = Array.from(kategoriSelect.selectedOptions).map(opt => opt.value).join(', ');
-
+        const kategoriValues = Array.from(document.getElementById('kategoriTemuan').selectedOptions).map(opt => opt.value).join(', ');
+        
         const data = {
             tglAudit: document.getElementById('tglAudit').value,
             namaAuditeePerson: document.getElementById('namaAuditee').value,
@@ -341,7 +313,6 @@
         const input = document.getElementById("searchTable").value.toUpperCase();
         const status = document.getElementById("filterStatus").value.toUpperCase();
         const rows = document.getElementById("historyBody").getElementsByTagName("tr");
-
         for (let i = 0; i < rows.length; i++) {
             const text = rows[i].textContent || rows[i].innerText;
             const matchesSearch = text.toUpperCase().indexOf(input) > -1;
@@ -355,17 +326,17 @@
         const year = parseInt(document.getElementById('filterYear').value);
         const startOfMonth = new Date(year, month, 1);
         const endOfMonth = new Date(year, month + 1, 0, 23, 59, 59);
-
         const body = document.getElementById('historyBody');
         body.innerHTML = '<tr><td colspan="11" style="text-align:center; padding:20px;">Memuat data...</td></tr>';
 
         try {
-            const snap = await db.collection('jadwal_audit')
+            // First try to get from cache to save reads
+            let snap = await db.collection('jadwal_audit')
                 .where('status', '==', 'Selesai')
                 .where('updatedAt', '>=', startOfMonth)
                 .where('updatedAt', '<=', endOfMonth)
                 .orderBy('updatedAt', 'desc')
-                .get();
+                .get({ source: 'server' }); // Change to 'cache' if you want even more aggressive savings
 
             body.innerHTML = '';
             if(snap.empty) {
@@ -392,10 +363,12 @@
                     </tr>`;
             });
         } catch (e) {
-            console.error(e);
             body.innerHTML = '<tr><td colspan="11" style="text-align:center; padding:20px; color:red;">Gagal memuat data.</td></tr>';
         }
     }
+    
+    // Final init
+    loadGroupsFromMateri();
     fetchAuditHistory();
 </script>
 </body>
