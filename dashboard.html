@@ -163,11 +163,16 @@
         appId: "1:184420389379:web:51bbb78ce5fa8e8d227436"
     };
     firebase.initializeApp(firebaseConfig);
+    
+    // Enable Offline Persistence to save READ quota on refreshes
+    firebase.firestore().enablePersistence().catch(err => console.log("Persistence error", err));
+
     const db = firebase.firestore();
 
     let masterData = [];
     let currentCardFilter = 'all';
     let charts = {};
+    let lastFetchedParams = "";
 
     const now = new Date();
     const currentMonth = now.toISOString().substring(0, 7);
@@ -176,11 +181,18 @@
     async function fetchData() {
         const g = document.getElementById('fGroup').value;
         const m = document.getElementById('fMonth').value;
+        
+        // Cache logic: avoid re-fetching the same data from server
+        const currentParams = `${g}_${m}`;
+        if(currentParams === lastFetchedParams && masterData.length > 0) return;
+        lastFetchedParams = currentParams;
+
         try {
             let query = db.collection('jadwal_audit');
             if(g) query = query.where('group', '==', g);
             if(m) query = query.where('periode', '==', m);
             
+            // Mengambil snapshot dari server (atau cache jika enablePersistence aktif)
             const snap = await query.get();
             masterData = snap.docs.map(doc => {
                 const d = doc.data();
