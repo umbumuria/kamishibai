@@ -26,7 +26,6 @@
         .btn-delete { color: var(--danger); background: #fee2e2; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-left: 5px; }
         .editing-row { background: #fff9db !important; }
         .paste-hint { font-size: 11px; color: #64748b; margin-bottom: 5px; font-style: italic; }
-        
         .filter-container { margin-bottom: 15px; display: flex; gap: 10px; align-items: center; background: white; padding: 15px; border-radius: 10px; border: 1px solid var(--border); }
         .filter-input { padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; outline: none; }
         .filter-input:focus { border-color: var(--primary); }
@@ -99,6 +98,7 @@
     let tempAuditData = {};
     let isSaving = false;
 
+    // Optimasi: Set filter ke bulan sekarang agar tidak load semua data sekaligus
     const now = new Date();
     document.getElementById('filterMonth').value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
@@ -177,6 +177,7 @@
         if (rows.length === 0) return;
         const btn = document.getElementById('btnSaveAll');
         btn.disabled = true; btn.innerText = "Menyimpan...";
+        
         const batch = db.batch();
         rows.forEach(row => {
             const p = row.querySelector('input[type="month"]').value;
@@ -188,14 +189,16 @@
             if (p && a && ad && ik) {
                 const [thn, bln] = p.split('-');
                 const k = `${bln}${thn}-${a.replace(/\s+/g,'').toUpperCase()}-${ad.replace(/\s+/g,'').toUpperCase()}-${g || 'NA'}`;
-                const oldData = tempAuditData[k] || {};
+                
+                // Optimasi: Hanya simpan jika data valid
                 batch.set(db.collection('jadwal_audit').doc(k), {
                     periode: p, auditor: a, auditee: ad, judulIK: ik, group: g || "CUSTOM", kodeUnik: k,
-                    status: oldData.status || "Pending",
-                    createdAt: oldData.createdAt || firebase.firestore.FieldValue.serverTimestamp()
+                    status: "Pending",
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 }, { merge: true });
             }
         });
+
         await batch.commit();
         isSaving = true;
         alert("Jadwal Berhasil Disimpan!");
@@ -211,20 +214,24 @@
         });
     }
 
+    // Optimasi Utama: Fetch data hanya berdasarkan Filter Periode yang dipilih
     async function fetchHistory() {
         const body = document.getElementById('historyBody');
         const filterVal = document.getElementById('filterMonth').value;
+        
+        if(!filterVal) {
+            body.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px;">Silakan pilih bulan filter untuk memuat data.</td></tr>';
+            return;
+        }
+
         body.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px;">Memuat data...</td></tr>';
         
         try {
-            let query = db.collection('jadwal_audit');
-            if(filterVal) {
-                query = query.where('periode', '==', filterVal);
-            } else {
-                query = query.orderBy('periode', 'desc').limit(50);
-            }
+            // Gunakan query yang terarah untuk menghemat Read
+            const snap = await db.collection('jadwal_audit')
+                                .where('periode', '==', filterVal)
+                                .get();
 
-            const snap = await query.get();
             body.innerHTML = '';
             
             if(snap.empty) {
@@ -257,10 +264,10 @@
     }
 
     async function moveRowToEdit(id) {
+        // Optimasi: Hanya Read 1 dokumen saat edit
         const doc = await db.collection('jadwal_audit').doc(id).get();
         if (doc.exists) {
             const d = doc.data();
-            tempAuditData[d.kodeUnik] = d;
             addRow([d.periode, d.auditor, d.auditee, d.judulIK, d.group], true);
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
@@ -275,7 +282,7 @@
         } catch (e) { alert(e.message); }
     }
 
-    // Jalankan langsung tanpa load masterDocs
+    // Jalankan awal
     addRow(); 
     fetchHistory();
 </script>
