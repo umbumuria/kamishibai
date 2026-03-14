@@ -114,7 +114,7 @@
             <div class="status-dots">
                 <div class="dot green"></div><div class="dot red"></div><div class="dot green"></div>
             </div>
-            <img class="logo" src="https://res.cloudinary.com/ddhsrvefu/image/upload/v1772248994/Gemini_Generated_Image_ilzww2ilzww2ilzw_vhl8zx.png">
+            <img class="logo" src="https://res.cloudinary.com/ddhsrvefu/image/upload/v1772248994/Gemini_Generated_Image_ilzww2ilzww2ilzw_vhl8zx.png" alt="logo">
             <div class="title">AUDIT KAMISHIBAI</div>
             <div class="subtitle">MSM SP/SF/SUPPORTING</div>
             
@@ -136,7 +136,7 @@
 
     <nav class="sidebar" id="sidebar">
         <div class="sidebar-header">
-            <img src="https://res.cloudinary.com/ddhsrvefu/image/upload/v1772248994/Gemini_Generated_Image_ilzww2ilzww2ilzw_vhl8zx.png" style="width: 50px;">
+            <img src="https://res.cloudinary.com/ddhsrvefu/image/upload/v1772248994/Gemini_Generated_Image_ilzww2ilzww2ilzw_vhl8zx.png" style="width: 50px;" alt="logo">
             <div style="font-weight: 800; font-size: 14px; margin-top: 10px;">MSM MENU</div>
             <div id="user-display" style="font-size: 10px; color: var(--primary); text-transform: uppercase;">Role: Guest</div>
         </div>
@@ -153,9 +153,6 @@
             <div onclick="loadPage('jadwal.html', 'Audit Schedule', this)" id="menu-jadwal" class="nav-item hidden">
                 <span>📅</span> Jadwal Audit
             </div>
-            <div onclick="loadPage('materi.html', 'Import Materi Audit', this)" id="menu-materi" class="nav-item hidden">
-                <span>📁</span> Import Materi (SOP/IK)
-            </div>
             <div onclick="loadPage('upload.html', 'Import Data Excel', this)" id="menu-upload" class="nav-item hidden">
                 <span>🚀</span> Import Data Sistem Lama (xls)
             </div>
@@ -169,7 +166,7 @@
             <div id="page-title" style="font-weight: bold; font-size: 15px;">MSM Integrated System</div>
         </header>
         <main style="flex: 1; overflow: hidden;">
-            <iframe name="content-frame" id="main-frame" src="about:blank"></iframe>
+            <iframe name="content-frame" id="main-frame" src="about:blank" loading="lazy"></iframe>
         </main>
     </div>
 
@@ -194,6 +191,12 @@
         function loadPage(url, title, element) {
             const iframe = document.getElementById('main-frame');
             const pageTitle = document.getElementById('page-title');
+            
+            // Cegah reload jika halaman sudah aktif (Hemat kuota read)
+            if (iframe.src.includes(url)) {
+                if(window.innerWidth < 992) toggleSidebar();
+                return;
+            }
             
             iframe.src = url;
             pageTitle.innerText = title;
@@ -221,26 +224,22 @@
             document.getElementById('login-overlay').classList.add('hidden');
             document.getElementById('user-display').innerText = "Role: " + user;
             
-            // Atur Visibilitas Menu
             const mAudit = document.getElementById('menu-audit');
             const mEdit = document.getElementById('menu-edit');
             const mJadwal = document.getElementById('menu-jadwal');
             const mUpload = document.getElementById('menu-upload');
-            const mMateri = document.getElementById('menu-materi');
 
             if (user === "auditor") {
                 mAudit.classList.remove('hidden');
                 mEdit.classList.add('hidden');
                 mJadwal.classList.add('hidden');
                 mUpload.classList.add('hidden');
-                mMateri.classList.add('hidden');
-                loadPage('audit.html', 'Audit System', document.getElementById('menu-audit'));
+                loadPage('audit.html', 'Audit System', mAudit);
             } else {
                 mAudit.classList.add('hidden');
                 mEdit.classList.remove('hidden');
                 mJadwal.classList.remove('hidden');
                 mUpload.classList.remove('hidden');
-                mMateri.classList.remove('hidden');
                 loadPage('dashboard.html', 'Admin Dashboard', document.getElementById('menu-dashboard'));
             }
 
