@@ -335,4 +335,69 @@ LOGOUT
 <div id="page-title" style="font-weight:bold;font-size:15px;">MSM Integrated System</div>
 </header>
 
-<main style="flex:1;ov
+<main style="flex:1;overflow:hidden">
+<iframe id="main-frame"></iframe>
+</main>
+
+</div>
+
+<script>
+
+function togglePassword(){
+const user=document.getElementById("username").value
+const pwd=document.getElementById("pwd-group")
+
+if(user==="admin"){
+pwd.classList.remove("hidden")
+}else{
+pwd.classList.add("hidden")
+}
+}
+
+function loginLokal(){
+const user=document.getElementById("username").value
+const pass=document.getElementById("password").value
+
+if(user==="admin"){
+if(pass!=="admin123"){
+alert("Password admin salah")
+return
+}
+
+document.getElementById("menu-edit").classList.remove("hidden")
+document.getElementById("menu-jadwal").classList.remove("hidden")
+document.getElementById("menu-upload").classList.remove("hidden")
+document.getElementById("user-display").innerText="Role: Admin"
+
+}else{
+
+document.getElementById("user-display").innerText="Role: Auditor"
+
+}
+
+document.getElementById("login-overlay").classList.add("hidden")
+loadPage('dashboard.html','Dashboard Analysis',document.getElementById("menu-dashboard"))
+}
+
+function toggleSidebar(){
+document.getElementById("sidebar").classList.toggle("active")
+document.getElementById("overlay").classList.toggle("active")
+document.getElementById("content").classList.toggle("shifted")
+}
+
+function loadPage(page,title,el){
+document.getElementById("main-frame").src=page
+document.getElementById("page-title").innerText=title
+
+document.querySelectorAll(".nav-item").forEach(i=>i.classList.remove("active"))
+if(el)el.classList.add("active")
+
+if(window.innerWidth<992){
+toggleSidebar()
+}
+}
+
+</script>
+
+</body>
+</html>
