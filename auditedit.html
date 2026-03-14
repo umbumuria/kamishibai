@@ -11,52 +11,32 @@
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding: 15px; margin: 0; }
         .container { max-width: 900px; margin: 0 auto; background: white; padding: 20px; border-radius: 15px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 30px; }
         .section-title { font-size: 18px; font-weight: bold; margin-bottom: 20px; border-left: 5px solid var(--primary); padding-left: 15px; color: var(--primary); }
-
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         label { display: block; font-size: 10px; font-weight: bold; margin-bottom: 5px; color: #64748b; text-transform: uppercase; }
-
-        input, select, textarea { 
-            width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid var(--border); 
-            border-radius: 10px; font-size: 16px; box-sizing: border-box; outline: none; 
-            min-height: 48px;
-        }
+        input, select, textarea { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid var(--border); border-radius: 10px; font-size: 16px; box-sizing: border-box; outline: none; min-height: 48px; }
         select[multiple] { min-height: 100px; padding: 5px; }
-
         textarea { min-height: 80px; }
         input:focus, select:focus, textarea:focus { border-color: var(--primary); background: #f0f7ff; }
         input:read-only { background: #f1f5f9; color: #64748b; }
-
         .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; margin-bottom: 20px; }
         .photo-box { border: 2px dashed var(--border); border-radius: 10px; padding: 5px; text-align: center; cursor: pointer; min-height: 100px; display: flex; align-items: center; justify-content: center; flex-direction: column; overflow: hidden; background: #fafafa; position: relative; }
         .photo-box img { width: 100%; height: 100%; border-radius: 5px; display: none; object-fit: cover; }
         .photo-box span { font-size: 10px; color: #64748b; font-weight: bold; }
-        
-        /* Style untuk tombol hapus foto */
-        .remove-photo { 
-            position: absolute; top: 2px; right: 2px; background: rgba(239, 68, 68, 0.8); 
-            color: white; border: none; border-radius: 50%; width: 20px; height: 20px; 
-            font-size: 12px; cursor: pointer; display: none; z-index: 10;
-        }
-
+        .remove-photo { position: absolute; top: 2px; right: 2px; background: rgba(239, 68, 68, 0.8); color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; cursor: pointer; display: none; z-index: 10; }
         .btn-submit { width: 100%; padding: 18px; background: var(--primary); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 18px; transition: 0.3s; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3); }
-
         .table-container { background: white; border-radius: 12px; border: 1px solid var(--border); overflow-x: auto; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 1100px; }
         th { background: #f8fafc; padding: 12px 10px; text-align: left; color: #475569; border-bottom: 2px solid var(--border); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
         td { padding: 12px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
-
         .thumb-img { width: 45px; height: 45px; object-fit: cover; border-radius: 6px; margin-right: 4px; border: 1px solid #ddd; cursor: pointer; }
         .badge { padding: 4px 8px; border-radius: 12px; font-size: 9px; font-weight: bold; display: inline-block; margin-top: 2px; }
         .badge-closed { background: #dcfce7; color: #166534; }
         .badge-open { background: #fee2e2; color: #991b1b; }
-
         .action-btn { padding: 5px 10px; border-radius: 6px; border: none; font-size: 10px; cursor: pointer; font-weight: bold; margin-bottom: 5px; width: 100%; display: block; }
         .btn-edit { background: #fef9c3; color: #854d0e; }
         .btn-delete { background: #fee2e2; color: #991b1b; }
-
-        .filter-box { margin-bottom: 15px; display: flex; gap: 10px; }
-        .filter-box input { margin-bottom: 0; padding: 8px 12px; font-size: 13px; min-height: 40px; }
-
+        .filter-box { margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap; }
+        .filter-box input, .filter-box select { margin-bottom: 0; padding: 8px 12px; font-size: 13px; min-height: 40px; }
         @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } .filter-box { flex-direction: column; } }
     </style>
 </head>
@@ -64,18 +44,15 @@
 
 <div class="container">
     <div class="section-title">FORM INPUT AUDIT KAMISHIBAI</div>
-
     <form id="auditForm">
         <label>1. Pilih Group Unit</label>
         <select id="filterGroupJadwal" onchange="loadJadwal()">
             <option value="">-- Memuat Group... --</option>
         </select>
-
         <label>2. Pilih Jadwal Audit</label>
         <select id="selectJadwal" onchange="fillJadwalData(this.value)" required>
             <option value="">-- Pilih Group Dahulu --</option>
         </select>
-
         <div class="grid">
             <div><label>Group Terpilih</label><input type="text" id="displayGroup" readonly></div>
             <div><label>Tanggal Audit</label><input type="date" id="tglAudit" required></div>
@@ -114,15 +91,12 @@
                 </select>
             </div>
         </div>
-
         <label>Uraian Ketidaksesuaian</label>
         <textarea id="uraian" rows="3"></textarea>
-
         <div class="grid">
             <div><label>Analisa Penyebab</label><textarea id="penyebab" rows="2"></textarea></div>
             <div><label>Tindakan Perbaikan</label><textarea id="tindakan" rows="2"></textarea></div>
         </div>
-
         <label>Foto Bukti</label>
         <div class="photo-grid">
             <script>
@@ -140,7 +114,6 @@
                 }
             </script>
         </div>
-
         <label>Catatan Tambahan</label>
         <input type="text" id="updateCatatan">
         <button type="submit" id="btnSave" class="btn-submit">SIMPAN HASIL AUDIT</button>
@@ -149,7 +122,6 @@
 
 <div style="max-width: 1300px; margin: 0 auto; margin-bottom: 80px; padding:0 15px;">
     <div class="section-title">HISTORY AUDIT LOG</div>
-    
     <div class="filter-box">
         <input type="text" id="searchTable" placeholder="Cari Auditor, Dept, atau Materi..." onkeyup="filterTable()">
         <select id="filterStatus" onchange="filterTable()">
@@ -157,8 +129,12 @@
             <option value="OPEN">OPEN</option>
             <option value="CLOSED">CLOSED</option>
         </select>
+        <select id="filterPeriode" onchange="fetchAuditHistory()">
+            <option value="30">30 Hari Terakhir</option>
+            <option value="90">3 Bulan Terakhir</option>
+            <option value="all">Semua Data (Boros Kuota)</option>
+        </select>
     </div>
-
     <div class="table-container">
         <table id="historyTable">
             <thead>
@@ -198,25 +174,32 @@
     let cacheJadwal = {};
     let cacheHistory = {};
 
+    // OPTIMASI 1: Gunakan LocalStorage untuk daftar Group agar tidak Read terus menerus
     async function loadGroupsFromMateri() {
         const groupSelect = document.getElementById('filterGroupJadwal');
+        const cachedGroups = localStorage.getItem('audit_groups');
+        
+        if (cachedGroups) {
+            renderGroups(JSON.parse(cachedGroups));
+        }
+
         try {
             const snap = await db.collection('documents').get();
-            const groups = new Set();
-            snap.forEach(doc => {
-                if(doc.data().group) groups.add(doc.data().group);
-            });
-            
-            groupSelect.innerHTML = '<option value="">-- Pilih Group --</option>';
-            groups.forEach(g => {
-                groupSelect.innerHTML += `<option value="${g}">${g}</option>`;
-            });
+            const groups = [...new Set(snap.docs.map(doc => doc.data().group).filter(Boolean))];
+            localStorage.setItem('audit_groups', JSON.stringify(groups));
+            renderGroups(groups);
         } catch (e) {
-            console.error("Error loading groups:", e);
             groupSelect.innerHTML = '<option value="">Gagal memuat group</option>';
         }
     }
-    loadGroupsFromMateri();
+
+    function renderGroups(groups) {
+        const groupSelect = document.getElementById('filterGroupJadwal');
+        groupSelect.innerHTML = '<option value="">-- Pilih Group --</option>';
+        groups.forEach(g => {
+            groupSelect.innerHTML += `<option value="${g}">${g}</option>`;
+        });
+    }
 
     async function loadJadwal() {
         const groupFilter = document.getElementById('filterGroupJadwal').value;
@@ -226,7 +209,10 @@
             return;
         }
         sel.innerHTML = '<option value="">-- Memuat... --</option>';
-        const snap = await db.collection('jadwal_audit').where('status', '==', 'Pending').where('group', '==', groupFilter).get();
+        const snap = await db.collection('jadwal_audit')
+                           .where('status', '==', 'Pending')
+                           .where('group', '==', groupFilter)
+                           .get();
         sel.innerHTML = '<option value="">-- Pilih Jadwal --</option>';
         snap.forEach(doc => {
             cacheJadwal[doc.id] = doc.data();
@@ -250,12 +236,8 @@
         document.getElementById('nilaiTemuan').value = i > 0 ? ((1-(t/i))*100).toFixed(2) + "%" : "0%";
     }
 
-    // Fungsi trigger input file
-    function triggerUpload(idx) {
-        document.getElementById(`file${idx}`).click();
-    }
+    function triggerUpload(idx) { document.getElementById(`file${idx}`).click(); }
 
-    // Fungsi hapus foto terpilih
     function removePhoto(event, idx) {
         event.stopPropagation();
         document.getElementById(`url${idx}`).value = '';
@@ -319,7 +301,6 @@
         const input = document.getElementById("searchTable").value.toUpperCase();
         const status = document.getElementById("filterStatus").value.toUpperCase();
         const rows = document.getElementById("historyBody").getElementsByTagName("tr");
-
         for (let i = 0; i < rows.length; i++) {
             const text = rows[i].textContent || rows[i].innerText;
             const matchesSearch = text.toUpperCase().indexOf(input) > -1;
@@ -333,7 +314,6 @@
         const sel = document.getElementById('selectJadwal');
         sel.innerHTML = `<option value="${id}">${d.periode || 'Edit'} | ${d.auditor}</option>`;
         cacheJadwal[id] = d;
-
         document.getElementById('tglAudit').value = d.tglAudit || '';
         document.getElementById('displayGroup').value = d.group || '';
         document.getElementById('displayAuditor').value = d.auditor || '';
@@ -349,15 +329,10 @@
         document.getElementById('tindakan').value = d.tindakan || '';
         document.getElementById('updateCatatan').value = d.updateCatatan || '';
         hitungNilai();
-
         for(let i=1; i<=5; i++){
-            document.getElementById(`url${i}`).value = '';
-            document.getElementById(`img${i}`).style.display = 'none';
-            document.getElementById(`text${i}`).style.display = 'block';
-            document.getElementById(`remove${i}`).style.display = 'none';
+            removePhoto({stopPropagation:()=>{}}, i);
         }
-
-        if(d.foto && d.foto.length > 0) {
+        if(d.foto) {
             d.foto.forEach((url, index) => {
                 const i = index + 1;
                 if(i <= 5) {
@@ -369,76 +344,67 @@
                 }
             });
         }
-
         const kategoriSelect = document.getElementById('kategoriTemuan');
-        Array.from(kategoriSelect.options).forEach(opt => opt.selected = false);
-        if(d.kategoriTemuan) {
-            const vals = d.kategoriTemuan.split(', ');
-            Array.from(kategoriSelect.options).forEach(opt => {
-                if(vals.includes(opt.value)) opt.selected = true;
-            });
-        }
-
+        Array.from(kategoriSelect.options).forEach(opt => {
+            opt.selected = d.kategoriTemuan ? d.kategoriTemuan.split(', ').includes(opt.value) : false;
+        });
         document.getElementById('btnSave').innerText = "UPDATE HASIL AUDIT";
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     async function deleteAudit(id) {
-        if(!confirm("Hapus data input audit ini? (Data jadwal akan tetap ada)")) return;
+        if(!confirm("Hapus data input audit ini?")) return;
+        try {
+            await db.collection('jadwal_audit').doc(id).update({
+                tglAudit: "", namaAuditeePerson: "", jmlTemuan: 0, status: "Pending", foto: []
+            });
+            alert("Terhapus"); location.reload();
+        } catch (e) { alert("Gagal"); }
+    }
+
+    // OPTIMASI 2: Ambil data history terbatas waktu (Default 30 hari) untuk menghemat Read
+    async function fetchAuditHistory() {
+        const body = document.getElementById('historyBody');
+        body.innerHTML = '<tr><td colspan="10" style="text-align:center">Memuat History...</td></tr>';
         
-        // Objek yang hanya berisi field hasil input audit untuk dikosongkan
-        const resetData = {
-            tglAudit: "",
-            namaAuditeePerson: "",
-            jmlItem: 10,
-            jmlTemuan: 0,
-            nilaiPencapaian: "",
-            uraian: "",
-            penyebab: "",
-            tindakan: "",
-            statusVerifikasi: "OPEN",
-            statusTemuan: "Major",
-            kategoriTemuan: "",
-            updateCatatan: "",
-            foto: [],
-            status: "Pending", // Kembalikan ke Pending agar bisa diinput ulang
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        };
+        const periode = document.getElementById('filterPeriode').value;
+        let query = db.collection('jadwal_audit').where('status', '==', 'Selesai').orderBy('updatedAt', 'desc');
+        
+        if (periode !== 'all') {
+            const dateLimit = new Date();
+            dateLimit.setDate(dateLimit.getDate() - parseInt(periode));
+            query = query.where('updatedAt', '>=', dateLimit);
+        }
 
         try {
-            await db.collection('jadwal_audit').doc(id).update(resetData);
-            alert("Data audit berhasil dihapus.");
-            location.reload();
+            const snap = await query.get();
+            body.innerHTML = '';
+            snap.forEach(doc => {
+                const d = doc.data(); cacheHistory[doc.id] = d;
+                let fotoHtml = (d.foto || []).map(url => `<img src="${url}" class="thumb-img" onclick="window.open('${url}')">`).join('');
+                body.innerHTML += `
+                    <tr>
+                        <td>
+                            <button class="action-btn btn-edit" onclick="editAudit('${doc.id}')">EDIT</button>
+                            <button class="action-btn btn-delete" onclick="deleteAudit('${doc.id}')">HAPUS</button>
+                        </td>
+                        <td>${d.tglAudit}</td>
+                        <td><b>${d.group}</b><br>${d.auditee}</td>
+                        <td>${d.auditor}<br><small>${d.namaAuditeePerson || '-'}</small></td>
+                        <td><b>IK: ${d.judulIK}</b><br><i>${d.uraian || '-'}</i><br><small>Kategori: ${d.kategoriTemuan}</small></td>
+                        <td>${d.tindakan || '-'}</td>
+                        <td>${d.nilaiPencapaian}</td>
+                        <td>${fotoHtml}</td>
+                        <td>${d.updateCatatan || '-'}</td>
+                        <td><span class="badge ${d.statusVerifikasi==='CLOSED'?'badge-closed':'badge-open'}">${d.statusVerifikasi}</span></td>
+                    </tr>`;
+            });
         } catch (e) {
-            alert("Gagal menghapus data.");
+            body.innerHTML = '<tr><td colspan="10" style="text-align:center; color:red">Gagal memuat history. Pastikan Index Firestore sudah dibuat.</td></tr>';
         }
     }
 
-    async function fetchAuditHistory() {
-        const snap = await db.collection('jadwal_audit').where('status', '==', 'Selesai').orderBy('updatedAt', 'desc').get();
-        const body = document.getElementById('historyBody');
-        body.innerHTML = '';
-        snap.forEach(doc => {
-            const d = doc.data(); cacheHistory[doc.id] = d;
-            let fotoHtml = (d.foto || []).map(url => `<img src="${url}" class="thumb-img" onclick="window.open('${url}')">`).join('');
-            body.innerHTML += `
-                <tr>
-                    <td>
-                        <button class="action-btn btn-edit" onclick="editAudit('${doc.id}')">EDIT</button>
-                        <button class="action-btn btn-delete" onclick="deleteAudit('${doc.id}')">HAPUS</button>
-                    </td>
-                    <td>${d.tglAudit}</td>
-                    <td><b>${d.group}</b><br>${d.auditee}</td>
-                    <td>${d.auditor}<br><small>${d.namaAuditeePerson || '-'}</small></td>
-                    <td><b>IK: ${d.judulIK}</b><br><i>${d.uraian || '-'}</i><br><small>Kategori: ${d.kategoriTemuan}</small></td>
-                    <td>${d.tindakan || '-'}</td>
-                    <td>${d.nilaiPencapaian}</td>
-                    <td>${fotoHtml}</td>
-                    <td>${d.updateCatatan || '-'}</td>
-                    <td><span class="badge ${d.statusVerifikasi==='CLOSED'?'badge-closed':'badge-open'}">${d.statusVerifikasi}</span></td>
-                </tr>`;
-        });
-    }
+    loadGroupsFromMateri();
     fetchAuditHistory();
 </script>
 </body>
