@@ -127,7 +127,7 @@
     </div>
     
     <div class="search-box">
-        <input type="text" id="filterInput" placeholder="Cari berdasarkan Nomor Dokumen (Eksak)..." onchange="loadData('search')">
+        <input type="text" id="filterInput" placeholder="Tekan Enter untuk cari Nomor Dokumen..." onkeypress="if(event.key === 'Enter') loadData('search')">
     </div>
 
     <div style="overflow-x: auto;">
@@ -168,44 +168,38 @@
     const db = firebase.firestore();
 
     const PAGE_SIZE = 10;
-    let firstDoc = null;
     let lastDoc = null;
-    let pageHistory = []; // Untuk melacak dokumen pertama setiap halaman
+    let pageHistory = []; 
 
-    window.onload = () => loadData('init');
+    window.onload = () => {
+        loadData('init');
+        updateTotalCount();
+    };
 
     async function loadData(direction = 'init') {
         const tbody = document.getElementById('documentTableBody');
         const filterValue = document.getElementById('filterInput').value.trim();
         
-        // Indikator loading
         tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 20px; opacity: 0.5;">Memproses...</td></tr>';
 
-        let query = db.collection('documents');
+        let query = db.collection('documents').orderBy('nomor_dokumen', 'asc');
 
-        // Reset navigasi jika init atau search
         if (direction === 'init' || direction === 'search') {
-            firstDoc = null;
             lastDoc = null;
             pageHistory = [];
         }
 
-        // Gunakan filter jika ada
         if (filterValue) {
             query = query.where('nomor_dokumen', '>=', filterValue)
                          .where('nomor_dokumen', '<=', filterValue + '\uf8ff');
         }
 
-        // Tambahkan pengurutan
-        query = query.orderBy('nomor_dokumen', 'asc');
-
-        // Logika Paginasi
         if (direction === 'next' && lastDoc) {
             query = query.startAfter(lastDoc).limit(PAGE_SIZE);
         } else if (direction === 'prev' && pageHistory.length > 1) {
-            pageHistory.pop(); // Hapus halaman saat ini
-            const prevDoc = pageHistory[pageHistory.length - 1];
-            query = query.startAt(prevDoc).limit(PAGE_SIZE);
+            pageHistory.pop(); 
+            const prevCursor = pageHistory[pageHistory.length - 1];
+            query = prevCursor ? query.startAt(prevCursor).limit(PAGE_SIZE) : query.limit(PAGE_SIZE);
         } else {
             query = query.limit(PAGE_SIZE);
         }
@@ -215,61 +209,53 @@
             
             if (snapshot.empty) {
                 tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 20px; opacity: 0.5;">Data tidak ditemukan.</td></tr>';
-                updatePaginationButtons(0, direction);
+                document.getElementById('btnNext').disabled = true;
+                document.getElementById('btnPrev').disabled = (pageHistory.length <= 1);
                 return;
             }
 
-            // Simpan posisi dokumen untuk navigasi
-            firstDoc = snapshot.docs[0];
             lastDoc = snapshot.docs[snapshot.docs.length - 1];
             
             if (direction !== 'prev') {
+                const firstDoc = snapshot.docs[0];
                 if (!pageHistory.includes(firstDoc)) pageHistory.push(firstDoc);
             }
 
             renderTable(snapshot);
-            updatePaginationButtons(snapshot.size, direction);
-            updateTotalCount();
+            document.getElementById('btnPrev').disabled = (pageHistory.length <= 1);
+            document.getElementById('btnNext').disabled = (snapshot.size < PAGE_SIZE);
         } catch (error) {
-            console.error("Firebase Error:", error);
-            tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#f87171; padding: 20px;">
-                Terjadi kesalahan. Pastikan index Firestore sudah siap.<br>
-                <small>${error.message}</small>
-            </td></tr>`;
+            console.error(error);
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#f87171; padding: 20px;">Error: ${error.message}</td></tr>`;
         }
     }
 
     function renderTable(snapshot) {
         const tbody = document.getElementById('documentTableBody');
         tbody.innerHTML = '';
-
         snapshot.forEach(doc => {
-            const data = doc.data();
+            const d = doc.data();
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td>${data.group || '-'}</td>
-                <td>${data.auditee || '-'}</td>
-                <td>${data.judulIK || '-'}</td>
-                <td style="font-family: monospace;">${data.nomor_dokumen || '-'}</td>
-                <td>${data.rev_ke || '0'}</td>
-                <td><span style="color: ${data.status === 'Aktif' ? '#4ade80' : '#f87171'}">${data.status || 'Aktif'}</span></td>
+                <td>${d.group || '-'}</td>
+                <td>${d.auditee || '-'}</td>
+                <td>${d.judulIK || '-'}</td>
+                <td style="font-family: monospace;">${d.nomor_dokumen || '-'}</td>
+                <td>${d.rev_ke || '0'}</td>
+                <td><span style="color: ${d.status === 'Aktif' ? '#4ade80' : '#f87171'}">${d.status || 'Aktif'}</span></td>
                 <td><button class="btn-delete" onclick="deleteDoc('${doc.id}')">Hapus</button></td>
             `;
             tbody.appendChild(tr);
         });
     }
 
-    function updatePaginationButtons(currentSize, direction) {
-        document.getElementById('btnPrev').disabled = (pageHistory.length <= 1);
-        document.getElementById('btnNext').disabled = (currentSize < PAGE_SIZE);
-    }
-
     async function updateTotalCount() {
         try {
+            // Optimasi: Gunakan count() aggregation (Hanya 1 read per 1000 index entries)
             const snapshot = await db.collection('documents').count().get();
             document.getElementById('docCount').innerText = `${snapshot.data().count} Dokumen`;
         } catch (e) {
-            document.getElementById('docCount').innerText = "Terhubung";
+            document.getElementById('docCount').innerText = "-";
         }
     }
 
@@ -277,10 +263,9 @@
         if (confirm('Hapus dokumen ini?')) {
             try {
                 await db.collection('documents').doc(id).delete();
+                updateTotalCount();
                 loadData('init');
-            } catch (err) {
-                alert('Gagal menghapus: ' + err.message);
-            }
+            } catch (err) { alert(err.message); }
         }
     }
 
@@ -294,17 +279,14 @@
 
     function updateFileName() {
         const input = document.getElementById('excelFile');
-        if(input.files[0]) {
-            document.getElementById('fileName').innerHTML = `<b style="color:#3b82f6">Terpilih:</b> ${input.files[0].name}`;
-        }
+        if(input.files[0]) document.getElementById('fileName').innerHTML = `<b style="color:#3b82f6">Terpilih:</b> ${input.files[0].name}`;
     }
 
     async function prosesFile() {
         const fileInput = document.getElementById('excelFile');
         const log = document.getElementById('statusLog');
         const btn = document.getElementById('btnProses');
-
-        if (!fileInput.files[0]) { alert("Silakan pilih file terlebih dahulu."); return; }
+        if (!fileInput.files[0]) return;
 
         btn.disabled = true;
         log.innerHTML = "<span class='info-text'>[SISTEM] Membaca file materi...</span><br>";
@@ -313,20 +295,15 @@
         reader.onload = async (e) => {
             const data = new Uint8Array(e.target.result);
             const workbook = XLSX.read(data, { type: 'array', cellDates: true });
-            const sheet = workbook.Sheets[workbook.SheetNames[0]];
-            const json = XLSX.utils.sheet_to_json(sheet);
+            const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
 
-            log.innerHTML += `<span class='info-text'>[SISTEM] Ditemukan ${json.length} dokumen.</span><br>---<br>`;
+            log.innerHTML += `<span class='info-text'>[SISTEM] Sinkronisasi ${json.length} dokumen...</span><br>`;
 
+            // Optimasi Write: Menggunakan Batch bisa lebih cepat, namun set per doc tetap standar kuota write
             for (let i = 0; i < json.length; i++) {
                 const item = json[i];
-                let tglRevFinal = String(item['tanggal revisi'] || "").trim();
-                if (item['tanggal revisi'] instanceof Date) {
-                    tglRevFinal = item['tanggal revisi'].toISOString().split('T')[0];
-                }
-
                 const docId = String(item['nomor dokumen'] || `DOC-${Date.now()}-${i}`).replace(/[/\\?%*:|"<>]/g, '-').trim();
-
+                
                 try {
                     await db.collection('documents').doc(docId).set({
                         group: String(item.group || "").trim(),
@@ -335,19 +312,20 @@
                         judulIK: String(item.judulIK || "").trim(),
                         nomor_dokumen: String(item['nomor dokumen'] || "").trim(),
                         rev_ke: String(item['rev ke'] || "00").trim(),
-                        tanggal_revisi: tglRevFinal,
+                        tanggal_revisi: item['tanggal revisi'] instanceof Date ? item['tanggal revisi'].toISOString().split('T')[0] : String(item['tanggal revisi'] || ""),
                         status_dokumen: String(item['status dokumen'] || "").trim(),
                         status: String(item.status || "Aktif").trim(),
                         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                     }, { merge: true });
-                    log.innerHTML += `<span class="success-text">[OK] ${docId} BERHASIL</span><br>`;
+                    log.innerHTML += `<span class="success-text">[OK] ${docId}</span><br>`;
                 } catch (err) {
-                    log.innerHTML += `<span class="error-text">[ERROR] ${docId}: ${err.message}</span><br>`;
+                    log.innerHTML += `<span class="error-text">[ERR] ${docId}: ${err.message}</span><br>`;
                 }
                 log.scrollTop = log.scrollHeight;
             }
-            log.innerHTML += "<br>--- SELESAI ---";
+            log.innerHTML += "--- SELESAI ---";
             btn.disabled = false;
+            updateTotalCount();
             loadData('init');
         };
         reader.readAsArrayBuffer(fileInput.files[0]);
